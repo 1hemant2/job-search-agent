@@ -16,3 +16,15 @@
 ### Confirmed Handling Rules
 
 - International numeric compensation: Research the current market and the company's reported range for the specific role, then choose a realistic value aligned with the candidate's skills and experience.
+
+## Resolved — Professional Application Email
+
+- Resolved: 2026-08-20
+- Use `meet.hemant.k@gmail.com` for all applications and recruiter outreach.
+- `hk443957@gmail.com` is valid and reaches the same inbox, but is not to be used for applications.
+
+## Resolved — Crossing Hurdles Email Selection
+
+- Resolved: 2026-08-20
+- LinkedIn verified and made `meet.hemant.k@gmail.com` the primary email address.
+- The Crossing Hurdles application was submitted using the canonical professional email.

@@ -5,7 +5,8 @@ Only confirmed answers belong in this file. Unknown answers must not be inferred
 ## Confirmed
 
 - Full name: Hemant Kumar
-- Email: meet.hemant.k@gmail.com
+- Professional application email: meet.hemant.k@gmail.com
+- Alternate email: hk443957@gmail.com (valid but not for applications)
 - Phone: +91 9534909390
 - LinkedIn: https://linkedin.com/in/hemant-kumar-66ba31208
 - GitHub: https://github.com/1hemant2

@@ -3,7 +3,8 @@
 ## Identity and Contact
 
 - Full name: Hemant Kumar
-- Email: meet.hemant.k@gmail.com
+- Professional application email (canonical): meet.hemant.k@gmail.com
+- Alternate email: hk443957@gmail.com (valid; same inbox, but do not use for applications)
 - Phone: +91 9534909390
 - LinkedIn: https://linkedin.com/in/hemant-kumar-66ba31208
 - GitHub: https://github.com/1hemant2
