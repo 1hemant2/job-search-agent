@@ -1,0 +1,4 @@
+interface:
+  display_name: "Job Application"
+  short_description: "Run truthful autonomous job applications"
+  default_prompt: "Use $job-application to start an authorized autonomous job-application batch."

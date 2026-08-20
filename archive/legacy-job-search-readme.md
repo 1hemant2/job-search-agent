@@ -1,4 +1,6 @@
-# Job Search Workspace
+# ARCHIVED - Legacy Job Search Workspace Summary
+
+This setup snapshot is historical only and is not a source of truth. Active ownership is defined by root `AGENTS.md`.
 
 This directory contains the reusable candidate profile and application state derived from the resume and the job-search instructions.
 

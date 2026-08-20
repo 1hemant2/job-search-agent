@@ -39,7 +39,7 @@
 - Save scores of 60-69 for review.
 - Skip scores below 60.
 - A small experience gap is acceptable when the technical match is strong.
-- Java screening answers must distinguish 2 years of hands-on independent project experience from 0 years of professional production Java experience.
+- Java screening answers must follow the separate general and professional/production concepts in `technology-experience.md`.
 
 ## Confirmed Personal Preferences
 

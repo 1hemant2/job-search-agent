@@ -34,12 +34,13 @@ Backend Engineer with 2 years of professional experience building scalable Node.
 - Professional experience: `experience.md`
 - Education: `education.md`
 - Projects: `projects.md`
+- Technology experience and scope: `technology-experience.md`
 - Work authorization: `work-authorization.md`
 - Preferences and constraints: `preferences.md`
-- Reusable answers: `common-questions.md`
+- Reusable answers: `application-answers.md`
 
 ## Source of Truth
 
-- Primary resume: `../Hemant_Kumar_NodeJS_Resume.pdf`
+- Primary resume: `../resumes/Hemant_Kumar_NodeJS_Resume.pdf`
 - Profile initialized: 2026-08-20
 - Resume visually inspected: Yes; one page, readable, with no observed clipping or overlap

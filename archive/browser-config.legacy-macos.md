@@ -1,4 +1,6 @@
-# Browser Configuration - Always Use Google Chrome
+# ARCHIVED - Legacy macOS Browser Configuration
+
+This file is historical only. Its macOS paths do not apply to the current Windows workspace and must never be loaded as active browser configuration. Use the supported browser-control skill and verify session availability at run time. The non-secret account/session intent has been migrated to `../state/credential-registry.md`.
 
 This file is read by the autonomous job-search agent (AGENTS.md) to ensure Chrome usage is consistent.
 

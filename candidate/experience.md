@@ -24,7 +24,6 @@
 
 ## Truthfulness Notes
 
-- Java and Spring Boot: 2 years of hands-on experience building independent backend projects, including AlertOps.
-- This Java experience is not professional production experience and must not be represented as employment experience.
-- TypeScript is a target-role preference but is not listed as a confirmed resume skill.
-- Do not claim professional production Java or Spring Boot experience. Do not claim TypeScript experience without additional confirmation.
+- AlertOps is evidence of substantial independent Java and Spring Boot work; Enterprise Bot employment is not evidence of professional Java employment.
+- `technology-experience.md` is the canonical source for general versus professional/production technology scope and numeric answers.
+- TypeScript is a target-role preference but is not listed as a confirmed resume skill. Do not claim TypeScript experience without additional confirmation.

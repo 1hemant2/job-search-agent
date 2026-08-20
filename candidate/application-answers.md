@@ -1,6 +1,8 @@
 # Reusable Application Answers
 
-Only confirmed answers belong in this file. Unknown answers must not be inferred.
+This is the canonical store for reusable non-technology application answers. Technology years and scope live only in `technology-experience.md`. Unknown material facts must not be inferred.
+
+When a future answer is learned, store its normalized meaning, value, source, confidence, equivalent wording when useful, and derivation basis if derived. User-confirmed corrections override derived entries; mark superseded derivations obsolete instead of silently retaining them.
 
 ## Confirmed
 
@@ -39,12 +41,46 @@ Only confirmed answers belong in this file. Unknown answers must not be inferred
 - Expected compensation when one annual India figure is required: INR 14 LPA
 - Expected annual India range when a range is accepted: INR 13-16 LPA
 - Expected monthly in-hand salary: INR 85,000
-- Hands-on Java experience: 2 years building independent backend projects
-- Professional production Java experience: 0 years
-- Java experience explanation: Two years of hands-on Java experience building independent backend projects, including Spring Boot development; this was not professional production experience
-- TypeScript experience: 0 years confirmed from the provided resume; do not claim experience unless the candidate later confirms and documents it
 - Formal government or role-specific security clearance: No formal security clearance
 - Voluntary demographic questions: Prefer not to answer when that option is available
+
+## Normalized Reusable Concepts
+
+```yaml
+- normalized_key: notice_period
+  value: 60 days
+  qualifier: negotiable to 30 days
+  source: user-confirmed
+  confidence: confirmed
+  equivalent_questions: [notice period, how soon can you join, availability, earliest start]
+- normalized_key: current_location
+  value: Bengaluru, Karnataka, India
+  source: user-confirmed
+  confidence: confirmed
+  equivalent_questions: [current city, city of residence, where are you based]
+- normalized_key: immediate_joiner
+  value: no
+  source: derived
+  derived_from: confirmed 60-day notice period
+  confidence: high
+- normalized_key: bachelors_degree
+  value: yes
+  source: derived
+  derived_from: confirmed B.Tech in Computer Science & Engineering
+  confidence: high
+- normalized_key: onsite_available
+  value: yes
+  source: derived
+  derived_from: confirmed acceptance of remote, hybrid, or onsite work
+  confidence: high
+- normalized_key: remote_available
+  value: yes
+  source: derived
+  derived_from: confirmed acceptance of remote, hybrid, or onsite work
+  confidence: high
+```
+
+For Java, Node.js, REST/API, database, messaging, Docker, Kubernetes, and other technology questions, use `technology-experience.md`.
 
 ## Awaiting Confirmation
 

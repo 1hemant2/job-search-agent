@@ -1,0 +1,23 @@
+{
+  "name": "job-application-browser-executor",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Deterministic Playwright execution adapter for the autonomous job-application workspace",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dry-run": "tsx src/runner.ts --dry-run",
+    "execute": "tsx src/runner.ts"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
