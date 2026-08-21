@@ -13,7 +13,7 @@ import type {
   Blocker,
 } from "../types.js";
 
-const CAPTCHA_RE = /captcha|recaptcha|hcaptcha|cloudflare turnstile/i;
+const CAPTCHA_CHALLENGE_TEXT_RE = /(?:complete|solve|verify|verification|challenge|required|human|robot)[^.!?\n]{0,100}(?:captcha|recaptcha|hcaptcha|turnstile)|(?:captcha|recaptcha|hcaptcha|turnstile)[^.!?\n]{0,100}(?:complete|solve|verify|verification|challenge|required|human|robot)/i;
 const AUTH_RE = /sign\s*in|log\s*in|create an account|verify your email|two[- ]factor|multi[- ]factor/i;
 const ASSESSMENT_RE = /technical assessment|coding assessment|take[- ]home|personality assessment|ai interview|online test/i;
 
@@ -132,6 +132,7 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
     for (let index = 0; index < count; index += 1) {
       const control = controls.nth(index);
       if (!(await control.isVisible().catch(() => false))) continue;
+      if (await this.isHiddenBackingControl(control)) continue;
       if (await this.isAuthenticationControl(control)) {
         return { ok: false, blocker: blocker("authentication", "Authentication or verification is required before form execution", { url: this.page.url() }) };
       }
@@ -171,10 +172,26 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
       return { ok: false, blocker: blocker("authentication", "Authentication is required before the application can be filled", { url }) };
     }
     const identity = `${this.payload.company} ${this.payload.role}`.trim().toLowerCase();
-    const titleAndBody = `${await this.page.title().catch(() => "")} ${body}`.toLowerCase();
-    const identityTokens = identity.split(/\s+/).filter((token) => token.length >= 4);
-    if (identityTokens.length > 0 && !identityTokens.some((token) => titleAndBody.includes(token))) {
-      return { ok: false, blocker: blocker("identity_mismatch", "Company or role identity was not found on the application page", { url }) };
+    const pageTitle = await this.page.title().catch(() => "");
+    const titleAndBody = `${pageTitle} ${body}`.toLowerCase();
+    const companyObserved = identityEvidence(this.payload.company, titleAndBody);
+    const roleObserved = identityEvidence(this.payload.role, titleAndBody);
+    if (!companyObserved && !roleObserved) {
+      const observedJobId = /\b(?:[A-Z]\d{2}-\d{4}|\d{7,})\b/i.exec(`${url} ${body}`)?.[0];
+      return {
+        ok: false,
+        blocker: blocker("identity_mismatch", "Company or role identity was not found on the application page", {
+          url,
+          expectedCompany: this.payload.company,
+          expectedRole: this.payload.role,
+          expectedJobId: this.payload.jobId,
+          observedCompany: companyObserved ? this.payload.company : "not detected",
+          observedRole: roleObserved ? this.payload.role : "not detected",
+          observedJobId,
+          pageTitle,
+          pageTextEvidence: body.replace(/\s+/g, " ").trim().slice(0, 500),
+        }),
+      };
     }
     return { ok: true, details: "domain, identity, CAPTCHA, and material form checks passed" };
   }
@@ -208,7 +225,7 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
 
   private async hasCaptchaChallenge(): Promise<boolean> {
     const body = await this.page.locator("body").innerText().catch(() => "");
-    if (CAPTCHA_RE.test(body)) return true;
+    if (CAPTCHA_CHALLENGE_TEXT_RE.test(body)) return true;
     const selectors = [
       "iframe[src*='captcha' i]",
       "iframe[title*='captcha' i]",
@@ -220,7 +237,16 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
       const controls = this.page.locator(selector);
       const count = await controls.count();
       for (let index = 0; index < count; index += 1) {
-        if (await controls.nth(index).isVisible().catch(() => false)) return true;
+        const control = controls.nth(index);
+        const metadata = await control.evaluate((node) => ({
+          src: node.getAttribute("src") ?? "",
+          className: typeof node.className === "string" ? node.className : "",
+          size: node.getAttribute("data-size") ?? "",
+        })).catch(() => ({ src: "", className: "", size: "" }));
+        const isInvisibleRecaptcha = /size=invisible/i.test(metadata.src) || /\binvisible\b/i.test(metadata.size);
+        const isBackgroundBadge = /(?:^|\s)grecaptcha-(?:badge|logo|error)(?:\s|$)/i.test(metadata.className);
+        if (isInvisibleRecaptcha || isBackgroundBadge) continue;
+        if (await control.isVisible().catch(() => false)) return true;
       }
     }
     return false;
@@ -261,9 +287,14 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
     return control.evaluate((node) => {
       const id = node.getAttribute("id");
       const associated = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
+      const labelledBy = (node.getAttribute("aria-labelledby") ?? "")
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((reference) => document.getElementById(reference)?.textContent ?? "")
+        .join(" ");
       const parent = node.closest("label");
       const fieldset = node.closest("fieldset");
-      return (associated?.textContent || parent?.textContent || fieldset?.querySelector("legend")?.textContent || node.getAttribute("aria-label") || node.getAttribute("placeholder") || "").replace(/\s+/g, " ").trim();
+      return (associated?.textContent || labelledBy || parent?.textContent || fieldset?.querySelector("legend")?.textContent || node.getAttribute("aria-label") || node.getAttribute("placeholder") || "").replace(/\s+/g, " ").trim();
     }).catch(() => "");
   }
 
@@ -292,13 +323,37 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
   private async fillControl(control: Locator, answer: AnswerValue): Promise<void> {
     const tag = await control.evaluate((node) => node.tagName.toLowerCase());
     const type = (await control.getAttribute("type"))?.toLowerCase();
+    const role = (await control.getAttribute("role"))?.toLowerCase();
     if (type === "checkbox" || type === "radio") {
       if (Boolean(answer) !== await control.isChecked().catch(() => false)) await control.check({ force: true });
     } else if (tag === "select") {
       if (typeof answer === "string") await control.selectOption({ label: answer }).catch(() => control.selectOption(answer));
       else await control.selectOption(String(answer));
+    } else if (role === "combobox") {
+      await control.click();
+      await control.fill(String(answer ?? ""));
+      const option = this.page.getByRole("option", { name: String(answer ?? ""), exact: false }).first();
+      if (await option.count() && await option.isVisible().catch(() => false)) await option.click();
+      else await control.press("Enter").catch(() => undefined);
     } else {
       await control.fill(String(answer ?? ""));
     }
   }
+
+  private async isHiddenBackingControl(control: Locator): Promise<boolean> {
+    const ariaHidden = (await control.getAttribute("aria-hidden"))?.toLowerCase() === "true";
+    const tabIndex = await control.getAttribute("tabindex");
+    const className = await control.getAttribute("class") ?? "";
+    return ariaHidden || (tabIndex === "-1" && /requiredinput/i.test(className));
+  }
+}
+
+function identityEvidence(expected: string, pageText: string): boolean {
+  const normalizedExpected = expected.trim().toLowerCase().replace(/\s+/g, " ");
+  if (!normalizedExpected) return false;
+  if (pageText.includes(normalizedExpected)) return true;
+  const tokens = normalizedExpected.split(" ").filter((token) => token.length >= 4);
+  if (!tokens.length) return false;
+  const matched = tokens.filter((token) => pageText.includes(token)).length;
+  return matched >= Math.ceil(tokens.length * 0.66);
 }

@@ -2,16 +2,17 @@
 
 ## Active Run
 
-- Status: terminal - recent qualifying search space exhausted for this run
-- Run ID: RUN-20260821-START1B
-- Requested target: 1
+- Status: terminal - recent qualifying search space exhausted; no executable submission path remained
+- Run ID: RUN-20260821-START2
+- Requested target: 2
 - Successful submissions this run: 0
-- Evaluated jobs this run: 20
-- Skipped or ineligible: 19
+- Evaluated jobs this run: 2
+- Skipped or ineligible: 0
 - Blocked before submission: 1
-- Failed: 0
+- Failed: 1
 - Assessments reached: 0
-- Last checkpoint: Official pages and current LinkedIn result pages checked; no additional recent qualifying opening remained
+- Retry attempts: CloudSEK 1 user-authorized retry after an earlier unverified submit click
+- Last checkpoint: Invisible reCAPTCHA handling was corrected; CloudSEK form was filled and a second submit click completed, but confirmation was again not verifiable, so it was not counted; GGS remains CAPTCHA-blocked
 - Lifecycle state: stopped
 
 ## Last Completed Run

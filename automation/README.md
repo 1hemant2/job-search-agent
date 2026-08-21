@@ -9,6 +9,9 @@ This subsystem is a deterministic browser executor for the existing job-agent wo
 - `src/browser.ts` — persistent Playwright profile/session and safe navigation.
 - `src/ats/` — LinkedIn, Workday, Greenhouse, Lever, Ashby, and conservative generic adapters.
 - `src/captcha-state.ts` — idempotent non-secret CAPTCHA queue/checkpoint persistence and resolution.
+- `src/discovery-ledger.ts` — append-safe JSONL discovery, search, and executor telemetry records.
+- `src/discovery.ts` — planned query/source coordination and explicit exhaustion state machine.
+- `src/run-state.ts` — compact discovery pointers and counters in `state/run-state.md`.
 - `src/runner.ts` — state-machine execution and structured JSON output.
 - `test/` — payload, detection, form-filling, unknown-question, CAPTCHA, deduplication, and dry-run integration tests.
 
@@ -100,3 +103,37 @@ npm run execute -- --payload ..\tmp\application-payload.json --allow-submit --he
 The runner checks the target domain, ATS, company/role identity, selected resume, prepared answers, and application history before the adapter-owned final submit control is allowed to run. It recognizes a confirmation page before returning `submitted`; unrecognized post-submit state returns `failed` with `submission_not_verified`.
 
 The runner prints only structured result JSON. It does not mutate `application-history.md` or candidate answer/source-of-truth files; the job-agent remains responsible for application-history reconciliation, target counting, candidate-answer learning, and final run reconciliation. For CAPTCHA only, the runner writes the normalized non-secret `blocked_captcha` queue/checkpoint metadata needed for resumability in `candidate/human-input-queue.md` and `state/run-state.md`.
+
+## Discovery telemetry and exhaustion
+
+Each run should construct a `DiscoveryCoordinator` with an explicit plan of source/query variants. It writes append-safe JSONL files under:
+
+```text
+state/runs/<RUN_ID>/discovery-ledger.jsonl
+state/runs/<RUN_ID>/search-telemetry.jsonl
+state/runs/<RUN_ID>/executor-telemetry.jsonl
+```
+
+Job records contain the run identity, source, query variant, location, page/cursor, result position, posting-age confidence, recency class, score, resume, decision, standardized reason codes, and executor outcome. Search records contain visible/new/duplicate/evaluated counts, pagination state, and query-level stop reason. Executor records contain the adapter, starting/final URL, page title, phase, status, blocker, visible classification evidence, and the raw structured executor result.
+
+The discovery state machine is:
+
+```text
+SEARCH_SAMPLE_EXHAUSTED
+  -> continue the current query's pagination
+QUERY_EXHAUSTED
+  -> continue the next planned query
+SOURCE_EXHAUSTED
+  -> continue the next configured source
+SEARCH_SPACE_REASONABLY_EXHAUSTED
+  -> the only state allowed to trigger run-level search exhaustion
+```
+
+A run must not stop because 20 jobs were evaluated or because one visible page had no qualifying job. The final state is reached only after every planned query has completed pagination, every planned source has completed its query variants, and no open cursor or planned query remains.
+
+To persist executor telemetry during a dry run, supply the run id:
+
+```powershell
+$env:DRY_RUN = "true"
+npm run dry-run -- --payload ..\tmp\application-payload.json --run-id RUN-20260821-DRYRUN --headful
+```

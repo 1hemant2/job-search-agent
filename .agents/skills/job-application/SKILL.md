@@ -314,6 +314,21 @@ otherwise require repetitive manual work.
 
 Search LinkedIn, Workday, Greenhouse, Lever, Ashby, Wellfound, YC jobs, reputable job boards, and company career pages. Do not restrict the run to Easy Apply; follow legitimate external ATS links.
 
+Build an explicit per-run discovery plan from the candidate preferences before
+searching. Use multiple compatible title/query variants (including Node.js
+backend, backend, backend-heavy software engineering, API/platform,
+distributed systems, realistic SDE I/II, TypeScript, and Java-backend variants)
+and multiple configured sources. Capture source, query variant, filters,
+location, page/cursor, visible results, new results, duplicates, evaluated
+count, and pagination completion in the run discovery telemetry.
+
+Treat `SEARCH_SAMPLE_EXHAUSTED`, `QUERY_EXHAUSTED`, and `SOURCE_EXHAUSTED` as
+continuation states. Only `SEARCH_SPACE_REASONABLY_EXHAUSTED` may trigger the
+run-level legitimate-search-space stop, and only after every planned query has
+completed pagination and every planned source has completed. Never infer
+search-space exhaustion from one LinkedIn result page, a zero-qualifying page,
+20 evaluated jobs, or one blocked application.
+
 Apply only to jobs reliably shown as posted fewer than 7 calendar days ago. Treat `1 week ago`, 7+ days, older, or unknown/unreliable age as ineligible for automatic submission; record or save for review as appropriate.
 
 Read the complete description before applying. Do not submit from a partial preview. Evaluate responsibilities, backend relevance, required and preferred skills, experience, seniority, location, authorization/sponsorship, compensation, and hard blockers.
@@ -453,6 +468,19 @@ truth or answer provenance.
 ## CAPTCHA, Human Input, and Recovery
 
 CAPTCHA, reCAPTCHA, hCaptcha, Turnstile, and equivalent human verification are application-level blockers, not run-level blockers. Use only a site's normal page behavior. Never use solver services, farms, forged tokens, fingerprint manipulation, stealth/evasion, token injection, or anti-bot bypasses.
+
+### Time-saving CAPTCHA handling
+
+Do not classify a page as blocked merely because it contains the words
+`captcha` or `reCAPTCHA`, an invisible reCAPTCHA iframe, or a background badge.
+Classify it as a blocker only when a visible challenge, explicit human/robot
+verification message, or visible challenge control remains after the short
+passive re-check. When no visible challenge exists, continue the ordinary
+workflow and prepare the form in one batch. This reduces false positives while
+preserving the security boundary: the agent must not bypass CAPTCHA, install
+solver/anti-bot packages, manipulate fingerprints, forge or inject tokens, or
+read/store CAPTCHA values. The user-facing handoff should be one consolidated
+queue entry with a resumable `--resume-captcha` checkpoint.
 
 ### CAPTCHA lifecycle
 

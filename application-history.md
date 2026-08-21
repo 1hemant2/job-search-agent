@@ -494,7 +494,7 @@
 - Connection request: Not sent
 - Message sent: Not sent
 - Follow-up date: Not scheduled
-- Notes: Node.js/JavaScript match is strong, but the external application explicitly requires extensive professional TypeScript and the candidate has 0 confirmed TypeScript experience.
+- Notes: Historical decision used the then-current TypeScript record of 0 confirmed years. This is superseded by the user-confirmed update on 2026-08-21: 2 years of professional TypeScript experience.
 
 ## Infor - Software Engineer (1-2 Years)
 
@@ -584,7 +584,7 @@
 - Connection request: Not sent
 - Message sent: Not sent
 - Follow-up date: Not scheduled
-- Notes: Full description read. The role lists TypeScript, React/React Native, Go, Python, Spring Boot/Java, and cloud-platform experience as must-have stack items; TypeScript and frontend experience are not confirmed, so the match is below the automatic-application threshold.
+- Notes: Historical decision used the then-current TypeScript record as unconfirmed. This is superseded by the user-confirmed update on 2026-08-21: 2 years of professional TypeScript experience. Frontend, Go, and Python requirements remain separately unconfirmed.
 
 ## Expedia Group — Software Development Engineer II, ML Systems — Marketing
 
@@ -630,3 +630,45 @@
 - Message sent: Not sent
 - Follow-up date: Not scheduled
 - Notes: The official page was rechecked before application and showed Posted 8 Days Ago, outside the fewer-than-7-calendar-days automatic-submission rule. The local Workday runner was tested but returned identity_mismatch before any form submission; no candidate data or resume submission is claimed.
+
+## GGS - Backend Developer (Node.js) - GGS - BLR
+
+- Date discovered: 2026-08-21
+- Platform: Freehire discovery / official Freshteam application
+- Job URL: https://getinz-people.freshteam.com/jobs/owvrsM53ohRL/backend-developer-node-js-ggs-blr
+- Location: Bengaluru, Karnataka, India (hybrid, HSR Layout)
+- Remote: No
+- Salary: INR 15-30 LPA
+- Experience requirement: 3-6 years; Node.js, PostgreSQL, Redis, API and performance optimization
+- Match score: 72
+- Decision: Qualified and attempted
+- Application status: Blocked before submission (CAPTCHA required)
+- Date applied: Not submitted
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Posting was listed as posted Aug 19, 2026. An initial runner pass prepared the form but the submit control was hidden behind the application anchor. A bounded retry exposed a CAPTCHA challenge; the runner stopped without submission. No submission is claimed.
+
+## CloudSEK - SDE 2 - Fullstack
+
+- Date discovered: 2026-08-21
+- Platform: JobsRadar discovery / official Greenhouse application
+- Job URL: https://job-boards.greenhouse.io/cloudsek/jobs/5551451004
+- Location: Bengaluru, Karnataka, India (onsite)
+- Remote: No
+- Salary: Not listed by employer
+- Experience requirement: 3+ years backend production experience; Node.js/TypeScript, PostgreSQL/MongoDB/Elasticsearch, Redis, queues, Docker/Kubernetes
+- Match score: 78
+- Decision: Qualified and attempted
+- Application status: Failed after submit click - confirmation not verified
+- Date applied: 2026-08-21 (confirmation unavailable)
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Fresh Aug 18 posting and strong Bengaluru backend match. The page contained invisible reCAPTCHA Enterprise, not a visible challenge; the runner allowed that background check. A user-authorized retry prepared the form and completed a second submit click, but Greenhouse again exposed no recognized confirmation. Submission remains unverified and is not counted; no further retry will be made to avoid duplicate submission risk.

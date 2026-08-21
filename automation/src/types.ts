@@ -84,7 +84,25 @@ export interface Blocker {
   options?: string[];
   fieldKey?: string;
   url?: string;
+  expectedCompany?: string;
+  expectedRole?: string;
+  expectedJobId?: string;
+  observedCompany?: string;
+  observedRole?: string;
+  observedJobId?: string;
+  pageTitle?: string;
+  pageTextEvidence?: string;
   message: string;
+}
+
+export interface ExecutorTelemetry {
+  executor: "local-playwright";
+  atsAdapter?: AtsName;
+  startingUrl?: string;
+  finalUrl?: string;
+  pageTitle?: string;
+  currentPhase: string;
+  visibleEvidence?: string;
 }
 
 export type ExecutionStatus =
@@ -106,6 +124,7 @@ export interface ExecutionResult {
   blocker?: Blocker;
   error?: string;
   dryRun?: boolean;
+  executorTelemetry?: ExecutorTelemetry;
   durationMs: number;
 }
 
@@ -142,6 +161,7 @@ export interface ExecutionOptions extends BrowserOptions {
   dryRun?: boolean;
   allowSubmit?: boolean;
   resumeCaptcha?: boolean;
+  runId?: string;
 }
 
 export interface AdapterContext {

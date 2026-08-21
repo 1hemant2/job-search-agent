@@ -49,11 +49,11 @@ Never answer 0 to a generic Java-experience question merely because the experien
 
 ```yaml
 normalized_key: typescript_experience
-value: 0 years confirmed
-scope: general or professional TypeScript experience
-source: candidate profile and resume audit
+value: 2 years
+scope: professional TypeScript experience
+source: user-confirmed
 confidence: confirmed
-interpretation: do not claim TypeScript experience unless the candidate later confirms and documents it
+interpretation: use 2 years for general, professional, production, employment, or commercial TypeScript experience questions unless a later user correction changes the scope
 ```
 
 ```yaml

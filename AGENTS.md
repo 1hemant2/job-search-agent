@@ -311,6 +311,15 @@ and continue with other jobs.
 
 Never bypass CAPTCHA or security controls.
 
+CAPTCHA time-saving rule: treat invisible/background reCAPTCHA elements as
+normal page infrastructure when no visible challenge or challenge message is
+present. The executor may perform a short passive re-check, then fill and
+prepare ordinary fields in one batch. Only a genuine visible challenge queues
+human input; never install or use CAPTCHA-solving packages, solver services,
+stealth/fingerprint evasion, forged tokens, or token injection to bypass it.
+Preserve the non-secret checkpoint so the user only needs to complete the
+visible challenge once and the application can resume with `--resume-captcha`.
+
 Never complete candidate assessments or interviews on the candidate's behalf.
 
 Use the supported browser-control skill and current authenticated browser

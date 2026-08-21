@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createBrowserSession } from "./browser.js";
+import { createBrowserSession, type BrowserSession } from "./browser.js";
 import { readPayloadFile, validateApplicationPayload, findDuplicate } from "./application-payload.js";
 import { AshbyAdapter } from "./ats/ashby.js";
 import { GenericAdapter } from "./ats/generic.js";
@@ -9,16 +9,66 @@ import { LeverAdapter } from "./ats/lever.js";
 import { LinkedInAdapter } from "./ats/linkedin.js";
 import { WorkdayAdapter } from "./ats/workday.js";
 import { hasActiveCaptchaBlocker, recordCaptchaBlocker, resolveCaptchaBlocker } from "./captcha-state.js";
+import { DiscoveryLedger, normalizedJobId } from "./discovery-ledger.js";
 import { applicationBlocker, resultFor, withoutSecrets, blocker } from "./result.js";
-import type { ApplicationPayload, AtsAdapter, AtsName, ExecutionOptions, ExecutionResult } from "./types.js";
+import type { ApplicationPayload, AtsAdapter, AtsName, Blocker, ExecutionOptions, ExecutionResult, ExecutorTelemetry } from "./types.js";
 
 export async function executeApplication(input: unknown, options: ExecutionOptions = {}): Promise<ExecutionResult> {
   const startedAt = Date.now();
   const workspaceRoot = options.workspaceRoot ?? path.resolve(process.cwd(), "..");
   const validation = validateApplicationPayload(input, workspaceRoot, options.dryRun ?? false);
   const payload = validation.payload;
+  let browser: BrowserSession | undefined;
+  let currentPhase = "validation";
+  const startingUrl = payload.applicationUrl ?? payload.jobUrl;
+  const ledger = options.runId ? new DiscoveryLedger(workspaceRoot, options.runId) : undefined;
+  const finish = async (
+    status: ExecutionResult["status"],
+    lifecycle: ExecutionResult["lifecycle"],
+    extras: Partial<ExecutionResult> = {},
+  ): Promise<ExecutionResult> => {
+    const telemetry: ExecutorTelemetry = {
+      executor: "local-playwright",
+      atsAdapter: payload.ats,
+      startingUrl,
+      finalUrl: browser?.page.url(),
+      pageTitle: await browser?.page.title().catch(() => undefined),
+      currentPhase,
+      visibleEvidence: extras.submissionEvidence ?? extras.blocker?.message ?? extras.error,
+    };
+    const result = resultFor(payload, status, lifecycle, startedAt, { ...extras, executorTelemetry: telemetry });
+    if (ledger) {
+      const executorBlocker = result.blocker;
+      ledger.appendExecutor({
+        run_id: options.runId!,
+        timestamp: new Date().toISOString(),
+        company: payload.company,
+        role: payload.role,
+        job_url: payload.jobUrl,
+        normalized_job_id: normalizedJobId(payload.jobId, payload.jobUrl, payload.applicationUrl),
+        executor: "local-playwright",
+        ats_adapter: payload.ats,
+        starting_url: telemetry.startingUrl,
+        final_url: telemetry.finalUrl,
+        page_title: telemetry.pageTitle,
+        current_phase: currentPhase,
+        result_status: result.status,
+        lifecycle: result.lifecycle,
+        blocker_type: executorBlocker?.type,
+        visible_evidence: telemetry.visibleEvidence,
+        expected_company: executorBlocker?.expectedCompany,
+        expected_role: executorBlocker?.expectedRole,
+        expected_job_id: executorBlocker?.expectedJobId,
+        observed_company: executorBlocker?.observedCompany,
+        observed_role: executorBlocker?.observedRole,
+        observed_job_id: executorBlocker?.observedJobId,
+        raw_result: result,
+      });
+    }
+    return result;
+  };
   if (validation.errors.length) {
-    return resultFor(payload, "failed", "failed", startedAt, { error: validation.errors.join("; ") });
+    return finish("failed", "failed", { error: validation.errors.join("; ") });
   }
 
   const historyPath = options.historyPath ?? path.join(workspaceRoot, "application-history.md");
@@ -26,12 +76,12 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
   const duplicate = findDuplicate(payload, history);
   if (duplicate) {
     if (options.resumeCaptcha) resolveCaptchaBlocker(workspaceRoot, payload);
-    return resultFor(payload, "duplicate", "failed", startedAt, { blocker: applicationBlocker(payload, "duplicate", duplicate) });
+    return finish("duplicate", "failed", { blocker: applicationBlocker(payload, "duplicate", duplicate) });
   }
 
   const activeCaptchaQueued = hasActiveCaptchaBlocker(workspaceRoot, payload);
   if (!options.resumeCaptcha && activeCaptchaQueued) {
-    return resultFor(payload, "blocked", "blocked_captcha", startedAt, {
+    return finish("blocked", "blocked_captcha", {
       blocker: applicationBlocker(payload, "captcha", "CAPTCHA blocker already queued; resume only after human verification is completed", {
         url: payload.applicationUrl ?? payload.jobUrl,
       }),
@@ -41,8 +91,8 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
   // A caller must explicitly opt in twice before a final submit click can occur:
   // dryRun must be false and allowSubmit must be true.
   const dryRun = options.dryRun === true || options.allowSubmit !== true;
-  let browser;
   try {
+    currentPhase = "browser_launch";
     browser = await createBrowserSession({ ...options, workspaceRoot });
     const adapter = adapterFor(payload.ats, {
       page: browser.page,
@@ -53,17 +103,25 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
     });
     const targetUrl = payload.applicationUrl ?? payload.jobUrl;
     if (!adapter.matchesUrl(targetUrl) && payload.ats !== "generic") {
-      return resultFor(payload, "failed", "failed", startedAt, { error: `ATS ${payload.ats} does not match target URL ${targetUrl}` });
+      currentPhase = "routing";
+      return finish("failed", "failed", { error: `ATS ${payload.ats} does not match target URL ${targetUrl}` });
     }
+    currentPhase = "application_opening";
     const opened = await adapter.openApplication();
-    if (!opened.ok) return resultFor(payload, "blocked", "blocked", startedAt, { blocker: opened.blocker });
-    if (!(await adapter.detect())) return resultFor(payload, "failed", "failed", startedAt, { error: `ATS ${payload.ats} was not detected on ${browser.page.url()}` });
+    if (!opened.ok) return finish("blocked", "blocked", { blocker: opened.blocker });
+    currentPhase = "application_opened";
+    if (!(await adapter.detect())) return finish("failed", "failed", { error: `ATS ${payload.ats} was not detected on ${browser.page.url()}` });
 
+    currentPhase = "captcha_check";
     const captcha = await adapter.handleCaptcha();
-    if (!captcha.ok && captcha.blocker?.type === "captcha") return recordCaptchaResult(payload, workspaceRoot, startedAt, captcha.blocker, "application_opened");
+    if (!captcha.ok && captcha.blocker?.type === "captcha") {
+      const captchaBlocker = recordCaptchaResult(payload, workspaceRoot, captcha.blocker, "application_opened");
+      return finish("blocked", "blocked_captcha", { blocker: captchaBlocker });
+    }
     if (options.resumeCaptcha && activeCaptchaQueued && captcha.ok) resolveCaptchaBlocker(workspaceRoot, payload);
 
-    if (await adapter.detectAssessment()) return resultFor(payload, "assessment", "assessment", startedAt, { blocker: blocker("unsupported_form", "Candidate assessment detected; executor will not complete it", { url: browser.page.url() }) });
+    currentPhase = "assessment_check";
+    if (await adapter.detectAssessment()) return finish("assessment", "assessment", { blocker: blocker("unsupported_form", "Candidate assessment detected; executor will not complete it", { url: browser.page.url() }) });
 
     const phases: Array<[string, () => Promise<Awaited<ReturnType<AtsAdapter["fillKnownFields"]>> >]> = [
       ["profile_filled", () => adapter.fillKnownFields()],
@@ -72,22 +130,32 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
       ["review_ready", () => adapter.validate()],
     ];
     for (const [stepName, executePhase] of phases) {
+      currentPhase = stepName;
       const step = await executePhase();
-      if (!step.ok && step.blocker?.type === "captcha") return recordCaptchaResult(payload, workspaceRoot, startedAt, step.blocker, stepName);
-      if (!step.ok) return resultFor(payload, "blocked", "blocked", startedAt, { blocker: step.blocker });
+      if (!step.ok && step.blocker?.type === "captcha") {
+        const captchaBlocker = recordCaptchaResult(payload, workspaceRoot, step.blocker, stepName);
+        return finish("blocked", "blocked_captcha", { blocker: captchaBlocker });
+      }
+      if (!step.ok) return finish("blocked", "blocked", { blocker: step.blocker });
     }
 
+    currentPhase = "submit";
     const submit = await adapter.submit();
-    if (!submit.ok && submit.blocker?.type === "captcha") return recordCaptchaResult(payload, workspaceRoot, startedAt, submit.blocker, "review_ready");
-    if (!submit.ok) return resultFor(payload, "blocked", "blocked", startedAt, { blocker: submit.blocker });
-    if (dryRun) return resultFor(payload, "dry_run", "prepared", startedAt, { dryRun: true, submissionEvidence: submit.details });
+    if (!submit.ok && submit.blocker?.type === "captcha") {
+      const captchaBlocker = recordCaptchaResult(payload, workspaceRoot, submit.blocker, "review_ready");
+      return finish("blocked", "blocked_captcha", { blocker: captchaBlocker });
+    }
+    if (!submit.ok) return finish("blocked", "blocked", { blocker: submit.blocker });
+    if (dryRun) return finish("dry_run", "prepared", { dryRun: true, submissionEvidence: submit.details });
 
+    currentPhase = "verify_submission";
     const verified = await adapter.verifySubmission();
-    if (!verified.ok) return resultFor(payload, "failed", "failed", startedAt, { blocker: verified.blocker });
+    if (!verified.ok) return finish("failed", "failed", { blocker: verified.blocker });
     if (options.resumeCaptcha) resolveCaptchaBlocker(workspaceRoot, payload);
-    return resultFor(payload, "submitted", "submitted", startedAt, { submissionEvidence: verified.details });
+    return finish("submitted", "submitted", { submissionEvidence: verified.details });
   } catch (error) {
-    return resultFor(payload, "failed", "failed", startedAt, { error: withoutSecrets(error) });
+    currentPhase = "exception";
+    return finish("failed", "failed", { error: withoutSecrets(error) });
   } finally {
     await browser?.close().catch(() => undefined);
   }
@@ -96,10 +164,9 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
 function recordCaptchaResult(
   payload: ApplicationPayload,
   workspaceRoot: string,
-  startedAt: number,
   detected: NonNullable<Awaited<ReturnType<AtsAdapter["handleCaptcha"]>>["blocker"]>,
   workflowStep: string,
-): ExecutionResult {
+): Blocker {
   const checkpoint = {
     workflowStep,
     fieldsCompleted: fieldsCompletedThrough(workflowStep),
@@ -111,13 +178,11 @@ function recordCaptchaResult(
     // The application remains blocked even if local bookkeeping is unavailable.
     detected = { ...detected, message: `${detected.message}; local CAPTCHA state could not be persisted: ${withoutSecrets(error)}` };
   }
-  return resultFor(payload, "blocked", "blocked_captcha", startedAt, {
-    blocker: applicationBlocker(payload, "captcha", detected.message, {
-      url: detected.url ?? payload.applicationUrl ?? payload.jobUrl,
-      fieldKey: detected.fieldKey,
-      question: detected.question,
-      options: detected.options,
-    }),
+  return applicationBlocker(payload, "captcha", detected.message, {
+    url: detected.url ?? payload.applicationUrl ?? payload.jobUrl,
+    fieldKey: detected.fieldKey,
+    question: detected.question,
+    options: detected.options,
   });
 }
 
@@ -143,7 +208,7 @@ function adapterFor(ats: AtsName, context: ConstructorParameters<typeof LinkedIn
   }
 }
 
-function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; allowSubmit: boolean; headless: boolean; profileDir?: string; resumeCaptcha: boolean } {
+function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; allowSubmit: boolean; headless: boolean; profileDir?: string; resumeCaptcha: boolean; runId?: string } {
   const args = new Map<string, string | boolean>();
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -160,6 +225,7 @@ function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; all
     headless: args.get("--headless") !== false,
     profileDir: typeof args.get("--profile-dir") === "string" ? args.get("--profile-dir") as string : undefined,
     resumeCaptcha: args.get("--resume-captcha") === true,
+    runId: typeof args.get("--run-id") === "string" ? args.get("--run-id") as string : undefined,
   };
 }
 

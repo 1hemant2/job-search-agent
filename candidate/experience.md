@@ -26,4 +26,4 @@
 
 - AlertOps is evidence of substantial independent Java and Spring Boot work; Enterprise Bot employment is not evidence of professional Java employment.
 - `technology-experience.md` is the canonical source for general versus professional/production technology scope and numeric answers.
-- TypeScript is a target-role preference but is not listed as a confirmed resume skill. Do not claim TypeScript experience without additional confirmation.
+- TypeScript is confirmed as 2 years of professional experience based on the updated resume and user confirmation on 2026-08-21.

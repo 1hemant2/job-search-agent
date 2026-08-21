@@ -35,7 +35,7 @@ describe("deterministic form execution", () => {
     const browser = await chromium.launch({ headless: true, executablePath: localExecutablePath() });
     const page = await browser.newPage();
     await page.setContent(`
-      <h1>Example Company — Backend Engineer</h1>
+      <h1>Example Company - Backend Engineer</h1>
       <form>
         <label>First name <input id="first_name" required></label>
         <label>Last name <input id="last_name" required></label>
@@ -64,7 +64,7 @@ describe("deterministic form execution", () => {
   it("returns the exact unknown required question and options", async () => {
     const browser = await chromium.launch({ headless: true, executablePath: localExecutablePath() });
     const page = await browser.newPage();
-    await page.setContent(`<h1>Example Company — Backend Engineer</h1><label>Do you agree to a background check? <select name="background_check" required><option value="">Choose</option><option>Yes</option><option>No</option></select></label>`);
+    await page.setContent(`<h1>Example Company - Backend Engineer</h1><label>Do you agree to a background check? <select name="background_check" required><option value="">Choose</option><option>Yes</option><option>No</option></select></label>`);
     const adapter = new GreenhouseAdapter({ page, payload: basePayload, workspaceRoot, dryRun: true, timeoutMs: 1000, captchaSettleMs: 1 });
     const result = await adapter.answerQuestions();
     expect(result.ok).toBe(false);
@@ -77,10 +77,36 @@ describe("deterministic form execution", () => {
   it("returns a CAPTCHA blocker", async () => {
     const browser = await chromium.launch({ headless: true, executablePath: localExecutablePath() });
     const page = await browser.newPage();
-    await page.setContent(`<h1>Example Company — Backend Engineer</h1><div>Complete the CAPTCHA verification</div>`);
+    await page.setContent(`<h1>Example Company - Backend Engineer</h1><div>Complete the CAPTCHA verification</div>`);
     const adapter = new GreenhouseAdapter({ page, payload: basePayload, workspaceRoot, dryRun: true, timeoutMs: 1000, captchaSettleMs: 1 });
     const result = await adapter.validate();
     expect(result.blocker?.type).toBe("captcha");
+    await browser.close();
+  });
+
+  it("allows invisible reCAPTCHA background checks without a visible challenge", async () => {
+    const browser = await chromium.launch({ headless: true, executablePath: localExecutablePath() });
+    const page = await browser.newPage();
+    await page.setContent(`<h1>Example Company - Backend Engineer</h1><iframe title="reCAPTCHA" data-size="invisible"></iframe>`);
+    const adapter = new GreenhouseAdapter({ page, payload: basePayload, workspaceRoot, dryRun: true, timeoutMs: 1000, captchaSettleMs: 1 });
+    const result = await adapter.validate();
+    expect(result.ok).toBe(true);
+    await browser.close();
+  });
+
+  it("preserves expected and observed evidence for an identity mismatch", async () => {
+    const browser = await chromium.launch({ headless: true, executablePath: localExecutablePath() });
+    const page = await browser.newPage();
+    await page.setContent(`<title>Different Company</title><h1>Different Company - Platform Engineer</h1><p>Job 7654321</p>`);
+    const adapter = new GreenhouseAdapter({ page, payload: { ...basePayload, jobId: "123" }, workspaceRoot, dryRun: true, timeoutMs: 1000, captchaSettleMs: 1 });
+    const result = await adapter.validate();
+    expect(result.blocker?.type).toBe("identity_mismatch");
+    expect(result.blocker?.expectedCompany).toBe("Example Company");
+    expect(result.blocker?.expectedRole).toBe("Backend Engineer");
+    expect(result.blocker?.expectedJobId).toBe("123");
+    expect(result.blocker?.observedCompany).toBe("not detected");
+    expect(result.blocker?.observedJobId).toBe("7654321");
+    expect(result.blocker?.pageTextEvidence).toContain("Different Company");
     await browser.close();
   });
 });

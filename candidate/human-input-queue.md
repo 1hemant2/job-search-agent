@@ -1,5 +1,16 @@
 # Human Input Queue
 
+## GGS — Backend Developer (Node.js) - GGS - BLR
+
+- Company: GGS / Getinz People Freshteam
+- Role: Backend Developer (Node.js) - GGS - BLR
+- URL: https://getinz-people.freshteam.com/jobs/owvrsM53ohRL/backend-developer-node-js-ggs-blr#applicant-form
+- ATS: Freshteam (generic runner)
+- Blocker: CAPTCHA challenge on the application form
+- Reason: The local runner will not solve or bypass CAPTCHA.
+- State: Candidate fields and resume preparation completed; no submission made.
+- Resume: resumes/Hemant_Kumar_NodeJS_Resume.pdf
+
 ## Initial Setup
 
 - Status: Core setup complete
@@ -41,3 +52,21 @@ After the user completes the CAPTCHA in the existing browser session, reconstruc
 - Resolved: 2026-08-20
 - LinkedIn verified and made `meet.hemant.k@gmail.com` the primary email address.
 - The Crossing Hurdles application was submitted using the canonical professional email.
+
+## CAPTCHA — GGS — Backend Developer (Node.js) - GGS - BLR
+<!-- captcha-queue-key: ggs backend developer node js ggs blr generic https getinz people freshteam com jobs owvrsm53ohrl backend developer node js ggs blr applicant form -->
+
+- status: blocked_captcha
+- company: GGS
+- role: Backend Developer (Node.js) - GGS - BLR
+- ats: generic
+- url: https://getinz-people.freshteam.com/jobs/owvrsM53ohRL/backend-developer-node-js-ggs-blr#applicant-form
+- job_id: not provided
+- reason: Human CAPTCHA verification required
+- resume: Hemant_Kumar_NodeJS_Resume.pdf
+- resume_step: application_opened
+- application_state: application_opened
+- fields_completed: none recorded
+- unresolved_questions: none
+- queued_at: 2026-08-21T04:37:14.307Z
+- resume_action: After manual CAPTCHA completion, rerun the same payload with --resume-captcha.

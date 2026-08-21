@@ -153,14 +153,22 @@ export function resumeAbsolutePath(payload: ApplicationPayload, workspaceRoot: s
 }
 
 export function findDuplicate(payload: ApplicationPayload, historyText: string): string | undefined {
-  const normalizedHistory = historyText.toLowerCase();
+  const sections = historyText.split(/^##\s+/m).slice(1);
+  // Blocked, failed, skipped, and assessment-only attempts remain retryable;
+  // only completed applications participate in deduplication.
+  const completedSections = sections.length
+    ? sections.filter((section) => {
+        const status = /Application status:\s*(.+)/i.exec(section)?.[1] ?? "";
+        return !status || /^(?:Applied|Submitted|Successful)/i.test(status.trim());
+      })
+    : [historyText];
+  const normalizedHistory = completedSections.join("\n").toLowerCase();
   if (payload.jobUrl && normalizedHistory.includes(payload.jobUrl.toLowerCase())) return "matching jobUrl found in application history";
-  if (payload.jobId && new RegExp(`\\b${escapeRegExp(payload.jobId)}\\b`, "i").test(historyText)) return "matching jobId found in application history";
+  if (payload.jobId && new RegExp(`\\b${escapeRegExp(payload.jobId)}\\b`, "i").test(completedSections.join("\n"))) return "matching jobId found in application history";
 
   const company = normalizeText(payload.company);
   const role = normalizeText(payload.role);
-  const sections = historyText.split(/^##\s+/m).slice(1);
-  for (const section of sections) {
+  for (const section of completedSections) {
     const sectionTitle = normalizeText(section.split(/\r?\n/, 1)[0] ?? "");
     if (sectionTitle.includes(company) && sectionTitle.includes(role)) return "matching company and role found in application history";
   }
