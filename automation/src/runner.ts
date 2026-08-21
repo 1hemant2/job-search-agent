@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { createBrowserSession, type BrowserSession } from "./browser.js";
 import { readPayloadFile, validateApplicationPayload, findDuplicate } from "./application-payload.js";
 import { AshbyAdapter } from "./ats/ashby.js";
@@ -229,7 +230,8 @@ function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; all
   };
 }
 
-if (import.meta.url === `file://${process.argv[1]?.replace(/\\/g, "/")}`) {
+const invokedModuleUrl = process.argv[1] ? pathToFileURL(process.argv[1]).href : undefined;
+if (import.meta.url === invokedModuleUrl) {
   const args = parseArgs(process.argv.slice(2));
   if (!args.payloadPath) {
     console.error("Usage: npm run execute -- --payload path\\to\\payload.json [--dry-run|--allow-submit] [--resume-captcha] [--headful]");

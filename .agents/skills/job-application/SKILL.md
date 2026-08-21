@@ -314,13 +314,145 @@ otherwise require repetitive manual work.
 
 Search LinkedIn, Workday, Greenhouse, Lever, Ashby, Wellfound, YC jobs, reputable job boards, and company career pages. Do not restrict the run to Easy Apply; follow legitimate external ATS links.
 
-Build an explicit per-run discovery plan from the candidate preferences before
-searching. Use multiple compatible title/query variants (including Node.js
-backend, backend, backend-heavy software engineering, API/platform,
-distributed systems, realistic SDE I/II, TypeScript, and Java-backend variants)
-and multiple configured sources. Capture source, query variant, filters,
-location, page/cursor, visible results, new results, duplicates, evaluated
-count, and pagination completion in the run discovery telemetry.
+### Non-negotiable search controller
+
+#### Human-style job review gate
+
+Treat each results page as one atomic review queue. Fully load and scroll the
+page, capture every visible job card, and then process those cards one by one.
+Do not click Next, change the query, change the location, or begin another
+source while any visible card on the current page remains unevaluated.
+
+For every card:
+
+1. Open its job-detail panel or page.
+2. Wait for the complete description to load and expand `Show more` or an
+   equivalent control when present.
+3. Read the complete responsibilities, required and preferred skills,
+   seniority, location, work authorization, compensation, posting age, and
+   application route. A card title, preview, match badge, or promoted label is
+   insufficient.
+4. Compare the opening with the selected resume and normalized candidate
+   state.
+5. Deduplicate against application history and the current-run ledger.
+6. Record exactly one decision before opening the next card:
+   - `APPLY`: score 70 or higher, reliably posted fewer than 7 days ago, no
+     hard blocker, and a truthful skills/resume match.
+   - `REVIEW`: score 60–69 or a material non-fatal uncertainty.
+   - `SKIP`: unsuitable, stale, duplicate, seniority mismatch, authorization
+     conflict, or unsupported required skills. Description-loading failure is
+     never a `SKIP` decision.
+7. If the decision is `APPLY`, finish or route that application before
+   reviewing the next card: select the truthful resume, resolve known answers,
+   open the actual LinkedIn or external application route, execute through the
+   local runner when supported, verify the result, record it, and return to the
+   same results page at the next unevaluated card.
+
+When an application is blocked by a visible CAPTCHA, authentication, an
+unknown material question, an assessment, a broken form, or another required
+human action, record or update its entry in `candidate/human-input-queue.md`,
+keep and mark the exact browser tab as a handoff, preserve only non-secret
+resume metadata and progress, and continue with the next unevaluated card.
+Never close, reset, or overwrite a recoverable handoff tab. Resume it only
+after the user completes the human action. Never bypass CAPTCHA, MFA, browser
+security controls, or assessments.
+
+The mandatory sequence is:
+
+```text
+ONE SEARCH PAGE
+-> ALL VISIBLE CARDS OPENED
+-> FULL DESCRIPTIONS READ
+-> MATCH / DEDUPE / DECISIONS RECORDED
+-> QUALIFYING APPLICATIONS PROCESSED
+-> NEXT RESULTS PAGE
+```
+
+#### Description evidence gate
+
+A job must never be marked `SKIP`, assigned a match score, or counted as
+evaluated merely because its description is not immediately visible.
+
+Before declaring `BLOCKED_DESCRIPTION_UNAVAILABLE`, perform this bounded
+loading sequence:
+
+1. Click the job card and verify that the selected job ID, detail heading, or
+   canonical job URL changed to the intended opening.
+2. Wait for the detail panel to finish loading.
+3. Scroll the job-description panel itself from top to bottom; scrolling only
+   the search-results list does not count.
+4. Click `Show more`, `See more`, or an equivalent expansion control when
+   present.
+5. Re-read the expanded panel and verify that responsibilities and
+   qualifications are present.
+6. If the side panel remains incomplete, open the standalone job-detail page.
+7. If LinkedIn exposes an official employer or ATS listing, open that listing
+   and attempt to read the complete authoritative description there.
+8. Retry the loading sequence once after inspecting the visible page state.
+
+Only after all eight steps fail may the job be recorded as
+`BLOCKED_DESCRIPTION_UNAVAILABLE`. This is a blocked, unevaluated discovery
+item: it has no match score and does not increment the evaluated-job count.
+After the complete loading sequence is recorded, it counts as a terminally
+processed blocked card for page-completion purposes, so the agent may continue
+to the next card without falsely treating the job as evaluated. Record the
+exact loading evidence and preserve a recoverable tab when useful.
+
+A match score or `APPLY` / `REVIEW` / `SKIP` decision is valid only when its
+discovery record contains:
+
+```yaml
+complete_description_read: true
+description_scroll_completed: true
+expansion_control_handled: true_or_not_present
+required_skills: recorded
+preferred_skills: recorded
+experience_requirement: recorded
+seniority: recorded
+location: recorded
+posting_age: recorded
+application_route: recorded
+matched_candidate_evidence: recorded
+unsupported_requirements: recorded
+final_score: recorded
+decision_reason: recorded
+```
+
+Do not open the next card until either this evidence is recorded or the
+current card has been explicitly recorded as
+`BLOCKED_DESCRIPTION_UNAVAILABLE` after the complete bounded sequence.
+
+Build an explicit per-run search plan before searching. The plan must contain
+multiple compatible role/query variants, locations, and sources. For every
+source/query combination:
+
+1. Open the first results page.
+2. Scroll through the entire visible results list before changing pages.
+3. Capture every visible job card: company, role, source URL, job ID,
+   location, posting age, and application route.
+4. Deduplicate against both `application-history.md` and the current-run
+   discovery ledger.
+5. Read the complete description of every new potentially suitable job.
+6. Record every evaluated job, including skipped, duplicate, stale,
+   unsuitable, blocked, and qualified decisions.
+7. Only after the complete page is processed, use the visible Next control or
+   a verified cursor.
+8. Verify that the page number, URL cursor, or first/last job IDs changed. If
+   unchanged, retry once; then mark the page stalled and move to the next
+   query or source.
+9. Preserve the active query, source, location, page/cursor, and evaluated
+   IDs. Never return to page 1 after processing a job.
+10. Do not repeatedly evaluate promoted or recommended listings already seen
+    in the current run.
+
+Before starting another page, verify that the previous page was fully
+scrolled and every visible card was recorded. A single page, 20 evaluated
+jobs, one blocked application, one empty qualifying page, or one exhausted
+query is never search exhaustion.
+
+Capture source, query variant, filters, location, page/cursor, scroll status,
+visible job IDs, new job IDs, duplicate job IDs, evaluated job IDs, next-page
+status, and source/query exhaustion status in the run discovery telemetry.
 
 Treat `SEARCH_SAMPLE_EXHAUSTED`, `QUERY_EXHAUSTED`, and `SOURCE_EXHAUSTED` as
 continuation states. Only `SEARCH_SPACE_REASONABLY_EXHAUSTED` may trigger the

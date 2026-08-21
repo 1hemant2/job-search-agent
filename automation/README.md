@@ -10,8 +10,8 @@ This subsystem is a deterministic browser executor for the existing job-agent wo
 - `src/ats/` — LinkedIn, Workday, Greenhouse, Lever, Ashby, and conservative generic adapters.
 - `src/captcha-state.ts` — idempotent non-secret CAPTCHA queue/checkpoint persistence and resolution.
 - `src/discovery-ledger.ts` — append-safe JSONL discovery, search, and executor telemetry records.
-- `src/discovery.ts` — planned query/source coordination and explicit exhaustion state machine.
-- `src/run-state.ts` — compact discovery pointers and counters in `state/run-state.md`.
+- `src/discovery.ts` — planned query/source coordination, page-processing checks, and explicit exhaustion state machine.
+- `src/run-state.ts` — discovery pointers, page-processing status, job-ID sets, and counters in `state/run-state.md`.
 - `src/runner.ts` — state-machine execution and structured JSON output.
 - `test/` — payload, detection, form-filling, unknown-question, CAPTCHA, deduplication, and dry-run integration tests.
 
@@ -151,7 +151,15 @@ state/runs/<RUN_ID>/search-telemetry.jsonl
 state/runs/<RUN_ID>/executor-telemetry.jsonl
 ```
 
-Job records contain the run identity, source, query variant, location, page/cursor, result position, posting-age confidence, recency class, score, resume, decision, standardized reason codes, and executor outcome. Search records contain visible/new/duplicate/evaluated counts, pagination state, and query-level stop reason. Executor records contain the adapter, starting/final URL, page title, phase, status, blocker, visible classification evidence, and the raw structured executor result.
+Job records contain the run identity, source, query variant, company, role,
+source/application URLs, job ID, card location and location filter,
+application route, description-read status, page/cursor, result position, posting-age confidence, recency class,
+score, resume, decision, standardized reason codes, and executor outcome.
+Search records contain every visible job ID, scroll completion, new/duplicate/
+evaluated IDs, pagination state, page-transition evidence, and query-level stop
+reason. Executor records contain the adapter, starting/final URL, page title,
+phase, status, blocker, visible classification evidence, and the raw
+structured executor result.
 
 The discovery state machine is:
 

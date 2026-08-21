@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { DiscoveryState } from "./discovery-ledger.js";
+import type { DiscoveryState, PageTransitionStatus } from "./discovery-ledger.js";
 
 export interface DiscoveryRunStateSummary {
   runId: string;
@@ -12,6 +12,15 @@ export interface DiscoveryRunStateSummary {
   jobsDiscovered: number;
   uniqueJobsEvaluated: number;
   activeQuery?: string;
+  activeSource?: string;
+  activeLocation?: string;
+  pageNumberOrCursor?: string;
+  scrollCompleted: boolean;
+  visibleJobIds: string[];
+  evaluatedJobIds: string[];
+  newJobIds: string[];
+  duplicateJobIds: string[];
+  nextPageStatus: PageTransitionStatus;
   nextCursorOrPage?: string;
   discoveryLedger: string;
   searchTelemetry: string;
@@ -40,6 +49,16 @@ export function updateDiscoveryRunState(workspaceRoot: string, summary: Discover
     ["Jobs discovered", String(summary.jobsDiscovered)],
     ["Unique jobs evaluated", String(summary.uniqueJobsEvaluated)],
     ["Active query", summary.activeQuery ?? "none"],
+    ["Source", summary.activeSource ?? "none"],
+    ["Location", summary.activeLocation ?? "none"],
+    ["Page number or cursor", summary.pageNumberOrCursor ?? "none"],
+    ["Scroll-completed status", summary.scrollCompleted ? "complete" : "not-complete"],
+    ["Visible job IDs", summary.visibleJobIds.length ? summary.visibleJobIds.join(", ") : "none"],
+    ["Evaluated job IDs", summary.evaluatedJobIds.length ? summary.evaluatedJobIds.join(", ") : "none"],
+    ["New job IDs", summary.newJobIds.length ? summary.newJobIds.join(", ") : "none"],
+    ["Duplicate job IDs", summary.duplicateJobIds.length ? summary.duplicateJobIds.join(", ") : "none"],
+    ["Next-page status", summary.nextPageStatus],
+    ["Source/query exhaustion status", summary.discoveryState],
     ["Next cursor/page", summary.nextCursorOrPage ?? "none"],
     ["Discovery ledger", summary.discoveryLedger],
     ["Search telemetry", summary.searchTelemetry],

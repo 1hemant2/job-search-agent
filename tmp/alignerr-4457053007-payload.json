@@ -1,0 +1,26 @@
+{
+  "company": "Alignerr",
+  "role": "Back End Developer (AI Infrastructure)",
+  "jobId": "4457053007",
+  "jobUrl": "https://www.linkedin.com/jobs/view/4457053007/",
+  "applicationUrl": "https://www.alignerr.com/jobs/d1805065-3991-404b-bc83-f3d3baca378b",
+  "ats": "generic",
+  "allowedApplicationDomains": ["www.alignerr.com", "app.alignerr.com"],
+  "resume": "resumes/Hemant_Kumar_NodeJS_Resume.pdf",
+  "candidate": {
+    "name": "Hemant Kumar",
+    "email": "meet.hemant.k@gmail.com",
+    "phone": "+91 9534909390",
+    "location": "Bengaluru, Karnataka, India",
+    "linkedin": "https://linkedin.com/in/hemant-kumar-66ba31208"
+  },
+  "answers": {
+    "work_authorized": "Yes",
+    "requires_sponsorship": "No",
+    "notice_period": "60 days",
+    "total_experience_years": "2",
+    "nodejs_experience_years": "2",
+    "remote_available": "Yes",
+    "willing_to_relocate": "Yes"
+  }
+}

@@ -19,7 +19,24 @@ Every run must use a planned set of query variants and sources rather than a
 single result-page sample. At minimum, vary the configured role family across
 Node.js/backend, backend, backend-heavy software engineering, API/platform,
 distributed systems, realistic SDE I/II, TypeScript, and Java-backend queries;
-the exact variants must remain compatible with `candidate/preferences.md`.
+the exact variants and locations must remain compatible with
+`candidate/preferences.md`.
+
+For every source/query, process the first page and fully scroll the visible
+results before changing pages. Record every visible card with company, role,
+URL, job ID, location, posting age, and application route. Deduplicate against
+both `application-history.md` and the current-run discovery ledger, read the
+complete description for each new potentially suitable job, and record every
+decision including skipped, duplicate, stale, unsuitable, blocked, and
+qualified jobs.
+
+Only after the page is complete may the coordinator use Next or a verified
+cursor. Confirm that the page number, URL cursor, or first/last job IDs
+changed. Retry an unchanged page once, then mark it stalled and continue with
+the next query or source. Preserve the active query, source, location,
+page/cursor, and evaluated IDs; never return to page 1 or repeatedly process a
+promoted/recommended listing already seen in the run.
+
 Paginate every query while a next page or cursor is present, then continue to
 the next query and source. A zero-qualifying page, a 20-job evaluation count,
 one blocked application, or one exhausted query is never run-level exhaustion.
@@ -30,7 +47,13 @@ The coordinator writes append-only JSONL under
 `executor-telemetry.jsonl` for every local Playwright result. Each job record
 uses standardized reason codes and records recency as within-window, too-old,
 or unknown so the impact of the seven-day rule can be measured without
-loosening it.
+loosening it. Search records also preserve scroll completion, visible job IDs,
+new/duplicate/evaluated IDs, next-page status, and page-transition evidence.
+
+The active section of `state/run-state.md` must preserve: active query, source,
+location, page number or cursor, scroll-completed status, visible job IDs,
+evaluated job IDs, new job IDs, duplicate job IDs, next-page status, and
+source/query exhaustion status.
 
 The only run-level search stop state is
 `SEARCH_SPACE_REASONABLY_EXHAUSTED`, reached after all planned query

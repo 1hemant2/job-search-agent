@@ -2,14 +2,14 @@
 
 ## Active Run
 
-- Status: blocked
-- Run ID: RUN-20260821-START20
-- Requested target: 20
+- Status: searching
+- Run ID: RUN-20260821-START2-RUN2
+- Requested target: 2
 - Successful submissions this run: 0
-- Evaluated jobs this run: 13
-- Skipped or ineligible: 0
-- Blocked before submission: 12
-- Failed: 1
+- Evaluated jobs this run: 18
+- Skipped or ineligible: 11
+- Blocked before submission: 2
+- Failed: 0
 - Fill-only dry runs: 0
 - Assessments reached: 0
 - Retry attempts: 0
@@ -19,8 +19,19 @@
 - Current application URL: none
 - Current job ID: none
 - Current ATS: none
-- Last checkpoint: 13 suitable listings evaluated with no verified submission; execution paths are blocked or failed, and the preserved Octillion CAPTCHA tab remains open for human completion
-- Lifecycle state: blocked
+- Active query: Node.js Backend Engineer
+- Source: LinkedIn
+- Location: India
+- Page number or cursor: 2
+- Scroll-completed status: completed
+- Visible job IDs: 4454154464,4457059483,4455304907,4456222404,4457058471,4457053007,4455599485,4455442530,4454184367,4452840047,4455411604
+- Evaluated job IDs: 4457068318,4453489815,4456208640,4456236144,4457069299,4457062483,4456083923,4457301552,4456218695,4454613064,4454154464,4457059483,4455304907,4456222404,4457058471,4457053007,4455599485,4455442530,4454184367
+- New job IDs: 4453489815,4456208640,4456236144,4457069299,4457062483
+- Duplicate job IDs: 4457068318,4456083923,4455442530
+- Next-page status: pending
+- Source/query exhaustion status: sample_exhausted; continue pagination
+- Last checkpoint: LinkedIn page 2 continues to reveal cards while scrolling. Axestrack Software Engineer (4454184367) was fully evaluated and skipped with complete-description evidence. Continue with Software Engineer II (4452840047), then Software Engineer | Remote (4455411604), and continue the visible-card queue before changing pages.
+- Lifecycle state: searching
 
 ## Last Completed Run
 
@@ -45,6 +56,9 @@ This file is operational state, not candidate knowledge. It may contain only:
 - lifecycle state and last completed checkpoint
 - selected resume filename
 - pending non-sensitive field keys or blocker references
+- active query, source, location, page number/cursor, and page-transition state
+- scroll-completed status and visible/new/duplicate/evaluated job IDs
+- next-page status and source/query exhaustion status
 - retry count and next action
 
 CAPTCHA checkpoints use lifecycle `blocked_captcha`, preserve only non-secret job identity, ATS, application URL, selected resume filename, workflow step, and blocker reference, and leave the successful-submission counter unchanged. A later `--resume-captcha` execution reconciles the same application after human verification; it must not create a duplicate submission.

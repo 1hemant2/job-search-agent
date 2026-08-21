@@ -1,4 +1,4 @@
-import { DiscoveryLedger, normalizedJobId, type DiscoveryJobRecord, type DiscoveryReasonCode, type DiscoveryState, type PostingAgeConfidence, type SearchTelemetryRecord } from "./discovery-ledger.js";
+import { DiscoveryLedger, normalizedJobId, type DiscoveryJobRecord, type DiscoveryReasonCode, type DiscoveryState, type PageTransitionStatus, type PostingAgeConfidence, type SearchTelemetryRecord } from "./discovery-ledger.js";
 import { updateDiscoveryRunState } from "./run-state.js";
 
 export interface DiscoveryQueryPlan {
@@ -21,6 +21,7 @@ export interface DiscoveryPlan {
 export interface DefaultDiscoveryPlanOptions {
   sources?: string[];
   location?: string;
+  locations?: string[];
   recencyDays?: number;
 }
 
@@ -43,16 +44,17 @@ const DEFAULT_QUERY_VARIANTS: Array<[string, string]> = [
 export function buildDefaultDiscoveryPlan(runId: string, options: DefaultDiscoveryPlanOptions = {}): DiscoveryPlan {
   const sources = options.sources?.length ? options.sources : ["linkedin", "company-careers", "greenhouse", "lever", "ashby", "workday", "wellfound", "yc-jobs"];
   const recencyDays = options.recencyDays ?? 7;
+  const locations = options.locations?.length ? options.locations : [options.location];
   return {
     runId,
     sources: sources.map((source) => ({
       source,
-      queries: DEFAULT_QUERY_VARIANTS.map(([query, queryVariant]) => ({
+      queries: DEFAULT_QUERY_VARIANTS.flatMap(([query, queryVariant]) => locations.map((location) => ({
         query,
-        queryVariant,
-        location: options.location,
+        queryVariant: location ? `${queryVariant}-${location.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` : queryVariant,
+        location,
         filters: { posted_within_days: recencyDays },
-      })),
+      }))),
     })),
   };
 }
@@ -71,6 +73,12 @@ export interface SearchPageInput {
   evaluated: number;
   hasNextPage: boolean;
   paginationCompleted?: boolean;
+  scrollCompleted: boolean;
+  visibleJobIds: string[];
+  newJobIds?: string[];
+  duplicateJobIds?: string[];
+  evaluatedJobIds?: string[];
+  nextPageStatus?: PageTransitionStatus;
 }
 
 export interface JobDiscoveryInput {
@@ -82,11 +90,15 @@ export interface JobDiscoveryInput {
   query: string;
   queryVariant: string;
   locationFilter?: string;
+  jobLocation?: string;
   pageNumber?: number;
   cursor?: string;
+  applicationUrl?: string;
+  applicationRoute?: string;
   resultPosition?: number;
   postingAge?: string | number;
   postingAgeConfidence?: PostingAgeConfidence;
+  descriptionReadComplete?: boolean;
   recencyClass?: "within_window" | "too_old" | "unknown";
   matchScore?: number;
   selectedResume?: string;
@@ -103,6 +115,13 @@ interface QueryProgress {
   paginationCompleted: boolean;
   hasOpenCursor: boolean;
   pages: number;
+  lastPageNumber?: number;
+  lastCursor?: string;
+  lastFirstJobId?: string;
+  lastLastJobId?: string;
+  unchangedRetries: number;
+  nextPageStatus: PageTransitionStatus;
+  stalled: boolean;
 }
 
 export interface DiscoverySnapshot {
@@ -115,6 +134,15 @@ export interface DiscoverySnapshot {
   jobsDiscovered: number;
   uniqueJobsEvaluated: number;
   activeQuery?: string;
+  activeSource?: string;
+  activeLocation?: string;
+  pageNumberOrCursor?: string;
+  scrollCompleted: boolean;
+  visibleJobIds: string[];
+  evaluatedJobIds: string[];
+  newJobIds: string[];
+  duplicateJobIds: string[];
+  nextPageStatus: PageTransitionStatus;
   nextCursorOrPage?: string;
 }
 
@@ -130,6 +158,15 @@ export class DiscoveryCoordinator {
   private jobsDiscovered = 0;
   private uniqueJobsEvaluated = 0;
   private activeQuery?: string;
+  private activeSource?: string;
+  private activeLocation?: string;
+  private pageNumberOrCursor?: string;
+  private scrollCompleted = false;
+  private visibleJobIds: string[] = [];
+  private readonly evaluatedJobIds = new Set<string>();
+  private readonly newJobIds = new Set<string>();
+  private readonly duplicateJobIds = new Set<string>();
+  private nextPageStatus: PageTransitionStatus = "not_attempted";
   private nextCursorOrPage?: string;
 
   constructor(private readonly workspaceRoot: string, plan: DiscoveryPlan) {
@@ -144,6 +181,9 @@ export class DiscoveryCoordinator {
           paginationCompleted: false,
           hasOpenCursor: false,
           pages: 0,
+          unchangedRetries: 0,
+          nextPageStatus: "not_attempted",
+          stalled: false,
         });
       }
     }
@@ -151,14 +191,64 @@ export class DiscoveryCoordinator {
 
   recordSearchPage(input: SearchPageInput): DiscoveryState {
     const progress = this.requireQuery(input.source, input.queryVariant);
+    if (!input.scrollCompleted) {
+      throw new Error("Cannot advance discovery: the current results page was not fully scrolled");
+    }
+
+    const visibleJobIds = input.visibleJobIds.map((jobId) => jobId.trim()).filter(Boolean);
+    if (visibleJobIds.length !== input.resultsVisible) {
+      throw new Error("Every visible job card must have a recorded job ID before pagination continues");
+    }
+    const scrollCompleted = input.scrollCompleted;
+    const firstJobId = visibleJobIds[0];
+    const lastJobId = visibleJobIds[visibleJobIds.length - 1];
+    const hasPreviousPage = progress.pages > 0;
+    const pageIdentityChanged = !hasPreviousPage
+      || progress.lastPageNumber !== input.pageNumber
+      || progress.lastCursor !== input.cursor
+      || progress.lastFirstJobId !== firstJobId
+      || progress.lastLastJobId !== lastJobId;
+
+    let nextPageStatus: PageTransitionStatus = input.nextPageStatus
+      ?? (hasPreviousPage && !pageIdentityChanged ? "unchanged_retry" : hasPreviousPage ? "changed" : "not_attempted");
+    if (hasPreviousPage && pageIdentityChanged && nextPageStatus === "stalled") {
+      throw new Error("A page marked stalled must have the same page identity as the prior page");
+    }
+    if (hasPreviousPage && !pageIdentityChanged) {
+      if (nextPageStatus !== "unchanged_retry" && nextPageStatus !== "stalled") {
+        throw new Error("Page transition was not verified; retry the unchanged page once before marking it stalled");
+      }
+      if (nextPageStatus === "unchanged_retry") {
+        if (progress.unchangedRetries >= 1) {
+          throw new Error("The unchanged page has already been retried; mark it stalled and continue elsewhere");
+        }
+        progress.unchangedRetries += 1;
+      }
+    } else if (pageIdentityChanged) {
+      progress.unchangedRetries = 0;
+    }
+
+    const stalled = nextPageStatus === "stalled";
     progress.attempted = true;
     progress.pages += 1;
-    progress.hasOpenCursor = input.hasNextPage;
-    progress.paginationCompleted = Boolean(input.paginationCompleted) && !input.hasNextPage;
+    progress.hasOpenCursor = input.hasNextPage && !stalled;
+    progress.paginationCompleted = stalled || (Boolean(input.paginationCompleted) && !input.hasNextPage);
+    progress.lastPageNumber = input.pageNumber;
+    progress.lastCursor = input.cursor;
+    progress.lastFirstJobId = firstJobId;
+    progress.lastLastJobId = lastJobId;
+    progress.nextPageStatus = nextPageStatus;
+    progress.stalled = stalled;
     this.activeQuery = `${input.source}:${input.queryVariant}`;
-    this.nextCursorOrPage = input.hasNextPage ? (input.cursor ?? `page ${Number(input.pageNumber ?? progress.pages) + 1}`) : undefined;
+    this.activeSource = input.source;
+    this.activeLocation = input.location;
+    this.pageNumberOrCursor = input.cursor ?? (input.pageNumber === undefined ? undefined : String(input.pageNumber));
+    this.scrollCompleted = scrollCompleted;
+    this.visibleJobIds = visibleJobIds;
+    this.nextPageStatus = nextPageStatus;
+    this.nextCursorOrPage = input.hasNextPage && !stalled ? (input.cursor ?? `page ${Number(input.pageNumber ?? progress.pages) + 1}`) : undefined;
 
-    const stopReason = input.hasNextPage || !progress.paginationCompleted
+    const stopReason = input.hasNextPage && !stalled || !progress.paginationCompleted
       ? "SEARCH_SAMPLE_EXHAUSTED"
       : this.stateAfterCompletedQuery(progress);
 
@@ -173,11 +263,18 @@ export class DiscoveryCoordinator {
       page_number: input.pageNumber,
       cursor: input.cursor,
       results_visible: input.resultsVisible,
+      visible_job_ids: visibleJobIds,
+      scroll_completed: scrollCompleted,
       newly_discovered: input.newlyDiscovered,
+      new_job_ids: input.newJobIds ?? [...this.newJobIds],
       duplicates: input.duplicates,
+      duplicate_job_ids: input.duplicateJobIds ?? [...this.duplicateJobIds],
       evaluated: input.evaluated,
+      evaluated_job_ids: input.evaluatedJobIds ?? [...this.evaluatedJobIds],
       has_next_page: input.hasNextPage,
       pagination_completed: progress.paginationCompleted,
+      next_page_status: nextPageStatus,
+      page_transition_verified: !hasPreviousPage || pageIdentityChanged,
       stop_reason: stopReason,
     };
     this.ledger.appendSearch(record);
@@ -189,6 +286,13 @@ export class DiscoveryCoordinator {
   recordJob(input: JobDiscoveryInput): void {
     this.jobsDiscovered += 1;
     if (input.decision) this.uniqueJobsEvaluated += 1;
+    const normalizedId = normalizedJobId(input.jobId, input.jobUrl);
+    this.evaluatedJobIds.add(normalizedId);
+    if (input.decision === "duplicate" || input.reasonCodes?.includes("DUPLICATE") || input.reasonCodes?.includes("ALREADY_APPLIED")) {
+      this.duplicateJobIds.add(normalizedId);
+    } else {
+      this.newJobIds.add(normalizedId);
+    }
     const record: Omit<DiscoveryJobRecord, "record_type" | "schema_version"> = {
       run_id: this.plan.runId,
       timestamp: new Date().toISOString(),
@@ -196,15 +300,19 @@ export class DiscoveryCoordinator {
       company: input.company,
       role: input.role,
       job_url: input.jobUrl,
-      normalized_job_id: normalizedJobId(input.jobId, input.jobUrl),
+      application_url: input.applicationUrl,
+      application_route: input.applicationRoute,
+      normalized_job_id: normalizedId,
       query: input.query,
       query_variant: input.queryVariant,
       location_filter: input.locationFilter,
+      job_location: input.jobLocation,
       page_number: input.pageNumber,
       cursor: input.cursor,
       result_position: input.resultPosition,
       posting_age: input.postingAge,
       posting_age_confidence: input.postingAgeConfidence ?? "unknown",
+      description_read_complete: input.descriptionReadComplete,
       recency_class: input.recencyClass,
       match_score: input.matchScore,
       selected_resume: input.selectedResume,
@@ -238,6 +346,15 @@ export class DiscoveryCoordinator {
       jobsDiscovered: this.jobsDiscovered,
       uniqueJobsEvaluated: this.uniqueJobsEvaluated,
       activeQuery: this.activeQuery,
+      activeSource: this.activeSource,
+      activeLocation: this.activeLocation,
+      pageNumberOrCursor: this.pageNumberOrCursor,
+      scrollCompleted: this.scrollCompleted,
+      visibleJobIds: this.visibleJobIds,
+      evaluatedJobIds: [...this.evaluatedJobIds],
+      newJobIds: [...this.newJobIds],
+      duplicateJobIds: [...this.duplicateJobIds],
+      nextPageStatus: this.nextPageStatus,
       nextCursorOrPage: this.nextCursorOrPage,
     };
   }

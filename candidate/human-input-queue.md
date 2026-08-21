@@ -1,5 +1,38 @@
 # Human Input Queue
 
+## Chrome Application Handoff — Genesys Workday
+
+- Status: blocked_authentication
+- Platform: LinkedIn → Genesys Workday
+- Role: Software Engineer
+- Job ID: JR112053-1
+- URL: https://genesys.wd1.myworkdayjobs.com/en-US/Genesys/job/Virtual-Office-(Tamil-Nadu)/Software-Engineer_JR112053-1/apply/autofillWithResume?source=Linkedin1
+- Reason: Workday requires a Genesys external account before the resume-upload step. The visible form asks for email address, password, and password confirmation.
+- State: The user-visible Chrome tab is on step 1 of 7 (Create Account/Sign In); no resume has been uploaded and no application submitted.
+- Resume: resumes/Hemant_Kumar_NodeJS_Resume.pdf
+
+## Chrome Application Handoff — Hire Feed
+
+- Status: blocked_unsupported_form
+- Platform: LinkedIn → Micro1
+- Role: Node.js Developer (Remote)
+- Job ID: 4457059483
+- URL: https://jobs.micro1.ai/post/bd545591-e88e-48f9-b3a9-cd3716144c8f
+- Reason: The local runner prepared the application but stopped before submission because Micro1 uses a multi-step “Next” flow and exposes no adapter-owned final submit control.
+- State: Official application tab remains open in Chrome; no final submission was made or verified.
+- Resume: resumes/Hemant_Kumar_NodeJS_Resume.pdf
+
+## Chrome Application Handoff — Alignerr
+
+- Status: blocked_unsupported_form
+- Platform: LinkedIn → Alignerr
+- Role: Back End Developer (AI Infrastructure)
+- Job ID: 4457053007
+- URL: https://www.alignerr.com/jobs/d1805065-3991-404b-bc83-f3d3baca378b
+- Reason: The local runner completed deterministic preparation but stopped before submission because no adapter-owned final submit control was available.
+- State: Official application tab remains open in Chrome; no final submission was made or verified.
+- Resume: resumes/Hemant_Kumar_NodeJS_Resume.pdf
+
 ## Chrome Application Follow-up — Baazi Games
 
 - Status: awaiting_user_confirmation

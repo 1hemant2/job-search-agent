@@ -233,10 +233,10 @@
 - Location: Tamil Nadu, India; remote
 - Remote: Remote
 - Salary: Not listed
-- Experience requirement: Software engineering role; full requirements were not available in the LinkedIn-rendered description
-- Match score: 78
-- Decision: Selected for application
-- Application status: Blocked — Workday identity not detected by local runner
+- Experience requirement: 3+ years with Node.js, TypeScript, and Java; distributed microservices, high availability, REST APIs, automated testing, AWS, networking
+- Match score: 56
+- Decision: Skip after full Workday review
+- Application status: Not submitted
 - Date applied: Not applied
 - Resume used: Hemant_Kumar_NodeJS_Resume.pdf
 - Recruiter: Not identified
@@ -244,7 +244,7 @@
 - Connection request: Not sent
 - Message sent: Not sent
 - Follow-up date: Not scheduled
-- Notes: Fresh listing posted 19 hours ago. The official Workday URL did not render a detectable company or role identity in the local runner, so submission was not attempted. No submission was made; the role was recorded and the run continued.
+- Notes: Fresh listing posted 19 hours ago. The full official Workday description was re-read on 2026-08-21 after the candidate created a Genesys account: complete_description_read=true; description_scroll_completed=true; expansion_control_handled=not_present; required_skills=3+ years Node.js, TypeScript, and Java, distributed systems/microservices, fault tolerance/high availability, REST APIs, automated testing, AWS, Git, networking; preferred_skills=messaging/social integrations, DynamoDB/S3/SQS/SNS/Lambda, async/serverless systems, observability; seniority=Software Engineer; location=Virtual Office Tamil Nadu; posting_age=Yesterday; application_route=Genesys Workday. Matched evidence=2 years professional Node.js/TypeScript, REST APIs, distributed backend services, Docker/Kubernetes, CI/CD; unsupported requirements=3+ years and professional Java (candidate has 0 professional Java). Final score=56; decision_reason=material Java and experience-duration mismatch. A user-authorized Playwright retry after an isolated Genesys sign-in still rendered no detectable page identity or form in the runner, so it stopped safely. No resume was uploaded or application submitted.
 
 ## Alignerr — Back End Developer (AI Infrastructure)
 
@@ -542,7 +542,7 @@
 - Connection request: Not sent
 - Message sent: Not sent
 - Follow-up date: Not scheduled
-- Notes: Submitted successfully. General Java work-experience answer set to 2 years per updated candidate instruction; REST API and REST answers set to 2 years. LinkedIn confirmation: "Your application was sent to ShrinQ Consulting Group Inc!"
+- Notes: Submitted successfully. General Java work-experience answer set to 2 years per updated candidate instruction; REST API and REST answers set to 2 years. LinkedIn confirmation: "Your application was sent to ShrinQ Consulting Group Inc!" Re-reviewed from LinkedIn search on 2026-08-21: complete_description_read=true; description_scroll_completed=true; expansion_control_handled=not_present (only unrelated company information control existed outside the description); required_skills=general programming, scalable/testable code, SQL/relational database skills; preferred_skills=not stated; experience_requirement=not stated; seniority=not stated; location=India remote; posting_age=1 day; application_route=already submitted through LinkedIn Easy Apply; matched_candidate_evidence=degree, backend experience, PostgreSQL/SQL, scalable/testable service work; unsupported_requirements=none material; final_score=75; decision_reason=duplicate—LinkedIn confirms this same job ID was successfully applied to on 2026-08-20.
 
 ## Spinta Digital — Software Engineer
 
@@ -1183,3 +1183,347 @@
 - Message sent: Not sent
 - Follow-up date: Not scheduled
 - Notes: Complete employer description read. The advertised apply link resolves to a 404 page; the page also lists an email application route, but no connected mail sender is available in this run. No submission is claimed.
+
+## RytHirings - Back End Developer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4456208640/
+- Job ID: 4456208640
+- Location: India; remote
+- Remote: Remote
+- Salary: Not listed
+- Experience requirement: Internship
+- Match score: 35
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Deepu Sunaria
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Full visible listing read; the role is explicitly an internship and materially below the candidate's current professional backend level.
+
+## Uni.AiHUb - Back End Developer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4456236144/
+- Job ID: 4456236144
+- Location: India; remote
+- Remote: Remote
+- Salary: Not listed
+- Experience requirement: Internship
+- Match score: 35
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Full visible listing read; the role is explicitly an internship and materially below the candidate's current professional backend level.
+
+## Hire Feed - Software Engineer - E-Commerce (Remote)
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4457069299/
+- Job ID: 4457069299
+- Location: India; remote
+- Remote: Remote
+- Salary: USD 180K-250K listed
+- Experience requirement: Not reliably exposed in the complete accessible listing
+- Match score: 55
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: The fresh promoted listing exposed title, location, compensation, and apply route but no complete job description or reliable requirements, so it is not eligible for automatic submission.
+
+## Jobs Ai - Software Engineer - Backend (Remote)
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4457062483/
+- Job ID: 4457062483
+- Location: India; remote
+- Remote: Remote
+- Salary: USD 50-100/hour listed
+- Experience requirement: Not reliably exposed in the complete accessible listing
+- Match score: 55
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: The fresh promoted listing exposed title, location, compensation, and apply route but no complete job description or reliable requirements, so it is not eligible for automatic submission.
+
+## Hirely - Software Engineer | Remote Contract
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4453489815/
+- Job ID: 4453489815
+- Location: India; remote
+- Remote: Remote
+- Salary: Not listed
+- Experience requirement: Not reliably exposed in the complete accessible listing
+- Match score: 55
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: The visible listing was one day old but did not expose a complete job description or reliable requirements, so it is not eligible for automatic submission.
+
+## Itron, Inc. — Apprentice
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4457301552/
+- Job ID: 4457301552
+- Location: Bengaluru, Karnataka, India; onsite
+- Remote: No
+- Salary: Not listed
+- Experience requirement: Recent graduate (2025 or recent) with no prior full-time work or apprenticeship experience; C/C++/C#/.NET and SQL preferred
+- Match score: 30
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Complete description read. The opening is explicitly an apprenticeship for recent graduates with no prior full-time experience, which conflicts with the candidate's current professional backend experience and is materially below target seniority.
+
+## Equifax — Software Engineer - Entry
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4456218695/
+- Job ID: 4456218695
+- Location: Pune/Pimpri-Chinchwad Area, India; onsite
+- Remote: No
+- Salary: Not listed
+- Experience requirement: Bachelor's degree; 1+ year Java; Java/J2EE, Spring Boot, SOA/microservices, relational databases, Agile, Atlassian tools; cloud preferred
+- Match score: 64
+- Decision: Review
+- Application status: Not submitted
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Complete description read. Relevant degree, hands-on Java/Spring Boot project work, backend/microservices, SQL, GitHub, Jira, and general cloud exposure align; however, the role is Java-centered and onsite in Pune, while the candidate has 0 years of professional/production Java employment and currently works primarily in Node.js. Saved for review rather than automatic submission.
+
+## Celonis — Software Engineer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4454613064/
+- Job ID: 4454613064
+- Location: Greater Bengaluru Area, India; hybrid
+- Remote: Hybrid
+- Salary: Not listed
+- Experience requirement: 3–6 years software engineering; Java, Spring, Hibernate; distributed systems/microservices; enterprise reliability and data consistency
+- Match score: 63
+- Decision: Review
+- Application status: Not submitted
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Not identified
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Complete description read. Bengaluru hybrid, degree, backend/microservices, Linux, distributed-systems, and data-consistency work align; the main gap is that the role is centered on 3–6 years of Java/Spring/Hibernate experience while the candidate's Java/Spring work is independent project experience and professional employment is Node.js. Saved for review rather than automatic submission.
+
+## Hirely — Backend Java Developer | $60-$110/hr
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4454154464/
+- Job ID: 4454154464
+- Location: India; remote contract
+- Remote: Yes
+- Salary: USD 60–110/hour
+- Experience requirement: Strong professional Java, Spring Boot, and microservices; REST APIs, backend architecture; cloud/distributed systems preferred; AI interview in process
+- Match score: 52
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Hirely
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Complete description read. The role explicitly requires strong professional Java/Spring Boot/microservices experience, while the candidate has 0 years of professional Java employment. The stated process also includes an AI interview, which the agent cannot complete. Evidence gate: complete_description_read=true; description_scroll_completed=true (detail article had no further scroll range after bottom check); expansion_control_handled=not_present; required_skills=professional Java, Spring Boot, microservices, REST APIs, backend architecture; preferred_skills=AWS/Azure/GCP, distributed systems, high availability; experience_requirement=strong professional Java/Spring; seniority=not explicitly stated; location=India remote contract; posting_age=14 hours; application_route=external company site; matched_candidate_evidence=REST APIs, backend systems, microservices concepts, cloud/container exposure; unsupported_requirements=professional Java/Spring Boot/microservices; final_score=52; decision_reason=hard professional-Java mismatch and an AI interview requirement.
+
+## Hire Feed — Node.js Developer (Remote)
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4457059483/
+- Job ID: 4457059483
+- Location: India; remote contract (work from anywhere)
+- Remote: Yes
+- Salary: USD 30–90/hour
+- Experience requirement: Minimum 2 years relevant Node.js/JavaScript experience
+- Match score: 84
+- Decision: Apply
+- Application status: Blocked before submission — Micro1 multi-step form unsupported by local runner
+- Date applied: Not submitted
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf (selected)
+- Recruiter: Hire Feed
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=true; required_skills=Node.js, JavaScript, RESTful APIs, MongoDB or PostgreSQL, Git, debugging, independent work; preferred_skills=none stated; experience_requirement=2+ years; seniority=not explicitly stated; location=remote/work from anywhere; posting_age=14 hours; application_route=external company site; matched_candidate_evidence=approximately 2 years professional Node.js, TypeScript/JavaScript, REST APIs, PostgreSQL/MongoDB, Git, production debugging and backend services; unsupported_requirements=none material; final_score=84; decision_reason=strong, recent Node.js backend match with no hard blocker. Prior Hire Feed record 4456446861 is a different opening and does not deduplicate this job ID. Local Playwright reached the submit phase after deterministic preparation but stopped without a submit click because Micro1 exposes a multi-step “Next” control rather than an adapter-owned final submit control. No submission is claimed. The official Micro1 tab remains open in Chrome as a handoff tab.
+
+## MantriAI — Fullstack Software Engineer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn Easy Apply discovery
+- Job URL: https://www.linkedin.com/jobs/view/4455304907/
+- Job ID: 4455304907
+- Location: India; remote now, Bengaluru office planned
+- Remote: Yes currently
+- Salary: INR 40–60 LPA
+- Experience requirement: 3+ years production end-to-end web applications; production React and Angular (2+ years), plus production Java and Python
+- Match score: 38
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: MantriAI
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=true; required_skills=3+ years production web applications, React, Angular (2+), Java, Python, API design, data modelling, databases; preferred_skills=platform/core-domain systems, dashboards/analytics, cloud, CI/CD, observability, industrial/IoT/time-series; experience_requirement=3+ production years; seniority=founding-engineer scope; location=remote with Bengaluru office expectation; posting_age=4 days; application_route=LinkedIn Easy Apply; matched_candidate_evidence=Node.js backend, API design, PostgreSQL/data modelling, Docker/Kubernetes, CI/CD; unsupported_requirements=professional React, Angular, Java, Python and 3+ years end-to-end production work; final_score=38; decision_reason=multiple required production-stack gaps and experience/seniority mismatch.
+
+## CSG — Java Software Developer Engineer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4456222404/
+- Job ID: 4456222404
+- Location: India; remote
+- Remote: Yes
+- Salary: Not listed
+- Experience requirement: 1–3 years; Java at beginner level and PostgreSQL
+- Match score: 54
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: CSG
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=not_present (only unrelated company-insight controls existed outside the description); required_skills=beginner Java, PostgreSQL, monitoring/alert investigation, customer/technical documentation, debugging Java and .NET products, client issue support; preferred_skills=none stated; experience_requirement=1–3 years; seniority=junior support/operations under senior guidance; location=India remote; posting_age=6 hours; application_route=external company site; matched_candidate_evidence=PostgreSQL, debugging, backend monitoring familiarity; unsupported_requirements=professional Java and .NET product support context; final_score=54; decision_reason=opening is primarily monitoring, documentation, and customer-support work rather than the candidate's backend-engineering target, with Java/.NET support responsibilities outside the strongest confirmed professional stack.
+
+## Quik Hire Staffing — Full Stack Engineer (Remote)
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery
+- Job URL: https://www.linkedin.com/jobs/view/4457058471/
+- Job ID: 4457058471
+- Location: India; remote contract (work from anywhere)
+- Remote: Yes
+- Salary: USD 30–80/hour
+- Experience requirement: Not explicitly stated
+- Match score: 66
+- Decision: Review
+- Application status: Not submitted
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: Quik Hire Staffing
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=not_present (only unrelated company-information control existed outside the description); required_skills=JavaScript/TypeScript, React, Node.js, Express or NestJS, REST APIs/microservices, PostgreSQL or MongoDB, cloud, CI/CD/DevOps; preferred_skills=none stated; experience_requirement=not stated; seniority=not stated; location=remote/work from anywhere; posting_age=14 hours; application_route=external company site; matched_candidate_evidence=professional Node.js/TypeScript, REST APIs, PostgreSQL/MongoDB, Docker/Kubernetes, CI/CD/GitOps; unsupported_requirements=professional React/frontend framework experience; final_score=66; decision_reason=strong backend overlap but a material unsupported React/full-stack requirement means it should not be auto-submitted.
+
+## Alignerr — Back End Developer (AI Infrastructure)
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn discovery → Alignerr
+- Job URL: https://www.linkedin.com/jobs/view/4457053007/
+- Application URL: https://www.alignerr.com/jobs/d1805065-3991-404b-bc83-f3d3baca378b
+- Job ID: 4457053007
+- Location: Ahmedabad listed; fully remote contract
+- Remote: Yes
+- Salary: USD 20–100/hour
+- Experience requirement: No explicit minimum years; proficient backend engineering and independent remote delivery
+- Match score: 88
+- Decision: Apply
+- Application status: Blocked before submission — Alignerr form unsupported by local runner
+- Date applied: Not submitted
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf (selected)
+- Recruiter: Alignerr
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=not_present (only unrelated company-insight controls existed outside the description); required_skills=Node.js or comparable backend language, REST APIs, microservices/distributed systems, PostgreSQL/MongoDB/Redis, cloud, Git, CI/CD, Docker/Kubernetes, debugging, autonomous remote work; preferred_skills=AI/ML infrastructure, Kafka/Spark/Airflow, caching/high-throughput systems, auth/security, serverless/event-driven systems, open-source/portfolio; experience_requirement=no explicit years; seniority=not specified; location=fully remote; posting_age=15 hours; application_route=official Alignerr site; matched_candidate_evidence=approximately 2 years professional Node.js/TypeScript APIs, PostgreSQL/MongoDB/Redis, BullMQ/RabbitMQ, Docker/Kubernetes, CI/CD/GitOps, cloud and backend troubleshooting; unsupported_requirements=none material; final_score=88; decision_reason=strong recent backend/platform match. The role name is similar to an older Alignerr listing, but the LinkedIn job ID and official application URL differ, so this opening is not automatically deduplicated. The local runner reached its submit phase but no adapter-owned final submit control was available. No submission is claimed; the official Alignerr tab remains open in Chrome as a handoff.
+
+## FRND — Software Engineer Intern
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn Easy Apply discovery
+- Job URL: https://www.linkedin.com/jobs/view/4455599485/
+- Job ID: 4455599485
+- Location: Bengaluru, Karnataka, India; onsite
+- Remote: No
+- Salary: Not listed
+- Experience requirement: Six-month in-office internship for candidates pursuing a degree; Python/Django focus
+- Match score: 30
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Recruiter: FRND
+- Hiring manager: Not identified
+- Connection request: Not sent
+- Message sent: Not sent
+- Follow-up date: Not scheduled
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (description panel scrolled to bottom); expansion_control_handled=not_present (only unrelated company-information control existed outside the description); required_skills=availability for a six-month onsite internship, pursuing CS/related degree, Python/Django, basic Java/OOP, databases/SQL, REST APIs; preferred_skills=Git; experience_requirement=internship; seniority=intern; location=Bengaluru onsite, six days per week; posting_age=3 days; application_route=LinkedIn Easy Apply; matched_candidate_evidence=degree completed, Java hands-on, databases, REST APIs, Git; unsupported_requirements=professional Python/Django; final_score=30; decision_reason=internship/pursuing-student requirement is materially below and incompatible with the candidate's current full-time professional backend position.
+
+## Axestrack — Software Engineer
+
+- Date discovered: 2026-08-21
+- Platform: LinkedIn Easy Apply discovery
+- Job URL: https://www.linkedin.com/jobs/view/4454184367/
+- Job ID: 4454184367
+- Location: Jaipur, Rajasthan, India; onsite
+- Match score: 35
+- Decision: Skip
+- Application status: Skipped
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true; expansion_control_handled=not_present; required_skills=Tier-1/IIT/BITS preference with JEE rank below 1000, 2+ years, Angular, Spring Boot, SQL/PostgreSQL, MongoDB, Redis/Caffeine, Kafka, Jenkins, Cursor/AI-assisted development; preferred_skills=competitive programming, open source, full-stack deployments; experience_requirement=2+ years; seniority=Software Engineer/Senior Software Engineer; location=Jaipur onsite; posting_age=9 hours; application_route=LinkedIn Easy Apply; matched_candidate_evidence=2 years backend, PostgreSQL/MongoDB/Redis, REST APIs, Git, CI/CD and messaging; unsupported_requirements=Tier-1/JEE-rank criterion, professional Angular/Spring Boot, Caffeine, Kafka/Jenkins, confirmed Cursor experience; final_score=35; decision_reason=multiple stated requirements and a strong education-screening preference are not supported by the candidate record.

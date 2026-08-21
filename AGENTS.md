@@ -56,6 +56,14 @@ Do not ask for routine permission to:
 - continue to the next application
 - perform outreach allowed by the skill
 
+At the beginning of every authorized `start` run, open or bring the user's
+Chrome browser to the foreground and use the supported Chrome-control skill to
+open the first planned job-search query. Use Chrome for job discovery and
+inspection, including the existing authenticated session when available.
+Keep the local Playwright runner as the required backend for ordinary
+application form filling, resume upload, submission, and submission
+verification when it supports the target ATS.
+
 
 ## 2. Bootstrap Sequence
 
@@ -140,6 +148,73 @@ If the user explicitly provides a target with the start command, use that as
 Otherwise:
 
 `ACTIVE_TARGET = DEFAULT_SUCCESSFUL_APPLICATION_TARGET`
+
+
+## Search Controller — Non-Negotiable
+
+Every visible search-result card must pass the human-style review gate defined
+in `.agents/skills/job-application/SKILL.md`: open the job, load and read the
+complete description, match it against the canonical candidate state, check
+deduplication, record an explicit APPLY / REVIEW / SKIP decision, and process
+any qualifying application before advancing. Do not paginate, change the
+query, or change the source while any visible card on the current page remains
+unevaluated. A title, card preview, match badge, or promoted label is never a
+completed evaluation.
+
+Failure to load a description is not a SKIP decision. Before recording
+`BLOCKED_DESCRIPTION_UNAVAILABLE`, exhaust the description-loading sequence in
+the job-application skill. Such a job remains unevaluated, receives no match
+score, and satisfies the current page's completion gate only as a terminally
+processed blocked card after the complete loading sequence is recorded.
+
+For every job-search query, use a search plan containing multiple role
+variants, locations, and sources.
+
+For each source and query:
+
+1. Open the first results page.
+2. Scroll through the entire visible results list before changing pages.
+3. Collect every visible job card, including company, role, URL, job ID,
+   location, posting age, and application route.
+4. Deduplicate against both `application-history.md` and the current-run
+   discovery ledger.
+5. Read the complete description of every new potentially suitable job.
+6. Record every evaluated job, including skipped, duplicate, stale,
+   unsuitable, blocked, and qualified jobs.
+7. Only after the entire page is processed, click the visible Next button or
+   use a verified page cursor.
+8. Confirm that the page number, URL cursor, or first/last job IDs changed.
+   If unchanged, retry once, then mark the page stalled and move to the next
+   query or source.
+9. Never return to page 1 after processing a job. Preserve the current query,
+   page number, cursor, and evaluated job IDs.
+10. Never repeatedly evaluate promoted or recommended listings already seen
+    in the current run.
+
+Continue through all planned pages and sources until the successful-application
+target is reached, every planned query and source is exhausted, a universal
+technical blocker prevents further work, or the user says `stop`, `pause`, or
+`cancel`.
+
+A single result page, 20 evaluated jobs, one blocked application, or one empty
+qualifying page is never search exhaustion.
+
+Before starting another search page, verify that the current page was fully
+scrolled and all visible cards were recorded.
+
+Maintain these fields in `state/run-state.md`:
+
+- active query
+- source
+- location
+- page number or cursor
+- scroll-completed status
+- visible job IDs
+- evaluated job IDs
+- new job IDs
+- duplicate job IDs
+- next-page status
+- source/query exhaustion status
 
 
 ## 4. Unattended Run Mode

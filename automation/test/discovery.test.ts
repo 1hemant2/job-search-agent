@@ -17,6 +17,10 @@ const oneQueryPlan = (runId: string): DiscoveryPlan => ({
   sources: [{ source: "linkedin", queries: [{ query: "Backend Engineer", queryVariant: "backend-engineer", location: "India" }] }],
 });
 
+function visibleIds(prefix: string, count: number): string[] {
+  return Array.from({ length: count }, (_, index) => `${prefix}-${index + 1}`);
+}
+
 describe("discovery breadth and exhaustion state machine", () => {
   it("builds multiple compatible query variants for each planned source", () => {
     const plan = buildDefaultDiscoveryPlan("RUN-PLAN", { sources: ["linkedin"], location: "India" });
@@ -27,12 +31,22 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(plan.sources[0].queries.every((query) => query.filters?.posted_within_days === 7)).toBe(true);
   });
 
+  it("expands each role variant across the configured locations", () => {
+    const plan = buildDefaultDiscoveryPlan("RUN-LOCATIONS", {
+      sources: ["linkedin"],
+      locations: ["India", "Remote"],
+    });
+    expect(plan.sources[0].queries).toHaveLength(26);
+    expect(plan.sources[0].queries.map((query) => query.location)).toContain("India");
+    expect(plan.sources[0].queries.map((query) => query.location)).toContain("Remote");
+  });
+
   it("continues from page 1 with zero qualifying jobs to page 2", () => {
     const { coordinator } = setup(oneQueryPlan("RUN-PAGE-2"));
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "India",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 20,
-      hasNextPage: true, paginationCompleted: false,
+      hasNextPage: true, paginationCompleted: false, scrollCompleted: true, visibleJobIds: visibleIds("page-1", 20),
     })).toBe("SEARCH_SAMPLE_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(false);
 
@@ -45,8 +59,31 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "India",
       pageNumber: 2, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 1,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("page-2", 20),
     })).toBe("SEARCH_SPACE_REASONABLY_EXHAUSTED");
+  });
+
+  it("requires a fully scrolled page and one job ID for every visible card", () => {
+    const { coordinator } = setup(oneQueryPlan("RUN-PAGE-CAPTURE"));
+    const base = {
+      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
+      pageNumber: 1, resultsVisible: 2, newlyDiscovered: 2, duplicates: 0, evaluated: 0,
+      hasNextPage: false, paginationCompleted: true, visibleJobIds: visibleIds("capture", 2),
+    };
+    expect(() => coordinator.recordSearchPage({ ...base, scrollCompleted: false })).toThrow("fully scrolled");
+    expect(() => coordinator.recordSearchPage({ ...base, scrollCompleted: true, visibleJobIds: ["capture-1"] })).toThrow("Every visible job card");
+  });
+
+  it("retries an unchanged page once, then records it as stalled", () => {
+    const { coordinator } = setup(oneQueryPlan("RUN-PAGE-STALL"));
+    const firstPage = {
+      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
+      pageNumber: 1, resultsVisible: 2, newlyDiscovered: 2, duplicates: 0, evaluated: 0,
+      hasNextPage: true, paginationCompleted: false, scrollCompleted: true, visibleJobIds: visibleIds("same-page", 2),
+    };
+    expect(coordinator.recordSearchPage(firstPage)).toBe("SEARCH_SAMPLE_EXHAUSTED");
+    expect(coordinator.recordSearchPage({ ...firstPage, nextPageStatus: "unchanged_retry" })).toBe("SEARCH_SAMPLE_EXHAUSTED");
+    expect(coordinator.recordSearchPage({ ...firstPage, nextPageStatus: "stalled" })).toBe("SEARCH_SPACE_REASONABLY_EXHAUSTED");
   });
 
   it("continues from an exhausted query to the next planned query", () => {
@@ -60,13 +97,13 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 20, duplicates: 20, evaluated: 0,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("query-a", 20),
     })).toBe("QUERY_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(false);
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Node.js Backend Engineer", queryVariant: "nodejs-backend-engineer",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 5, duplicates: 15, evaluated: 5,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("query-b", 20),
     })).toBe("SEARCH_SPACE_REASONABLY_EXHAUSTED");
   });
 
@@ -88,7 +125,7 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 20,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("remaining-a", 20),
     })).toBe("QUERY_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(false);
   });
@@ -104,13 +141,13 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 20,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("source-a", 20),
     })).toBe("SOURCE_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(false);
     expect(coordinator.recordSearchPage({
       source: "greenhouse", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 10, newlyDiscovered: 10, duplicates: 0, evaluated: 10,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("source-b", 10),
     })).toBe("SEARCH_SPACE_REASONABLY_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(true);
   });
@@ -132,7 +169,7 @@ describe("discovery breadth and exhaustion state machine", () => {
     expect(coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 1, newlyDiscovered: 1, duplicates: 0, evaluated: 1,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("blocked", 1),
     })).toBe("QUERY_EXHAUSTED");
     expect(coordinator.canStopForSearchExhaustion()).toBe(false);
     const ledgerPath = path.join(root, "state", "runs", "RUN-BLOCKED-CONTINUE", "discovery-ledger.jsonl");
@@ -154,7 +191,7 @@ describe("discovery telemetry", () => {
     coordinator.recordSearchPage({
       source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer",
       pageNumber: 1, resultsVisible: 1, newlyDiscovered: 1, duplicates: 0, evaluated: 1,
-      hasNextPage: false, paginationCompleted: true,
+      hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("telemetry", 1),
     });
     const runDir = path.join(root, "state", "runs", "RUN-TELEMETRY");
     expect(fs.readFileSync(path.join(runDir, "discovery-ledger.jsonl"), "utf8")).toContain('"record_type":"job"');

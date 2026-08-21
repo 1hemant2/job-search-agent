@@ -5,6 +5,8 @@ export const DISCOVERY_LEDGER_SCHEMA_VERSION = 1;
 
 export type PostingAgeConfidence = "exact" | "high" | "medium" | "low" | "unknown";
 
+export type PageTransitionStatus = "not_attempted" | "changed" | "unchanged_retry" | "stalled";
+
 export type DiscoveryState =
   | "SEARCH_SAMPLE_EXHAUSTED"
   | "QUERY_EXHAUSTED"
@@ -35,15 +37,19 @@ export interface DiscoveryJobRecord {
   company: string;
   role: string;
   job_url: string;
+  application_url?: string;
+  application_route?: string;
   normalized_job_id: string;
   query: string;
   query_variant: string;
   location_filter?: string;
+  job_location?: string;
   page_number?: number;
   cursor?: string;
   result_position?: number;
   posting_age?: string | number;
   posting_age_confidence: PostingAgeConfidence;
+  description_read_complete?: boolean;
   recency_class?: "within_window" | "too_old" | "unknown";
   match_score?: number;
   selected_resume?: string;
@@ -66,11 +72,18 @@ export interface SearchTelemetryRecord {
   page_number?: number;
   cursor?: string;
   results_visible: number;
+  visible_job_ids: string[];
+  scroll_completed: boolean;
   newly_discovered: number;
+  new_job_ids: string[];
   duplicates: number;
+  duplicate_job_ids: string[];
   evaluated: number;
+  evaluated_job_ids: string[];
   has_next_page: boolean;
   pagination_completed: boolean;
+  next_page_status: PageTransitionStatus;
+  page_transition_verified: boolean;
   stop_reason?: DiscoveryState | "SEARCH_SAMPLE_EXHAUSTED" | "QUERY_EXHAUSTED" | "SOURCE_EXHAUSTED" | "RUN_SEARCH_SPACE_EXHAUSTED";
 }
 
