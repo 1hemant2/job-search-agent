@@ -1527,3 +1527,122 @@
 - Application status: Skipped
 - Resume used: Not submitted
 - Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true; expansion_control_handled=not_present; required_skills=Tier-1/IIT/BITS preference with JEE rank below 1000, 2+ years, Angular, Spring Boot, SQL/PostgreSQL, MongoDB, Redis/Caffeine, Kafka, Jenkins, Cursor/AI-assisted development; preferred_skills=competitive programming, open source, full-stack deployments; experience_requirement=2+ years; seniority=Software Engineer/Senior Software Engineer; location=Jaipur onsite; posting_age=9 hours; application_route=LinkedIn Easy Apply; matched_candidate_evidence=2 years backend, PostgreSQL/MongoDB/Redis, REST APIs, Git, CI/CD and messaging; unsupported_requirements=Tier-1/JEE-rank criterion, professional Angular/Spring Boot, Caffeine, Kafka/Jenkins, confirmed Cursor experience; final_score=35; decision_reason=multiple stated requirements and a strong education-screening preference are not supported by the candidate record.
+
+## Innoterra India — Full-Stack Platform Engineer (Python + React Native)
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-full-stack-platform-engineer-python-react-native-innoterra-india-bengaluru-3-to-5-years-240726012221
+- Job ID: 240726012221
+- Location: Bengaluru (Kudlu Gate); hybrid, four office days per week
+- Remote: No
+- Salary: Not disclosed
+- Experience requirement: 3+ years of professional full-stack or mobile engineering
+- Match score: 28
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=strong Python/Frappe, production React Native and Android release tooling, Node.js/TypeScript, Angular/Ionic, SQL/MariaDB/MySQL, RabbitMQ, Docker, CI/CD, multi-stack ownership; preferred_skills=Frappe, payment gateways, OTP/SMS authentication, Firebase/Google Maps, iOS; experience_requirement=3+ years; seniority=full-stack/mobile engineer owning a multi-repository platform; location=Bengaluru hybrid; posting_age=3+ weeks; application_route=Naukri Apply; matched_candidate_evidence=professional Node.js/TypeScript, RabbitMQ, Docker, CI/CD, SQL/database and API experience; unsupported_requirements=strong Python/Frappe, production React Native/Android release tooling, Angular/Ionic, 3+ years across multiple stacks; final_score=28; decision_reason=stale and centered on senior multi-stack Python/Frappe and React Native ownership outside the candidate's truthful professional experience.
+
+## Tech Stalwart Solution — Full Stack Developer
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-full-stack-developer-tech-stalwart-solution-private-limited-kolkata-mumbai-new-delhi-hyderabad-pune-chennai-bengaluru-0-to-3-years-040225508253
+- Job ID: 040225508253
+- Location: Bengaluru and multiple India locations
+- Remote: Not stated
+- Salary: Not disclosed
+- Experience requirement: 0–3 years
+- Match score: 42
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=strong frontend React/Angular/Vue, JavaScript/HTML/CSS, backend familiarity including Node.js, relational/NoSQL databases, Git, REST/GraphQL, testing, Agile; preferred_skills=IIT/NIT/Tier-1 degree, cloud, mobile; experience_requirement=0–3 years; seniority=full-stack developer; location=multiple India locations; posting_age=3+ weeks; application_route=company site; matched_candidate_evidence=Node.js, PostgreSQL/MongoDB, Git, REST APIs, debugging, CI/CD/cloud familiarity; unsupported_requirements=strong professional frontend framework and HTML/CSS experience, preferred Tier-1 institution criterion; final_score=42; decision_reason=stale and primarily a frontend-led full-stack opening, without supported professional frontend experience.
+
+## Erudio Technologies — Java Developer (3 To 8 years)
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-java-developer-3-to-8-years-erudio-technologies-hyderabad-chennai-bengaluru-3-to-8-years-110826013926
+- Job ID: 110826013926
+- Location: Bengaluru, Hyderabad, or Chennai; hybrid
+- Remote: No
+- Salary: INR 8–16 LPA
+- Experience requirement: 3–8 years
+- Match score: 24
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=professional Java and Spring Boot, REST APIs/microservices, SQL/NoSQL, debugging, code reviews, performance/security, Agile; preferred_skills=none separately stated; experience_requirement=3–8 years; seniority=backend developer; location=Bengaluru/Hyderabad/Chennai hybrid; posting_age=1 week (not eligible for automatic submission); application_route=Naukri Apply; matched_candidate_evidence=REST APIs, databases, Docker/Kubernetes and backend troubleshooting; unsupported_requirements=professional Java and Spring Boot experience, stated minimum 3 years; final_score=24; decision_reason=the candidate has no professional/production Java experience and is below the stated minimum; the listing is also 1 week old, which is ineligible for automatic submission.
+
+## US MNC (analytics) / Aspyra HR Services — Fullstack Developer - Gen AI
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-fullstack-developer-gen-ai-us-mnc-aspyra-hr-services-pune-gurugram-bengaluru-4-to-8-years-210826004480
+- Job ID: 210826004480
+- Location: Bengaluru, Pune, or Gurugram; hybrid
+- Remote: No
+- Salary: INR 20–35 LPA
+- Experience requirement: 3+ years; listing band 4–8 years
+- Match score: 38
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=Python, React/Next.js, FastAPI or Node.js, SQL, LLM/GenAI, LangChain/LangGraph, production RAG/agent applications, vector databases, cloud, Docker and CI/CD; preferred_skills=none separately stated; experience_requirement=3+ years full-stack with strong production GenAI/LLM exposure; seniority=full-stack GenAI engineer; location=PAN India, listed Bengaluru/Pune/Gurugram hybrid; posting_age=today; application_route=Naukri Apply; matched_candidate_evidence=professional Node.js APIs, SQL, Docker, CI/CD and use of AI coding tools; unsupported_requirements=professional Python, React/Next.js, production RAG/AI-agent/LLM applications, vector databases, 3+ years experience; final_score=38; decision_reason=recent but multiple mandatory full-stack GenAI requirements and experience level are not truthfully supported.
+
+## US MNC (analytics) / Aspyra HR Services — Fullstack Developer with Gen AI
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-fullstack-developer-with-gen-ai-us-mnc-aspyra-hr-services-pune-gurugram-bengaluru-4-to-8-years-200826006652
+- Job ID: 200826006652
+- Location: Bengaluru, Pune, or Gurugram; hybrid
+- Remote: No
+- Salary: INR 20–35 LPA
+- Experience requirement: 3+ years; listing band 4–8 years
+- Match score: 38
+- Decision: Skip
+- Application status: Skipped as duplicate opening
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=Python, React/Next.js, FastAPI or Node.js, SQL, LLM/GenAI, LangChain/LangGraph, production RAG/agent applications, vector databases, cloud, Docker and CI/CD; preferred_skills=none separately stated; experience_requirement=3+ years full-stack with strong production GenAI/LLM exposure; seniority=full-stack GenAI engineer; location=PAN India, listed Bengaluru/Pune/Gurugram hybrid; posting_age=1 day; application_route=Naukri Apply; matched_candidate_evidence=professional Node.js APIs, SQL, Docker and CI/CD; unsupported_requirements=professional Python, React/Next.js, production RAG/AI-agent/LLM applications, vector databases, 3+ years experience; final_score=38; decision_reason=the description, advertiser, role, location, compensation band, and requirements duplicate the immediately preceding Aspyra opening (210826004480); it is also not a truthful match.
+
+## Nxtwave Disruptive Technologies (for client) — Back End Developer
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-back-end-developer-nxtwave-disruptive-technologies-hiring-for-a-client-bengaluru-2-to-4-years-110826039852
+- Job ID: 110826039852
+- Location: Bengaluru
+- Remote: No
+- Salary: INR 7–10 LPA
+- Experience requirement: 2–4 years backend development
+- Match score: 89
+- Decision: Skip
+- Application status: Skipped as stale for automatic submission
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=Node.js, TypeScript, REST APIs/microservices, SQL/query optimization, databases, third-party integrations, secure coding/testing; preferred_skills=product-company and commerce/FinTech/SaaS/ERP experience; experience_requirement=2–4 years; seniority=backend engineer; location=Bengaluru; posting_age=1 week (not eligible for automatic submission); application_route=Naukri Apply; matched_candidate_evidence=approximately 2 years professional Node.js/TypeScript, REST APIs/microservices, PostgreSQL, Redis, RabbitMQ, Docker, backend reliability and integrations; unsupported_requirements=none material, though product-company experience is only preferred; final_score=89; decision_reason=excellent truthful match but the page says 1 week ago, which is explicitly ineligible for automatic submission under the active freshness rule.
+
+## Alpine Placement Consultant — Senior React Developer
+
+- Date discovered: 2026-08-21
+- Platform: Naukri
+- Job URL: https://www.naukri.com/job-listings-senior-react-developer-alpine-placement-consultant-bengaluru-6-to-8-years-230726033579
+- Job ID: 230726033579
+- Location: Bengaluru (Jayanagar)
+- Remote: No
+- Salary: INR 20–22.5 LPA
+- Experience requirement: 6–8 years
+- Match score: 12
+- Decision: Skip
+- Application status: Skipped
+- Date applied: Not applied
+- Resume used: Not submitted
+- Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=6–8 years React.js, JavaScript/ES6+, HTML5/CSS3, UI frameworks and telecom-domain experience; preferred_skills=none separately stated; experience_requirement=6–8 years; seniority=senior frontend/mobile developer; location=Bengaluru onsite; posting_age=3+ weeks; application_route=Naukri Apply; matched_candidate_evidence=TypeScript and REST API familiarity; unsupported_requirements=professional React/frontend/HTML/CSS, telecom domain, 6–8 years experience; final_score=12; decision_reason=stale senior frontend React role with required experience well outside the candidate profile.
