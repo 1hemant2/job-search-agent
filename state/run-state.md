@@ -2,27 +2,36 @@
 
 ## Active Run
 
-- Status: terminal - recent qualifying search space exhausted; no executable submission path remained
-- Run ID: RUN-20260821-START2
-- Requested target: 2
+- Status: blocked
+- Run ID: RUN-20260821-START20
+- Requested target: 20
 - Successful submissions this run: 0
-- Evaluated jobs this run: 2
+- Evaluated jobs this run: 13
 - Skipped or ineligible: 0
-- Blocked before submission: 1
+- Blocked before submission: 12
 - Failed: 1
+- Fill-only dry runs: 0
 - Assessments reached: 0
-- Retry attempts: CloudSEK 1 user-authorized retry after an earlier unverified submit click
-- Last checkpoint: Invisible reCAPTCHA handling was corrected; CloudSEK form was filled and a second submit click completed, but confirmation was again not verifiable, so it was not counted; GGS remains CAPTCHA-blocked
-- Lifecycle state: stopped
+- Retry attempts: 0
+- Current company: none
+- Current role: none
+- Current job URL: none
+- Current application URL: none
+- Current job ID: none
+- Current ATS: none
+- Last checkpoint: 13 suitable listings evaluated with no verified submission; execution paths are blocked or failed, and the preserved Octillion CAPTCHA tab remains open for human completion
+- Lifecycle state: blocked
 
 ## Last Completed Run
 
-- Run ID: RUN-20260821-START1
-- Requested target: 1
-- Successful submissions this run: 1
-- Last checkpoint: Synthires / Software Engineer submitted successfully; LinkedIn showed Application submitted
-- Job ID: 4452236568
-- ATS: LinkedIn Easy Apply
+- Run ID: RUN-20260821-LINKEDIN-APPLY
+- Requested target: 4 user-selected LinkedIn roles
+- Successful submissions this run: 0
+- Evaluated jobs: 4
+- Blocked before submission: 4
+- Last checkpoint: Terminal; all four selected applications reached LinkedIn authentication before submission; no submission counted
+- Job ID: 4455423014 (final processed role)
+- ATS: LinkedIn
 - Selected resume: Hemant_Kumar_NodeJS_Resume.pdf
 
 ## Checkpoint Contract

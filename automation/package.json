@@ -9,9 +9,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "dry-run": "tsx src/runner.ts --dry-run",
-    "execute": "tsx src/runner.ts"
+    "execute": "tsx src/runner.ts",
+    "auth-audit": "tsx src/auth-audit-runner.ts"
   },
   "dependencies": {
+    "@2captcha/captcha-solver": "^1.3.8",
     "playwright": "^1.62.1"
   },
   "devDependencies": {

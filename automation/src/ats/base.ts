@@ -253,16 +253,21 @@ export abstract class BaseAtsAdapter implements AtsAdapter {
   }
 
   protected async fillFirst(labels: string[], selectors: string[], value: string): Promise<boolean> {
-    for (const label of labels) {
-      const locator = this.page.getByLabel(label, { exact: false }).first();
+    // Prefer structural input selectors before accessible-label lookup. Some
+    // ATS pages expose unrelated links (for example, "Share via email") with
+    // the same accessible label as a real form field.
+    for (const selector of selectors) {
+      const locator = this.page.locator(selector).first();
       if (await locator.count() && await locator.isVisible().catch(() => false)) {
         await locator.fill(value);
         return true;
       }
     }
-    for (const selector of selectors) {
-      const locator = this.page.locator(selector).first();
+    for (const label of labels) {
+      const locator = this.page.getByLabel(label, { exact: false }).first();
       if (await locator.count() && await locator.isVisible().catch(() => false)) {
+        const tag = await locator.evaluate((node) => node.tagName.toLowerCase()).catch(() => "");
+        if (!["input", "textarea", "select"].includes(tag)) continue;
         await locator.fill(value);
         return true;
       }
