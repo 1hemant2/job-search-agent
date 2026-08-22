@@ -14,6 +14,10 @@ This file contains only bootstrapping, command modes, and invariants.
 - `show external` shows the highest-value pending external applications.
 - `show external java` filters the manual external queue to the Java profile.
 - `mark external <id> applied|skipped` updates the manual external queue.
+- `outreach prepare <count>` researches relevant recruiting contacts and saves
+  an exact, personalized, deduplicated message batch locally without sending.
+- `outreach send <batch-id>` opens the saved profiles and sends the prepared
+  messages one at a time, with exact pre-send read-back and durable logging.
 - `start` is retained as a compatibility alias for an authorized run, but it
   now means discovery, evaluation, classification, and queue routing. It does
   not authorize automatic external ATS submission.
@@ -90,6 +94,13 @@ facts, accepting new material legal attestations (such as background checks,
 criminal-history declarations, conflicts, or work-authorization statements),
 bypassing CAPTCHA/MFA, completing assessments or interviews, transmitting
 secrets, or submitting the final application.
+
+When the user explicitly authorizes both preparation and sending of a recruiter
+outreach batch, save the exact personalized notes locally and proceed through
+the batch without asking for review of each message or the whole batch. Show
+all draft text only when requested. This removes a review checkpoint; it does
+not authorize outreach beyond the requested batch or bypass message-verification
+and site-safety rules.
 
 If the user has already uploaded a resume before handing over an ATS form such
 as Workday, preserve that attached resume and continue from the current page.

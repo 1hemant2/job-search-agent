@@ -70,6 +70,16 @@ score, recency, and preference alignment. `mark external <id> applied` and
 `mark external <id> skipped` append a status event to the external queue.
 `show external java` filters this view to pending Java-profile records.
 
+Recruiter and hiring-team outreach uses a separate prepare-then-send workflow.
+`outreach prepare <count>` researches and drafts a batch without sending;
+`outreach send <batch-id>` sends only the exact notes already saved in that
+batch. If a user's single request explicitly asks both to find relevant people
+and send the notes, preparation and sending run consecutively without asking
+the user to review or approve each message or the completed batch. Every draft
+must still be persisted and verified before its profile is opened for sending.
+Read [references/outreach.md](references/outreach.md) for the complete batch,
+personalization, verification, and logging rules.
+
 `start` is a compatibility alias for an authorized continuous discovery run.
 It no longer means “submit every qualifying ATS job.” A migration, test, or
 dry run is simulation-only and must not create accounts, upload resumes, or
