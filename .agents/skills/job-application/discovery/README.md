@@ -3,6 +3,18 @@
 Discovery remains source-agnostic: LinkedIn is primarily a discovery source,
 while official company and ATS applications are first-class targets.
 
+## Direct-link handoff
+
+A user-provided job or application URL creates `DIRECT_LINK_HANDOFF` mode and
+overrides discovery. Treat that URL as the one authoritative opening. Follow a
+redirect or apply control only when it remains part of the same opening. Do not
+search for the role, expand queries, inspect alternate listings, process the
+normal queues, or switch to another job if the URL fails.
+
+Record the blocker or failure and stop with an explicit not-completed report.
+The batch rule that a failed application may be routed while other jobs
+continue does not apply to a direct-link handoff.
+
 For each candidate opening, capture company, normalized role, posting date,
 location/work arrangement, compensation when known, source URL, official ATS
 URL, job ID, and the complete description before scoring.

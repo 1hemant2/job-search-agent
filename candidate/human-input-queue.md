@@ -151,3 +151,30 @@ After the user completes the CAPTCHA in the existing browser session, reconstruc
 - unresolved_questions: none
 - queued_at: 2026-08-21T11:15:47.772Z
 - resume_action: After manual CAPTCHA completion, rerun the same payload with --resume-captcha.
+## RBS Workday - Software Engineer - Background-check acknowledgment
+
+- Status: resolved_user_instruction
+- Platform: RBS Workday
+- Job ID: R-00283835
+- URL: https://rbs.wd3.myworkdayjobs.com/en-US/RBS/job/Bengaluru/Software-Engineer_R-00283835/apply/autofillWithResume
+- Reason: User confirmed that the affirmative acknowledgment option should always be selected for this standard background-check question.
+- State: Resolved; browser application preserved on Application Questions for continuation, with no final submission.
+- Other deterministic questions available from confirmed facts: Indian nationality = Yes; prior NatWest redundancy = No; prior NatWest misconduct termination = No. Optional reasonable-adjustments question left unanswered.
+
+## RBS Workday - Software Engineer - Voluntary-disclosure consent
+
+- Status: resolved_user_instruction
+- Platform: RBS Workday
+- Job ID: R-00283835
+- URL: https://rbs.wd3.myworkdayjobs.com/en-US/RBS/job/Bengaluru/Software-Engineer_R-00283835/apply/autofillWithResume
+- Reason: User confirmed use of workspace facts, Sex = Male, and affirmative special-category consent.
+- State: Resolved; browser preserved on Voluntary Disclosures for continuation, with no final submission.
+
+## JCPenney iCIMS - Engineer 1 - Account and required preference blockers
+
+- Status: resolved_submitted
+- Platform: JCPenney iCIMS
+- Job ID: 2026-8885
+- URL: https://careers-jcpenney.icims.com/jobs/8885/engineer-1/candidate
+- Reason: JCPenney iCIMS displayed successful submission after the Work Opportunity questionnaire Opt-Out path.
+- State: Submitted; success page preserved. Resume: `Hemant_Kumar_NodeJS_Resume.pdf`.

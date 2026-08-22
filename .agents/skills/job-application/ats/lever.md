@@ -12,11 +12,16 @@ cover-letter attachments, and custom questions. Resolve fields in one visible
 pass, fill routine known fields in a batch, then inspect all required custom
 questions before review.
 
+Preserve a resume already attached at handoff and skip duplicate upload. Use
+confirmed candidate facts for remaining fields and parser/autofill corrections.
+
 Do not treat a successful file upload or button click as submission. Require a
 visible confirmation state and record the exact resume filename used.
 
 ## Recovery
 
-Retry one safe upload or transient page action. For an unknown required
+Retry one safe upload only when the attachment is visibly absent, rejected, or
+lost; otherwise retry only a transient page action. For an unknown required
 question, preserve the current state and queue it. If the page uses a custom
-embedded flow, use `generic.md` while retaining Lever as the ATS family.
+embedded flow, use `generic.md` for the same opening while retaining Lever as
+the ATS family.

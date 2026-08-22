@@ -77,3 +77,46 @@ Never store passwords, OTPs, MFA codes, CAPTCHA values, cookies, tokens, or
 recovery codes. Never complete assessments or interviews. A visible CAPTCHA,
 MFA, or required human action blocks only that native application and the queue
 continues. External applications are already manual-first.
+
+## User workflow preference
+
+When the user explicitly hands off a website task, fill ordinary application
+details using confirmed facts already persisted in the workspace and continue
+through the workflow without asking the user to repeat them. For external job applications,
+the user authorizes checking a standard terms-and-conditions acknowledgment
+needed to reach the final review page, then stop and notify the user before any
+final submission. This preference does not authorize guessing unknown material
+facts, accepting new material legal attestations (such as background checks,
+criminal-history declarations, conflicts, or work-authorization statements),
+bypassing CAPTCHA/MFA, completing assessments or interviews, transmitting
+secrets, or submitting the final application.
+
+If the user has already uploaded a resume before handing over an ATS form such
+as Workday, preserve that attached resume and continue from the current page.
+Do not upload, delete, replace, or reparse it merely because the automated
+workflow normally contains a resume-upload step. Backfill blank fields and
+correct inaccurate parser-populated fields with confirmed candidate facts from
+the workspace while leaving the same resume attached. Upload again only when
+the page clearly shows no attachment, the site rejects or loses the file, or
+the user explicitly asks to replace it.
+
+Persisted candidate context also states that Enterprise Bot is the candidate's
+only employer and that the candidate is the first person in the family to work
+in IT, with no relatives at other companies. Backfill employer-history and
+familial-relationship questions from these facts automatically when applicable.
+
+## Specific-link handoff mode
+
+When the user provides a specific job or application URL and hands off the task,
+enter `DIRECT_LINK_HANDOFF` mode. The provided URL is the authoritative target:
+open it, follow only redirects or apply controls that belong to that same
+opening, and continue the requested workflow from there. Do not start search,
+query expansion, discovery, queue processing, alternate-source lookup, or a
+different job as a fallback.
+
+If the specific-link workflow cannot be completed for any reason, record the
+actual blocker or failure, tell the user that the application was not completed,
+and stop the task. This stop rule overrides normal batch behavior that would
+continue with another queued job. A same-opening external application may be
+left at the authorized manual handoff point, but it must still be reported as
+not completed until the user confirms submission.

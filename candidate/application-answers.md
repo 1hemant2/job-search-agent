@@ -15,6 +15,7 @@ When a future answer is learned, store its normalized meaning, value, source, co
 - Highest degree: B.Tech in Computer Science & Engineering
 - Graduation date: May 2024
 - Current employer: Enterprise Bot
+- Employment history: Enterprise Bot is the only employer the candidate has worked for (user-confirmed 2026-08-22)
 - Current title: Software Developer
 - Confirmed professional experience start: September 2024
 - Total professional experience: 2 years for application and recruiter-screening purposes
@@ -43,6 +44,9 @@ When a future answer is learned, store its normalized meaning, value, source, co
 - Expected monthly in-hand salary: INR 85,000
 - Formal government or role-specific security clearance: No formal security clearance
 - Voluntary demographic questions: Prefer not to answer when that option is available
+- Offers in hand: No (user-confirmed 2026-08-22)
+- Familial or personal relationship with CSG: No (user-confirmed 2026-08-22)
+- Family employment context: First person in the family to work in IT; no relatives work at other companies (user-confirmed 2026-08-22)
 
 ## Normalized Reusable Concepts
 
@@ -86,5 +90,15 @@ For Java, Node.js, REST/API, database, messaging, Docker, Kubernetes, and other 
 
 - House/flat number and street, if a form requires more than the confirmed locality and PIN
 - Exact employment start day, if a form requires a day rather than month and year
-- Agreement to background checks or other legally significant declarations
 - Conflicts of interest or restrictive covenants
+
+## Confirmed Form Handling Rules
+
+- Background-check acknowledgment: When an application asks for consent to standard pre-employment background checks and the corresponding disclosure acknowledgment, select the affirmative option `I acknowledge that these checks will take place, and agree to disclose any relevant information during the recruitment process`. Source: user-confirmed 2026-08-22.
+- Workday account-email exception: If a Workday application shows the existing account email `hk443957@gmail.com` as a non-editable value, accept it for the application and do not treat it as a blocker. This exception does not change the canonical professional application email for editable fields. Source: user-confirmed 2026-08-22.
+- Sex: Male. Source: user-confirmed 2026-08-22.
+- Gender: Man (use Male when the form offers that label instead). Source: user-confirmed 2026-08-22.
+- Disability, neurodivergence, or long-term condition impacting day-to-day activity: No. Source: user-confirmed 2026-08-22.
+- Reasonable adjustments required for disability, health, mental-health condition, or neurodivergence: No. For equivalent questions on future applications, select No unless the user provides a specific correction. Source: user-confirmed 2026-08-22.
+- Special-category data consent: When an application requires explicit consent to process special-category demographic or health data for stated recruitment/diversity purposes, select `Yes, I have read and consent to the terms and conditions`. Source: user-confirmed 2026-08-22.
+- Workflow handling: User will personally enter passwords and other secrets. For all job websites, continue filling ordinary fields from confirmed workspace facts without repeated confirmation, leave unknown or legally material fields for the user, and continue other deterministic fields when possible. Final submission still requires immediate confirmation. Source: user-confirmed 2026-08-22.

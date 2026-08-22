@@ -11,6 +11,29 @@ external handoff. Candidate facts remain in `candidate/`; resume selection
 remains in `resumes/`; `application-history.md` remains the human-readable
 audit trail; `state/run-state.md` remains operational checkpoint state.
 
+## Specific-link handoff override
+
+If the user provides a specific job or application URL and explicitly hands off
+that task, the run enters `DIRECT_LINK_HANDOFF` mode. The URL is the
+authoritative target. Continue from that URL and follow only redirects, login
+gates, or apply controls that clearly belong to the same job opening. Do not
+fall back to `search`, discovery, query expansion, queue processing, alternate
+job URLs, alternate listings, or another job if the handed-off workflow fails.
+
+On any failure or blocker, persist the real non-secret outcome, report that the
+specific application was not completed, and stop. The normal batch rule to
+continue after a blocked or failed application does not apply in this mode.
+Reaching an authorized external/manual handoff point is not a completed
+application; report it as pending/not completed and stop for the user.
+
+When the user has already uploaded a resume before handoff, treat the visible
+attachment as the selected resume for that opening. Inspect the current page
+before acting, preserve the attachment and existing progress, and backfill the
+remaining form with confirmed workspace facts. Correct inaccurate resume-parser
+output using candidate source-of-truth, but do not replace, delete, re-upload,
+or reparse the attached resume unless it is visibly absent, rejected/lost by
+the site, or the user requests a replacement.
+
 The migration policy is:
 
 ```text
@@ -52,6 +75,10 @@ It no longer means “submit every qualifying ATS job.” A migration, test, or
 dry run is simulation-only and must not create accounts, upload resumes, or
 submit applications.
 
+When a specific URL is present, do not invoke `search`, `start`, or any batch
+queue command as a substitute for the direct-link task. The direct-link
+workflow is single-opening and terminal on failure.
+
 ## Bootstrap and candidate truth
 
 Before searching or applying, load the full source set listed in root
@@ -59,6 +86,10 @@ Before searching or applying, load the full source set listed in root
 already present there. Source priority is current user correction, candidate
 source-of-truth, confirmed reusable answers, resume, derivations with
 provenance, records, preferences, and only then current form context.
+
+An already-attached resume is authoritative for attachment selection in that
+specific handoff, but not for candidate facts: confirmed candidate files still
+control field values when ATS parsing is blank, malformed, or inconsistent.
 
 Never invent identity, employment, dates, education, achievements, skills,
 production experience, authorization, sponsorship, clearance, demographics,
@@ -213,6 +244,10 @@ that queue item blocked, preserve only non-secret operational state, and
 continue with the next native item. Never bypass security controls or complete
 assessments/interviews. Genuine human-only blockers remain in
 `candidate/human-input-queue.md`; that file is not the job queue.
+
+The preceding continue-with-the-next-item rule applies only to ordinary batch
+runs. In `DIRECT_LINK_HANDOFF` mode, the blocker is recorded for the handed-off
+opening, the user is told the application was not completed, and the run stops.
 
 External applications are already handed to the user through the external
 queue, so no external CAPTCHA-resume or automatic ATS-confirmation workflow is

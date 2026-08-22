@@ -14,6 +14,23 @@ acting.
 Detection is routing metadata only. It never changes candidate truth rules or
 deduplication.
 
+## Direct-link handoff boundary
+
+When the task began with a user-provided URL, the adapter may navigate through
+same-opening redirects, authentication gates, and apply controls exposed by
+that opening. It must not replace the target with a search result, alternate
+listing, or another queued opportunity. If the target cannot be completed,
+return the observed blocker or failure so the agent can report not completed and
+stop the direct-link run.
+
+Before running any upload step, inspect the current form state. If the user
+already attached a resume, preserve that file and its parsed progress, treat it
+as the selected resume for this opening, and continue with unanswered sections.
+Use confirmed candidate files to backfill blanks and correct parser mistakes.
+Do not remove, replace, re-upload, or reparse the attachment unless it is
+visibly missing, rejected/lost by the ATS, or the user explicitly requests a
+different resume.
+
 ## Adapter interface
 
 Each ATS module should describe only the current page's observed flow:
@@ -51,6 +68,7 @@ same challenge in a loop, or use solver/stealth/anti-detection mechanisms.
 Preserve the official URL, company, role, ATS, job ID, selected resume
 filename, workflow step, and completed field keys only. Queue one
 `blocked_captcha` entry in `candidate/human-input-queue.md`, leave the target
-counter unchanged, and continue with another suitable application. Resume
-only after an explicit human completion using the same browser profile and a
-reconciled payload.
+counter unchanged, and continue with another suitable application in a normal
+batch. For `DIRECT_LINK_HANDOFF`, preserve the same checkpoint, report the
+application as not completed, and stop. Resume only after an explicit human
+completion using the same browser profile and a reconciled payload.

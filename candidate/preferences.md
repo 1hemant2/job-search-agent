@@ -52,3 +52,9 @@
 - Industry exclusions: None
 - Notice period: Officially 60 days, negotiable to 30 days
 - Travel willingness: Yes, up to 25%
+
+## Application Automation Handling
+
+- User will personally enter passwords and other secrets on job websites; never request, store, or transmit those secrets through the agent.
+- Across job websites, continue filling ordinary fields from confirmed workspace facts without repeatedly asking the user. If a field is unknown or legally material, leave it for the user and continue with other deterministic fields where possible.
+- Final application submission still requires an immediate confirmation at the final Submit action.

@@ -16,6 +16,11 @@ them.
 Procedural memory may improve routing and browser efficiency, but it can never
 create candidate facts or override a source-of-truth file.
 
+When a user hands off a specific job or application URL, procedural memory may
+help resume that same opening, but it must not redirect the task to another
+listing or start discovery. A failure remains terminal for that
+`DIRECT_LINK_HANDOFF` and must be reported as not completed.
+
 ## Answer resolution contract
 
 Normalize a form question to a semantic key before resolving it. Preserve

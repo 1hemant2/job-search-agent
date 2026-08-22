@@ -26,6 +26,11 @@ identity, ATS, lifecycle state, selected resume filename, pending field keys,
 blocker reference, retry count, and next action. It does not contain answer
 values, credentials, cookies, or browser state.
 
+For a handed-off ATS page, checkpoint whether the resume was already attached.
+On resume, preserve that same attachment and continue from the nearest safe
+step; do not repeat upload/parsing unless the ATS visibly lost or rejected it.
+Candidate source-of-truth remains authoritative for backfilled field values.
+
 At restart:
 
 1. load `state/run-state.md` and the complete candidate bootstrap set;
@@ -35,8 +40,14 @@ At restart:
 4. reopen a nonterminal application at its last safe checkpoint when the
    browser still has the page, otherwise reopen the job through its official
    ATS URL;
-5. retry only the failed transition once when safe, then record the failure and
-   continue with another suitable job.
+5. retry only the failed transition once when safe. For a normal batch, record
+   the failure and continue with another suitable job. For
+   `DIRECT_LINK_HANDOFF`, record the failure, report that the specific
+   application was not completed, and stop; never substitute another job.
+
+The direct-link target remains authoritative across restarts. An official ATS
+URL reached by a redirect is valid only when it is clearly the same opening;
+otherwise the handoff is blocked rather than converted into discovery.
 
 ### CAPTCHA resumability
 
@@ -52,7 +63,8 @@ Reopen the official application URL, detect that the challenge is gone,
 revalidate/refill only ordinary prepared fields, and continue from the nearest
 safe step. On confirmed submission, resolve the queue entry and record the
 normal history result. If CAPTCHA remains, update the existing blocker and
-continue with another job.
+continue with another job in a normal batch. In `DIRECT_LINK_HANDOFF` mode,
+update the existing blocker, report not completed, and stop.
 
 The target counter is rebuilt from confirmed successful submissions in the
 current run, not from attempted, historical, duplicate, blocked, or uncertain

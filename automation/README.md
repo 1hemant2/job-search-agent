@@ -1,5 +1,18 @@
 # Local Playwright execution adapter
 
+For a user-provided URL, the caller must treat the payload as a
+`DIRECT_LINK_HANDOFF`: execute only that opening and same-opening redirects or
+apply controls. A failed or blocked result is final for that handoff; do not
+replace the payload with a search result, alternate listing, queued item, or
+other job. The caller must report that the specific application was not
+completed and stop. This does not change ordinary batch queue behavior.
+
+If the user hands off an ATS page after already uploading a resume, the caller
+must preserve the visible attachment and current form progress. It should skip
+duplicate upload/parsing, backfill blanks, and correct parser errors with
+confirmed workspace facts. Re-upload is appropriate only when the attachment
+is visibly absent, rejected/lost by the ATS, or the user requests replacement.
+
 This subsystem is a deterministic browser executor for the existing job-agent workspace. It does not discover jobs, score them, derive candidate answers, or write candidate memory/history. Codex prepares one JSON payload, the runner executes routine browser actions, and Codex records the returned result in `application-history.md`, `state/run-state.md`, and—when a reusable answer was learned—`candidate/application-answers.md`.
 
 ## Architecture
@@ -15,7 +28,7 @@ This subsystem is a deterministic browser executor for the existing job-agent wo
 - `src/runner.ts` — state-machine execution and structured JSON output.
 - `test/` — payload, detection, form-filling, unknown-question, CAPTCHA, deduplication, and dry-run integration tests.
 
-The lifecycle is explicit: `prepared → executing → blocked | blocked_captcha | assessment | failed | submitted`. A blocked application returns to Codex as a result and does not stop other jobs.
+The lifecycle is explicit: `prepared → executing → blocked | blocked_captcha | assessment | failed | submitted`. A blocked application returns to Codex as a result and does not stop other jobs in an ordinary batch; a `DIRECT_LINK_HANDOFF` stops after reporting that its specific application was not completed.
 
 ## Payload contract
 
@@ -58,6 +71,10 @@ Required questions are matched only by deterministic field keys/labels. If a req
 The executor never invents answers, bypasses CAPTCHA, completes assessments, or stores passwords, cookies, OTPs, MFA codes, or tokens.
 
 CAPTCHA is handled with one short passive re-check for natural page verification. If it remains, the runner returns `status: "blocked"`, `lifecycle: "blocked_captcha"`, and `blocker.type: "captcha"`, writes one non-secret queue/checkpoint entry, and exits promptly. A later run must pass `--resume-captcha`; otherwise an active queued CAPTCHA is returned without reopening or retrying that application.
+
+When the payload came from a direct-link handoff, the blocked result ends that
+handoff. Resume is allowed only for the same opening after the user completes
+the required human action; it must never trigger job search or substitution.
 
 ## Browser state
 

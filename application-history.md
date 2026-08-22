@@ -1674,3 +1674,27 @@
 - Date applied: Not applied
 - Resume used: Not submitted
 - Notes: Evidence gate: complete_description_read=true; description_scroll_completed=true (standalone Naukri description scrolled bottom-to-top); expansion_control_handled=not_present; required_skills=6–8 years React.js, JavaScript/ES6+, HTML5/CSS3, UI frameworks and telecom-domain experience; preferred_skills=none separately stated; experience_requirement=6–8 years; seniority=senior frontend/mobile developer; location=Bengaluru onsite; posting_age=3+ weeks; application_route=Naukri Apply; matched_candidate_evidence=TypeScript and REST API familiarity; unsupported_requirements=professional React/frontend/HTML/CSS, telecom domain, 6–8 years experience; final_score=12; decision_reason=stale senior frontend React role with required experience well outside the candidate profile.
+## Royal Bank of Scotland / NatWest Group - Software Engineer
+
+- Date accessed: 2026-08-22
+- Platform: RBS Workday
+- Job URL: https://rbs.wd3.myworkdayjobs.com/en-US/RBS/job/Bengaluru/Software-Engineer_R-00283835
+- Job ID: R-00283835
+- Location: Bengaluru
+- Application status: Blocked pending candidate instruction on legally material background-check acknowledgment
+- Resume used: Existing attached `Hemant_Kumar_Java_Resume.pdf` preserved; not replaced
+- Progress: My Information, My Experience, Application Questions, and Voluntary Disclosures saved; final Review reached
+- Voluntary disclosure preferences: Sex Male; gender Man; disability/neurodivergence/long-term condition impacting day-to-day activity No; special-category consent Yes. No final submission made.
+- Reasonable adjustments: No. Final Review updated and preserved; no final submission made.
+- Notes: Corrected address spelling to the confirmed `Roopena Agrahara`; entered confirmed phone number; the Workday account/application email visibly remains `hk443957@gmail.com` and is not editable on the current step. No final submission made.
+## JCPenney / Catalyst Brands - Engineer 1
+
+- Date applied: 2026-08-22
+- Platform: JCPenney iCIMS
+- Job URL: https://careers-jcpenney.icims.com/jobs/8885/engineer-1
+- Job ID: 2026-8885
+- Location: IN-KA-Bangalore
+- Application status: Submitted
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf
+- Verification: iCIMS displayed "Your application was submitted successfully. Thank you for applying." and "You are currently submitted to this job."
+- Notes: Work Opportunity questionnaire was opted out; no assessment was completed.

@@ -8,11 +8,14 @@ or when an employer has materially customized a known ATS.
 1. Verify the destination is a legitimate employer or ATS domain.
 2. Identify the visible form's labels, required state, control type, and
    navigation structure in one pass.
-3. Map known candidate fields and normalized reusable answers.
-4. Derive only low-risk answers with a recorded basis.
-5. Leave optional unknown fields blank and queue required material fields.
-6. Checkpoint before navigation and before review.
-7. Submit only after the standard pre-submission checklist passes and verify a
+3. Detect whether a resume is already attached. Preserve it and skip duplicate
+   upload/parsing; upload only when no valid attachment is present.
+4. Map known candidate fields and normalized reusable answers, using confirmed
+   facts to backfill blanks and correct parser/autofill errors.
+5. Derive only low-risk answers with a recorded basis.
+6. Leave optional unknown fields blank and queue required material fields.
+7. Checkpoint before navigation and before review.
+8. Submit only after the standard pre-submission checklist passes and verify a
    visible success state.
 
 Generic handling is not permission to ask an LLM to invent values or to click
