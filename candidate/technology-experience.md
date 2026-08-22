@@ -6,7 +6,7 @@ This file is the canonical source for technology-experience scope. General hands
 
 ```yaml
 normalized_key: java_general_experience
-value: approximately 2 years
+value: 2 years
 scope: substantial hands-on Java development, DSA/LLD work, and independent backend projects including Spring Boot AlertOps
 source: user-confirmed
 confidence: confirmed
@@ -43,7 +43,7 @@ confidence: high
 interpretation: use only when commercial clearly means paid employment; otherwise preserve the literal scope or queue a required material ambiguity
 ```
 
-Never answer 0 to a generic Java-experience question merely because the experience was not professional. Never present the approximately 2 years of general Java experience as employment.
+Never answer 0 to a generic Java-experience question merely because the experience was not professional. Never present the 2 years of general Java experience as employment.
 
 ## Confirmed Professional Backend Experience
 
@@ -58,7 +58,7 @@ interpretation: use 2 years for general, professional, production, employment, o
 
 ```yaml
 normalized_key: nodejs_experience
-value: approximately 2 years
+value: 2 years
 scope: professional Node.js backend development
 source: candidate profile and resume
 confidence: confirmed
@@ -66,7 +66,7 @@ confidence: confirmed
 
 ```yaml
 normalized_key: backend_api_experience
-value: approximately 2 years
+value: 2 years
 scope: professional backend and REST API development
 source: derived
 derived_from:

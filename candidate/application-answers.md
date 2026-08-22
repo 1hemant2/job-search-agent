@@ -18,7 +18,7 @@ When a future answer is learned, store its normalized meaning, value, source, co
 - Current title: Software Developer
 - Confirmed professional experience start: September 2024
 - Total professional experience: 2 years for application and recruiter-screening purposes
-- Experience timing note: Rounded to 2 years because the exact two-year mark is approximately 10 days after 2026-08-20
+- Experience representation: Use 2 years in resumes, applications, and recruiter screening. User reconfirmed this on 2026-08-22 because the exact two-year anniversary is approximately one week away; retain September 2024 as the precise confirmed start month for date fields.
 - Whole-year or numeric experience fields: Enter 2 years
 - Current residential location: Bengaluru, Karnataka, India
 - Current residential address: Roopena Agrahara, Bengaluru, Karnataka 560068, India

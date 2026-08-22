@@ -27,7 +27,7 @@ Backend Engineer with 2 years of professional experience building scalable Node.
 - Start date: September 2024
 - End date: Present
 - Application experience answer: 2 years of professional experience
-- Timing note: This is rounded from September 2024 to present because the exact two-year mark is approximately 10 days after 2026-08-20
+- Experience representation: Use 2 years in resumes, applications, and recruiter screening. User reconfirmed this on 2026-08-22 because the exact two-year anniversary is approximately one week away; retain September 2024 as the precise confirmed start month for date fields.
 
 ## Links to Detailed Records
 

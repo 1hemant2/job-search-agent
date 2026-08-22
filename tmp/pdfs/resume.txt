@@ -1,11 +1,11 @@
 Hemant Kumar
 +91 9534909390- meet.hemant.k@gmail.com - linkedin.com/in/hemant-kumar-66ba31208 - github.com/1hemant2
 PROFESSIONAL SUMMARY
-Backend Engineer with nearly 2 years of experience building scalable Node.js backend systems using PostgreSQL,
+Backend Engineer with 2 years of experience building scalable Node.js backend systems using PostgreSQL,
 Redis, BullMQ, and MongoDB. Experienced in analytics platforms, asynchronous processing, database optimization,
 Docker, Kubernetes, and GitOps.
 TECHNICAL SKILLS
-Languages:JavaScript, Java, SQL
+Languages:JavaScript, TypeScript, Java, SQL
 Backend:Node.js, Express.js, Koa, REST APIs, WebSockets (Socket.IO)
 Architecture:Microservices, Event-Driven Architecture, Multi-Tenancy , Caching
 Databases & Messaging:PostgreSQL, MongoDB, Redis (Caching, Pub/Sub), BullMQ, RabbitMQ
