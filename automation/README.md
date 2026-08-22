@@ -182,3 +182,34 @@ To persist executor telemetry during a dry run, supply the run id:
 $env:DRY_RUN = "true"
 npm run dry-run -- --payload ..\tmp\application-payload.json --run-id RUN-20260821-DRYRUN --headful
 ```
+## Discovery-first routing
+
+Workspace commands are:
+
+```text
+npm run search -- 100
+npm run apply-native
+npm run show-external
+npm run workspace -- mark external <opportunity-id> applied
+```
+
+Qualifying native records go to `state/queues/native-apply.jsonl`; qualifying
+external records go to `state/queues/external-apply.jsonl`; unresolved routes
+go to `state/queues/unknown-review.jsonl`. External jobs are manual-first and
+the runner blocks `applicationChannel: "external_application"` unless an
+explicit future policy override is supplied.
+
+The capability registry currently reports no bundled local collectors for
+LinkedIn, Naukri, Indeed, Wellfound, or external job boards. It reports native
+classification support and enables only LinkedIn native execution. Naukri,
+Indeed, and Wellfound native items are queued as `native_unsupported` until
+their flows are separately implemented and tested.
+
+Safe representative discovery simulation:
+
+```powershell
+npm run workspace -- search 100 --fixture automation/test/fixtures/discovery-first-dry-run.json --run-id RUN-DRYRUN
+```
+
+Fixture queues are isolated under the run directory and do not enter the live
+application queues.

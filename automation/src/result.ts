@@ -10,6 +10,7 @@ export function resultFor(
   return {
     status,
     lifecycle,
+    opportunityId: payload.opportunityId,
     company: payload.company,
     role: payload.role,
     jobUrl: payload.jobUrl,

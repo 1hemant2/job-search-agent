@@ -163,6 +163,7 @@ export function findDuplicate(payload: ApplicationPayload, historyText: string):
       })
     : [historyText];
   const normalizedHistory = completedSections.join("\n").toLowerCase();
+  if (payload.opportunityId && normalizedHistory.includes(payload.opportunityId.toLowerCase())) return "matching opportunityId found in application history";
   if (payload.jobUrl && normalizedHistory.includes(payload.jobUrl.toLowerCase())) return "matching jobUrl found in application history";
   if (payload.jobId && new RegExp(`\\b${escapeRegExp(payload.jobId)}\\b`, "i").test(completedSections.join("\n"))) return "matching jobId found in application history";
 

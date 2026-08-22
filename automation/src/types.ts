@@ -8,6 +8,55 @@ export type AtsName =
   | "ashby"
   | "generic";
 
+export type ApplicationChannel = "native_easy_apply" | "external_application" | "unknown";
+
+export type NativePlatform = "linkedin" | "naukri" | "indeed" | "wellfound" | (string & {});
+
+export type ExternalAts =
+  | "workday"
+  | "greenhouse"
+  | "lever"
+  | "ashby"
+  | "smartrecruiters"
+  | "company"
+  | "other";
+
+export type OpportunityStatus =
+  | "discovered"
+  | "evaluated"
+  | "queued_native"
+  | "queued_external"
+  | "unknown_route"
+  | "submitted"
+  | "skipped"
+  | "blocked"
+  | "failed";
+
+/** Canonical opportunity shared by discovery, dedupe, queues, history, and execution. */
+export interface JobOpportunity {
+  id: string;
+  source: string;
+  company: string;
+  role: string;
+  jobUrl: string;
+  applicationUrl?: string;
+  jobId?: string;
+  location?: string;
+  workArrangement?: string;
+  postingAge?: string | number;
+  postingAgeConfidence?: string;
+  description?: string;
+  descriptionReadComplete: boolean;
+  matchScore?: number;
+  selectedResume?: string;
+  applicationChannel: ApplicationChannel;
+  nativePlatform?: NativePlatform;
+  externalAts?: ExternalAts;
+  status: OpportunityStatus;
+  reasonCodes: string[];
+  discoveredAt: string;
+}
+
 export type AnswerValue = string | number | boolean | null;
 
 export interface CandidateEducation {
@@ -39,6 +88,7 @@ export interface CandidatePayload {
 }
 
 export interface ApplicationPayload {
+  opportunityId?: string;
   company: string;
   role: string;
   jobUrl: string;
@@ -48,6 +98,8 @@ export interface ApplicationPayload {
   resume: string;
   candidate: CandidatePayload;
   answers: Record<string, AnswerValue>;
+  /** External applications are manual-first and require an explicit policy override. */
+  applicationChannel?: ApplicationChannel;
   /** Required when a LinkedIn listing redirects to a non-ATS company domain. */
   allowedApplicationDomains?: string[];
 }
@@ -116,6 +168,7 @@ export type ExecutionStatus =
 export interface ExecutionResult {
   status: ExecutionStatus;
   lifecycle: LifecycleState;
+  opportunityId?: string;
   company: string;
   role: string;
   jobUrl: string;
@@ -162,6 +215,7 @@ export interface ExecutionOptions extends BrowserOptions {
   allowSubmit?: boolean;
   resumeCaptcha?: boolean;
   runId?: string;
+  allowExternalAutomation?: boolean;
 }
 
 export interface AdapterContext {

@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import { canonicalOpportunityId, canonicalizeUrl } from "./opportunity.js";
 
-export const DISCOVERY_LEDGER_SCHEMA_VERSION = 1;
+export const DISCOVERY_LEDGER_SCHEMA_VERSION = 2;
 
 export type PostingAgeConfidence = "exact" | "high" | "medium" | "low" | "unknown";
 
@@ -26,6 +27,9 @@ export type DiscoveryReasonCode =
   | "JOB_CLOSED"
   | "EXECUTOR_BLOCKED"
   | "ASSESSMENT"
+  | "UNKNOWN_APPLICATION_ROUTE"
+  | "NATIVE_UNSUPPORTED"
+  | "EXTERNAL_MANUAL_QUEUE"
   | "OTHER";
 
 export interface DiscoveryJobRecord {
@@ -40,6 +44,14 @@ export interface DiscoveryJobRecord {
   application_url?: string;
   application_route?: string;
   normalized_job_id: string;
+  opportunity_id: string;
+  identity_aliases: string[];
+  application_channel?: "native_easy_apply" | "external_application" | "unknown";
+  native_platform?: string;
+  external_ats?: string;
+  opportunity_status?: string;
+  work_arrangement?: string;
+  description?: string;
   query: string;
   query_variant: string;
   location_filter?: string;
@@ -96,6 +108,7 @@ export interface ExecutorTelemetryRecord {
   role: string;
   job_url: string;
   normalized_job_id: string;
+  opportunity_id?: string;
   executor: "local-playwright";
   ats_adapter?: string;
   starting_url?: string;
@@ -120,6 +133,7 @@ export interface DiscoveryLedgerPaths {
   discoveryLedger: string;
   searchTelemetry: string;
   executorTelemetry: string;
+  runSummary: string;
 }
 
 export interface RecencyImpactSummary {
@@ -150,12 +164,13 @@ export function runLedgerPaths(workspaceRoot: string, runId: string): DiscoveryL
     discoveryLedger: path.join(directory, "discovery-ledger.jsonl"),
     searchTelemetry: path.join(directory, "search-telemetry.jsonl"),
     executorTelemetry: path.join(directory, "executor-telemetry.jsonl"),
+    runSummary: path.join(directory, "run-summary.json"),
   };
 }
 
 export function normalizedJobId(jobId?: string, jobUrl?: string, applicationUrl?: string): string {
   if (jobId?.trim()) return jobId.trim().toLowerCase();
-  const source = applicationUrl || jobUrl || "";
+  const source = canonicalizeUrl(applicationUrl || jobUrl) || "";
   try {
     const parsed = new URL(source);
     const withoutTracking = parsed.pathname.replace(/\/$/, "");
@@ -163,6 +178,10 @@ export function normalizedJobId(jobId?: string, jobUrl?: string, applicationUrl?
   } catch {
     return source.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "unknown";
   }
+}
+
+export function canonicalDiscoveryId(input: { source: string; company: string; role: string; jobUrl: string; jobId?: string; applicationUrl?: string }): string {
+  return canonicalOpportunityId(input);
 }
 
 export class DiscoveryLedger {
@@ -194,5 +213,10 @@ export class DiscoveryLedger {
       schema_version: DISCOVERY_LEDGER_SCHEMA_VERSION,
       ...record,
     });
+  }
+
+  writeRunSummary(summary: unknown): void {
+    fs.mkdirSync(path.dirname(this.paths.runSummary), { recursive: true });
+    fs.writeFileSync(this.paths.runSummary, `${JSON.stringify(summary, null, 2)}\n`, "utf8");
   }
 }

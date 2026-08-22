@@ -1,5 +1,33 @@
 # Application History
 
+## InCommon — Agentic Software Engineer
+
+- Date discovered: 2026-08-22
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4453873792
+- Job ID: 4453873792
+- Location: Bengaluru, India; onsite
+- Match score: 75
+- Decision: Selected for application
+- Application status: Blocked — LinkedIn Easy Apply page not found / identity mismatch
+- Date applied: Not applied
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf
+- Notes: Local runner reached the LinkedIn apply endpoint, but the page showed “Page not found” and no company or role identity. No submission was made.
+
+## Seceon Inc. — Software Engineer (25 Position)
+
+- Date discovered: 2026-08-22
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4455631031
+- Job ID: 4455631031
+- Location: India; remote
+- Match score: 78
+- Decision: Selected for application
+- Application status: Blocked — LinkedIn Easy Apply page not found / identity mismatch
+- Date applied: Not applied
+- Resume used: Hemant_Kumar_NodeJS_Resume.pdf
+- Notes: Local runner reached the LinkedIn apply endpoint, but the page showed “Page not found” and no company or role identity. No submission was made.
+
 ## Wenger and Watson Inc (client: healthcare company) — Backend Developer
 
 - Date discovered: 2026-08-21

@@ -1,0 +1,19 @@
+{
+  "run_id": "RUN-20260822-DISCOVERY-DRYRUN3",
+  "generated_at": "2026-08-21T18:38:18.577Z",
+  "evaluated": 5,
+  "qualifying": 4,
+  "recency_too_old": 0,
+  "recency_unknown": 0,
+  "score_too_low": 0,
+  "hard_blockers": 0,
+  "native_easy": 2,
+  "external": 3,
+  "unknown_route": 0,
+  "queue_paths": {
+    "native": "D:\\Job Apply\\state\\runs\\RUN-20260822-DISCOVERY-DRYRUN3\\queues\\native-apply.jsonl",
+    "external": "D:\\Job Apply\\state\\runs\\RUN-20260822-DISCOVERY-DRYRUN3\\queues\\external-apply.jsonl",
+    "unknown": "D:\\Job Apply\\state\\runs\\RUN-20260822-DISCOVERY-DRYRUN3\\queues\\unknown-review.jsonl"
+  },
+  "discovery_state": "SEARCH_SPACE_REASONABLY_EXHAUSTED"
+}

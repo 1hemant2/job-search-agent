@@ -10,7 +10,8 @@ import { LeverAdapter } from "./ats/lever.js";
 import { LinkedInAdapter } from "./ats/linkedin.js";
 import { WorkdayAdapter } from "./ats/workday.js";
 import { hasActiveCaptchaBlocker, recordCaptchaBlocker, resolveCaptchaBlocker } from "./captcha-state.js";
-import { DiscoveryLedger, normalizedJobId } from "./discovery-ledger.js";
+import { DiscoveryLedger } from "./discovery-ledger.js";
+import { canonicalOpportunityId } from "./opportunity.js";
 import { applicationBlocker, resultFor, withoutSecrets, blocker } from "./result.js";
 import type { ApplicationPayload, AtsAdapter, AtsName, Blocker, ExecutionOptions, ExecutionResult, ExecutorTelemetry } from "./types.js";
 
@@ -46,7 +47,8 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
         company: payload.company,
         role: payload.role,
         job_url: payload.jobUrl,
-        normalized_job_id: normalizedJobId(payload.jobId, payload.jobUrl, payload.applicationUrl),
+        normalized_job_id: payload.opportunityId ?? canonicalOpportunityId({ source: payload.ats, company: payload.company, role: payload.role, jobUrl: payload.jobUrl, jobId: payload.jobId, applicationUrl: payload.applicationUrl }),
+        opportunity_id: payload.opportunityId,
         executor: "local-playwright",
         ats_adapter: payload.ats,
         starting_url: telemetry.startingUrl,
@@ -70,6 +72,12 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
   };
   if (validation.errors.length) {
     return finish("failed", "failed", { error: validation.errors.join("; ") });
+  }
+
+  if (payload.applicationChannel === "external_application" && !options.allowExternalAutomation) {
+    return finish("blocked", "blocked", {
+      blocker: applicationBlocker(payload, "unsupported_form", "External applications are manual-first; automatic ATS submission is disabled by policy"),
+    });
   }
 
   const historyPath = options.historyPath ?? path.join(workspaceRoot, "application-history.md");
@@ -209,12 +217,13 @@ function adapterFor(ats: AtsName, context: ConstructorParameters<typeof LinkedIn
   }
 }
 
-function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; allowSubmit: boolean; headless: boolean; profileDir?: string; resumeCaptcha: boolean; runId?: string } {
+function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; allowSubmit: boolean; allowExternalAutomation: boolean; headless: boolean; profileDir?: string; resumeCaptcha: boolean; runId?: string } {
   const args = new Map<string, string | boolean>();
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--dry-run") args.set(arg, true);
     else if (arg === "--allow-submit") args.set(arg, true);
+    else if (arg === "--allow-external") args.set(arg, true);
     else if (arg === "--resume-captcha") args.set(arg, true);
     else if (arg === "--headful") args.set("--headless", false);
     else if (arg.startsWith("--") && argv[index + 1] && !argv[index + 1].startsWith("--")) args.set(arg, argv[++index]);
@@ -223,6 +232,7 @@ function parseArgs(argv: string[]): { payloadPath?: string; dryRun: boolean; all
     payloadPath: typeof args.get("--payload") === "string" ? args.get("--payload") as string : undefined,
     dryRun: args.get("--dry-run") === true || process.env.DRY_RUN?.toLowerCase() === "true" || args.get("--allow-submit") !== true,
     allowSubmit: args.get("--allow-submit") === true,
+    allowExternalAutomation: args.get("--allow-external") === true,
     headless: args.get("--headless") !== false,
     profileDir: typeof args.get("--profile-dir") === "string" ? args.get("--profile-dir") as string : undefined,
     resumeCaptcha: args.get("--resume-captcha") === true,

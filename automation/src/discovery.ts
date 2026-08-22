@@ -1,4 +1,8 @@
+import fs from "node:fs";
 import { DiscoveryLedger, normalizedJobId, type DiscoveryJobRecord, type DiscoveryReasonCode, type DiscoveryState, type PageTransitionStatus, type PostingAgeConfidence, type SearchTelemetryRecord } from "./discovery-ledger.js";
+import { makeJobOpportunity, opportunityAliases } from "./opportunity.js";
+import { OpportunityQueues, routeOpportunity, type RouteResult } from "./queues.js";
+import type { ApplicationChannel, ExternalAts, JobOpportunity, NativePlatform, OpportunityStatus } from "./types.js";
 import { updateDiscoveryRunState } from "./run-state.js";
 
 export interface DiscoveryQueryPlan {
@@ -16,6 +20,11 @@ export interface DiscoverySourcePlan {
 export interface DiscoveryPlan {
   runId: string;
   sources: DiscoverySourcePlan[];
+}
+
+export interface DiscoveryCoordinatorOptions {
+  persistRunState?: boolean;
+  queueDirectory?: string;
 }
 
 export interface DefaultDiscoveryPlanOptions {
@@ -95,6 +104,11 @@ export interface JobDiscoveryInput {
   cursor?: string;
   applicationUrl?: string;
   applicationRoute?: string;
+  applicationChannel?: ApplicationChannel;
+  nativePlatform?: NativePlatform;
+  externalAts?: ExternalAts;
+  workArrangement?: string;
+  description?: string;
   resultPosition?: number;
   postingAge?: string | number;
   postingAgeConfidence?: PostingAgeConfidence;
@@ -152,6 +166,7 @@ function key(source: string, queryVariant: string): string {
 
 export class DiscoveryCoordinator {
   readonly ledger: DiscoveryLedger;
+  readonly queues: OpportunityQueues;
   private readonly plan: DiscoveryPlan;
   private readonly queries = new Map<string, QueryProgress>();
   private lastState: DiscoveryState = "SEARCH_SAMPLE_EXHAUSTED";
@@ -166,12 +181,17 @@ export class DiscoveryCoordinator {
   private readonly evaluatedJobIds = new Set<string>();
   private readonly newJobIds = new Set<string>();
   private readonly duplicateJobIds = new Set<string>();
+  private readonly seenOpportunityIds = new Set<string>();
   private nextPageStatus: PageTransitionStatus = "not_attempted";
   private nextCursorOrPage?: string;
 
-  constructor(private readonly workspaceRoot: string, plan: DiscoveryPlan) {
+  private readonly persistRunStateEnabled: boolean;
+
+  constructor(private readonly workspaceRoot: string, plan: DiscoveryPlan, options: DiscoveryCoordinatorOptions = {}) {
     this.plan = plan;
+    this.persistRunStateEnabled = options.persistRunState ?? true;
     this.ledger = new DiscoveryLedger(workspaceRoot, plan.runId);
+    this.queues = new OpportunityQueues(workspaceRoot, options.queueDirectory);
     for (const source of plan.sources) {
       for (const query of source.queries) {
         this.queries.set(key(source.source, query.queryVariant), {
@@ -279,6 +299,7 @@ export class DiscoveryCoordinator {
     };
     this.ledger.appendSearch(record);
     this.lastState = stopReason;
+    this.writeRunSummary();
     this.persistState();
     return stopReason;
   }
@@ -286,7 +307,29 @@ export class DiscoveryCoordinator {
   recordJob(input: JobDiscoveryInput): void {
     this.jobsDiscovered += 1;
     if (input.decision) this.uniqueJobsEvaluated += 1;
-    const normalizedId = normalizedJobId(input.jobId, input.jobUrl);
+    const opportunity = makeJobOpportunity({
+      source: input.source,
+      company: input.company,
+      role: input.role,
+      jobUrl: input.jobUrl,
+      applicationUrl: input.applicationUrl,
+      jobId: input.jobId,
+      location: input.jobLocation,
+      workArrangement: input.workArrangement,
+      postingAge: input.postingAge,
+      postingAgeConfidence: input.postingAgeConfidence,
+      description: input.description,
+      descriptionReadComplete: input.descriptionReadComplete,
+      matchScore: input.matchScore,
+      selectedResume: input.selectedResume,
+      applicationRoute: input.applicationRoute,
+      applicationChannel: input.applicationChannel,
+      nativePlatform: input.nativePlatform,
+      externalAts: input.externalAts,
+      status: this.opportunityStatus(input),
+      reasonCodes: input.reasonCodes ?? [],
+    });
+    const normalizedId = opportunity.id || normalizedJobId(input.jobId, input.jobUrl, input.applicationUrl);
     this.evaluatedJobIds.add(normalizedId);
     if (input.decision === "duplicate" || input.reasonCodes?.includes("DUPLICATE") || input.reasonCodes?.includes("ALREADY_APPLIED")) {
       this.duplicateJobIds.add(normalizedId);
@@ -303,6 +346,21 @@ export class DiscoveryCoordinator {
       application_url: input.applicationUrl,
       application_route: input.applicationRoute,
       normalized_job_id: normalizedId,
+      opportunity_id: opportunity.id,
+      identity_aliases: opportunityAliases({
+        source: input.source,
+        company: input.company,
+        role: input.role,
+        jobUrl: input.jobUrl,
+        jobId: input.jobId,
+        applicationUrl: input.applicationUrl,
+      }),
+      application_channel: opportunity.applicationChannel,
+      native_platform: opportunity.nativePlatform,
+      external_ats: opportunity.externalAts,
+      opportunity_status: opportunity.status,
+      work_arrangement: opportunity.workArrangement,
+      description: opportunity.description,
       query: input.query,
       query_variant: input.queryVariant,
       location_filter: input.locationFilter,
@@ -322,7 +380,66 @@ export class DiscoveryCoordinator {
       blocker_type: input.blockerType,
     };
     this.ledger.appendJob(record);
+    this.writeRunSummary();
     this.persistState();
+  }
+
+  /** Persist one fully normalized opportunity and route it to a durable queue. */
+  recordOpportunity(opportunity: JobOpportunity, metadata: {
+    query?: string;
+    queryVariant?: string;
+    pageNumber?: number;
+    cursor?: string;
+    resultPosition?: number;
+    locationFilter?: string;
+    decision?: string;
+    recencyClass?: "within_window" | "too_old" | "unknown";
+  } = {}): RouteResult {
+    const duplicate = this.seenOpportunityIds.has(opportunity.id);
+    this.seenOpportunityIds.add(opportunity.id);
+    this.recordJob({
+      source: opportunity.source,
+      company: opportunity.company,
+      role: opportunity.role,
+      jobUrl: opportunity.jobUrl,
+      applicationUrl: opportunity.applicationUrl,
+      jobId: opportunity.jobId,
+      jobLocation: opportunity.location,
+      postingAge: opportunity.postingAge,
+      postingAgeConfidence: opportunity.postingAgeConfidence as PostingAgeConfidence | undefined,
+      descriptionReadComplete: opportunity.descriptionReadComplete,
+      description: opportunity.description,
+      matchScore: opportunity.matchScore,
+      selectedResume: opportunity.selectedResume,
+      applicationRoute: opportunity.applicationChannel,
+      applicationChannel: opportunity.applicationChannel,
+      nativePlatform: opportunity.nativePlatform,
+      externalAts: opportunity.externalAts,
+      workArrangement: opportunity.workArrangement,
+      reasonCodes: duplicate ? [...opportunity.reasonCodes, "DUPLICATE"] as DiscoveryReasonCode[] : opportunity.reasonCodes as DiscoveryReasonCode[],
+      decision: duplicate ? "duplicate" : metadata.decision ?? opportunity.status,
+      query: metadata.query ?? opportunity.source,
+      queryVariant: metadata.queryVariant ?? "manual-discovery",
+      pageNumber: metadata.pageNumber,
+      cursor: metadata.cursor,
+      resultPosition: metadata.resultPosition,
+      locationFilter: metadata.locationFilter,
+      recencyClass: metadata.recencyClass,
+    });
+    if (duplicate) return { route: "duplicate", opportunityId: opportunity.id };
+    return routeOpportunity(this.workspaceRoot, opportunity, this.queues);
+  }
+
+  private opportunityStatus(input: JobDiscoveryInput): OpportunityStatus {
+    if (input.decision === "qualifying" || input.decision === "apply") {
+      if (input.applicationChannel === "native_easy_apply") return "queued_native";
+      if (input.applicationChannel === "external_application") return "queued_external";
+    }
+    if (input.applicationChannel === "unknown") return "unknown_route";
+    if (input.decision === "skipped") return "skipped";
+    if (input.decision === "blocked") return "blocked";
+    if (input.decision === "failed") return "failed";
+    return "evaluated";
   }
 
   currentState(): DiscoveryState {
@@ -388,6 +505,7 @@ export class DiscoveryCoordinator {
   }
 
   private persistState(): void {
+    if (!this.persistRunStateEnabled) return;
     const snapshot = this.snapshot();
     updateDiscoveryRunState(this.workspaceRoot, {
       ...snapshot,
@@ -395,6 +513,28 @@ export class DiscoveryCoordinator {
       discoveryLedger: this.ledger.paths.discoveryLedger.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
       searchTelemetry: this.ledger.paths.searchTelemetry.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
       executorTelemetry: this.ledger.paths.executorTelemetry.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
+    });
+  }
+
+  private writeRunSummary(): void {
+    const records = fs.existsSync(this.ledger.paths.discoveryLedger)
+      ? fs.readFileSync(this.ledger.paths.discoveryLedger, "utf8").split(/\r?\n/).filter(Boolean).map((line: string) => JSON.parse(line) as DiscoveryJobRecord)
+      : [];
+    const count = (predicate: (record: DiscoveryJobRecord) => boolean) => records.filter(predicate).length;
+    this.ledger.writeRunSummary({
+      run_id: this.plan.runId,
+      generated_at: new Date().toISOString(),
+      evaluated: records.length,
+      qualifying: count((record) => ["qualifying", "apply"].includes(record.decision)),
+      recency_too_old: count((record) => record.recency_class === "too_old" || record.reason_codes.includes("RECENCY_TOO_OLD")),
+      recency_unknown: count((record) => record.recency_class === "unknown" || record.reason_codes.includes("RECENCY_UNKNOWN")),
+      score_too_low: count((record) => record.reason_codes.includes("INSUFFICIENT_MATCH_SCORE")),
+      hard_blockers: count((record) => record.reason_codes.some((code) => ["EXPERIENCE_HARD_BLOCKER", "WORK_AUTHORIZATION_MISMATCH", "ROLE_MISMATCH"].includes(code))),
+      native_easy: count((record) => record.application_channel === "native_easy_apply"),
+      external: count((record) => record.application_channel === "external_application"),
+      unknown_route: count((record) => record.application_channel === "unknown"),
+      queue_paths: this.queues.paths,
+      discovery_state: this.lastState,
     });
   }
 }
