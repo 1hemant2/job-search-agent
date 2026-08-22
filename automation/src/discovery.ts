@@ -4,6 +4,8 @@ import { makeJobOpportunity, opportunityAliases } from "./opportunity.js";
 import { OpportunityQueues, routeOpportunity, type RouteResult } from "./queues.js";
 import type { ApplicationChannel, ExternalAts, JobOpportunity, NativePlatform, OpportunityStatus } from "./types.js";
 import { updateDiscoveryRunState } from "./run-state.js";
+import { SEARCH_PROFILES, type SearchProfileId } from "./search-profiles.js";
+import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
 
 export interface DiscoveryQueryPlan {
   query: string;
@@ -19,6 +21,7 @@ export interface DiscoverySourcePlan {
 
 export interface DiscoveryPlan {
   runId: string;
+  searchProfile?: SearchProfileId;
   sources: DiscoverySourcePlan[];
 }
 
@@ -32,33 +35,20 @@ export interface DefaultDiscoveryPlanOptions {
   location?: string;
   locations?: string[];
   recencyDays?: number;
+  searchProfile?: SearchProfileId;
 }
-
-const DEFAULT_QUERY_VARIANTS: Array<[string, string]> = [
-  ["Node.js Backend Engineer", "nodejs-backend-engineer"],
-  ["Backend Engineer", "backend-engineer"],
-  ["Software Engineer Backend", "software-engineer-backend"],
-  ["Node.js Developer", "nodejs-developer"],
-  ["TypeScript Backend Engineer", "typescript-backend-engineer"],
-  ["API Engineer", "api-engineer"],
-  ["Platform Engineer", "platform-engineer"],
-  ["Distributed Systems Engineer", "distributed-systems-engineer"],
-  ["Software Engineer I", "software-engineer-i"],
-  ["SDE 1", "sde-1"],
-  ["Software Engineer II", "software-engineer-ii"],
-  ["SDE 2", "sde-2"],
-  ["Java Backend Engineer", "java-backend-engineer"],
-];
 
 export function buildDefaultDiscoveryPlan(runId: string, options: DefaultDiscoveryPlanOptions = {}): DiscoveryPlan {
   const sources = options.sources?.length ? options.sources : ["linkedin", "company-careers", "greenhouse", "lever", "ashby", "workday", "wellfound", "yc-jobs"];
   const recencyDays = options.recencyDays ?? 7;
-  const locations = options.locations?.length ? options.locations : [options.location];
+  const profile = SEARCH_PROFILES[options.searchProfile ?? "node_backend"];
+  const locations = options.locations?.length ? options.locations : options.location ? [options.location] : profile.locations;
   return {
     runId,
+    searchProfile: options.searchProfile,
     sources: sources.map((source) => ({
       source,
-      queries: DEFAULT_QUERY_VARIANTS.flatMap(([query, queryVariant]) => locations.map((location) => ({
+      queries: profile.queryVariants.flatMap(([query, queryVariant]) => locations.map((location) => ({
         query,
         queryVariant: location ? `${queryVariant}-${location.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` : queryVariant,
         location,
@@ -115,7 +105,14 @@ export interface JobDiscoveryInput {
   descriptionReadComplete?: boolean;
   recencyClass?: "within_window" | "too_old" | "unknown";
   matchScore?: number;
+  matchClassification?: JavaMatchClassification;
+  searchProfile?: SearchProfileId;
   selectedResume?: string;
+  requiredYoe?: string;
+  javaSpringRequirement?: string;
+  javaExperienceScope?: JavaExperienceScope;
+  whyCandidateMatches?: string[];
+  gaps?: string[];
   decision: string;
   reasonCodes?: DiscoveryReasonCode[];
   executorStatus?: string;
@@ -321,7 +318,14 @@ export class DiscoveryCoordinator {
       description: input.description,
       descriptionReadComplete: input.descriptionReadComplete,
       matchScore: input.matchScore,
+      matchClassification: input.matchClassification,
+      searchProfile: input.searchProfile,
       selectedResume: input.selectedResume,
+      requiredYoe: input.requiredYoe,
+      javaSpringRequirement: input.javaSpringRequirement,
+      javaExperienceScope: input.javaExperienceScope,
+      whyCandidateMatches: input.whyCandidateMatches,
+      gaps: input.gaps,
       applicationRoute: input.applicationRoute,
       applicationChannel: input.applicationChannel,
       nativePlatform: input.nativePlatform,
@@ -373,7 +377,14 @@ export class DiscoveryCoordinator {
       description_read_complete: input.descriptionReadComplete,
       recency_class: input.recencyClass,
       match_score: input.matchScore,
+      match_classification: input.matchClassification,
+      search_profile: input.searchProfile,
       selected_resume: input.selectedResume,
+      required_yoe: input.requiredYoe,
+      java_spring_requirement: input.javaSpringRequirement,
+      java_experience_scope: input.javaExperienceScope,
+      why_candidate_matches: input.whyCandidateMatches,
+      gaps: input.gaps,
       decision: input.decision,
       reason_codes: input.reasonCodes ?? [],
       executor_status: input.executorStatus,
@@ -410,7 +421,14 @@ export class DiscoveryCoordinator {
       descriptionReadComplete: opportunity.descriptionReadComplete,
       description: opportunity.description,
       matchScore: opportunity.matchScore,
+      matchClassification: opportunity.matchClassification,
+      searchProfile: opportunity.searchProfile,
       selectedResume: opportunity.selectedResume,
+      requiredYoe: opportunity.requiredYoe,
+      javaSpringRequirement: opportunity.javaSpringRequirement,
+      javaExperienceScope: opportunity.javaExperienceScope,
+      whyCandidateMatches: opportunity.whyCandidateMatches,
+      gaps: opportunity.gaps,
       applicationRoute: opportunity.applicationChannel,
       applicationChannel: opportunity.applicationChannel,
       nativePlatform: opportunity.nativePlatform,
@@ -427,11 +445,14 @@ export class DiscoveryCoordinator {
       recencyClass: metadata.recencyClass,
     });
     if (duplicate) return { route: "duplicate", opportunityId: opportunity.id };
+    if (!["qualifying", "apply", "apply_stretch"].includes(metadata.decision ?? "")) {
+      return { route: "not_queued", opportunityId: opportunity.id };
+    }
     return routeOpportunity(this.workspaceRoot, opportunity, this.queues);
   }
 
   private opportunityStatus(input: JobDiscoveryInput): OpportunityStatus {
-    if (input.decision === "qualifying" || input.decision === "apply") {
+    if (["qualifying", "apply", "apply_stretch"].includes(input.decision)) {
       if (input.applicationChannel === "native_easy_apply") return "queued_native";
       if (input.applicationChannel === "external_application") return "queued_external";
     }
@@ -523,9 +544,10 @@ export class DiscoveryCoordinator {
     const count = (predicate: (record: DiscoveryJobRecord) => boolean) => records.filter(predicate).length;
     this.ledger.writeRunSummary({
       run_id: this.plan.runId,
+      search_profile: this.plan.searchProfile,
       generated_at: new Date().toISOString(),
       evaluated: records.length,
-      qualifying: count((record) => ["qualifying", "apply"].includes(record.decision)),
+      qualifying: count((record) => ["qualifying", "apply", "apply_stretch"].includes(record.decision)),
       recency_too_old: count((record) => record.recency_class === "too_old" || record.reason_codes.includes("RECENCY_TOO_OLD")),
       recency_unknown: count((record) => record.recency_class === "unknown" || record.reason_codes.includes("RECENCY_UNKNOWN")),
       score_too_low: count((record) => record.reason_codes.includes("INSUFFICIENT_MATCH_SCORE")),

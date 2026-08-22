@@ -33,6 +33,12 @@ describe("discovery-first routing", () => {
       .toBe(canonicalOpportunityId({ source: "greenhouse", company: " ACME ", role: "Backend Engineer", jobUrl: "https://boards.greenhouse.io/acme/jobs/42", applicationUrl: official }));
   });
 
+  it("keeps same-titled openings in different locations distinct without a shared official URL", () => {
+    const base = { source: "linkedin", company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/search" };
+    expect(canonicalOpportunityId({ ...base, location: "Bengaluru" }))
+      .not.toBe(canonicalOpportunityId({ ...base, location: "Hyderabad" }));
+  });
+
   it("routes qualifying native, external, and unknown opportunities to durable queues", () => {
     const root = workspace();
     const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "India" }));

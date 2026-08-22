@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { canonicalOpportunityId, canonicalizeUrl } from "./opportunity.js";
 
-export const DISCOVERY_LEDGER_SCHEMA_VERSION = 2;
+export const DISCOVERY_LEDGER_SCHEMA_VERSION = 3;
 
 export type PostingAgeConfidence = "exact" | "high" | "medium" | "low" | "unknown";
 
@@ -64,7 +64,14 @@ export interface DiscoveryJobRecord {
   description_read_complete?: boolean;
   recency_class?: "within_window" | "too_old" | "unknown";
   match_score?: number;
+  match_classification?: string;
+  search_profile?: string;
   selected_resume?: string;
+  required_yoe?: string;
+  java_spring_requirement?: string;
+  java_experience_scope?: string;
+  why_candidate_matches?: string[];
+  gaps?: string[];
   decision: string;
   reason_codes: DiscoveryReasonCode[];
   executor_status?: string;

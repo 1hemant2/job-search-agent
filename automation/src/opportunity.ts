@@ -6,6 +6,8 @@ import type {
   NativePlatform,
   OpportunityStatus,
 } from "./types.js";
+import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
+import type { SearchProfileId } from "./search-profiles.js";
 
 const TRACKING_PARAMS = /^(utm_[^=]+|fbclid|gclid|mc_cid|mc_eid|ref|referrer|source)$/i;
 
@@ -23,7 +25,14 @@ export interface OpportunityInput {
   description?: string;
   descriptionReadComplete?: boolean;
   matchScore?: number;
+  matchClassification?: JavaMatchClassification;
+  searchProfile?: SearchProfileId;
   selectedResume?: string;
+  requiredYoe?: string;
+  javaSpringRequirement?: string;
+  javaExperienceScope?: JavaExperienceScope;
+  whyCandidateMatches?: string[];
+  gaps?: string[];
   applicationRoute?: string;
   applicationChannel?: ApplicationChannel;
   nativePlatform?: NativePlatform;
@@ -105,11 +114,14 @@ export function classifyApplicationChannel(input: OpportunityInput): Application
 function identityMaterial(input: OpportunityInput): string {
   const company = normalizeIdentityText(input.company);
   const role = normalizeIdentityText(input.role);
+  const location = normalizeIdentityText(input.location);
   const app = canonicalizeUrl(input.applicationUrl);
   const job = canonicalizeUrl(input.jobUrl);
-  // Company + role is the cross-source opening key. URLs, IDs, and source are
-  // retained as aliases in the ledger so the same LinkedIn/ATS opening merges.
-  const sourceJobKey = app ? "" : `${hostOf(job) ?? ""}|${normalizeIdentityText(input.jobId)}`;
+  // A shared official application URL identifies the same opening across
+  // sources. Otherwise job ID and canonical host disambiguate listings, with
+  // normalized location preventing same-titled openings in different places
+  // from collapsing when no stronger identifier is present.
+  const sourceJobKey = app ? "" : `${hostOf(job) ?? ""}|${normalizeIdentityText(input.jobId)}|${location}`;
   return [company, role, app ?? "", sourceJobKey].join("|");
 }
 
@@ -123,6 +135,7 @@ export function opportunityAliases(input: OpportunityInput): string[] {
   const company = normalizeIdentityText(input.company);
   const role = normalizeIdentityText(input.role);
   aliases.add(`company-role:${company}|${role}`);
+  if (input.location?.trim()) aliases.add(`company-role-location:${company}|${role}|${normalizeIdentityText(input.location)}`);
   if (input.jobId?.trim()) aliases.add(`job-id:${normalizeIdentityText(input.jobId)}`);
   for (const value of [input.jobUrl, input.applicationUrl]) {
     const canonical = canonicalizeUrl(value);
@@ -150,7 +163,14 @@ export function makeJobOpportunity(input: OpportunityInput): JobOpportunity {
     description: input.description,
     descriptionReadComplete: input.descriptionReadComplete ?? false,
     matchScore: input.matchScore,
+    matchClassification: input.matchClassification,
+    searchProfile: input.searchProfile,
     selectedResume: input.selectedResume,
+    requiredYoe: input.requiredYoe,
+    javaSpringRequirement: input.javaSpringRequirement,
+    javaExperienceScope: input.javaExperienceScope,
+    whyCandidateMatches: input.whyCandidateMatches,
+    gaps: input.gaps,
     applicationChannel,
     nativePlatform,
     externalAts,
@@ -167,6 +187,9 @@ export function sameOpportunity(left: OpportunityInput, right: OpportunityInput)
   const leftApp = canonicalizeUrl(left.applicationUrl);
   const rightApp = canonicalizeUrl(right.applicationUrl);
   if (leftApp && rightApp) return leftApp === rightApp;
+  const leftLocation = normalizeIdentityText(left.location);
+  const rightLocation = normalizeIdentityText(right.location);
+  if (leftLocation && rightLocation && leftLocation !== rightLocation) return false;
   // When no shared official URL exists, a cross-platform listing with the
   // same company/role is the same opening for discovery purposes. The ledger
   // preserves every source URL and job ID as aliases for auditability.

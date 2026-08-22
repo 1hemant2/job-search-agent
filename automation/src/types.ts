@@ -1,4 +1,6 @@
 import type { Page } from "playwright";
+import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
+import type { SearchProfileId } from "./search-profiles.js";
 
 export type AtsName =
   | "linkedin"
@@ -48,7 +50,14 @@ export interface JobOpportunity {
   description?: string;
   descriptionReadComplete: boolean;
   matchScore?: number;
+  matchClassification?: JavaMatchClassification;
+  searchProfile?: SearchProfileId;
   selectedResume?: string;
+  requiredYoe?: string;
+  javaSpringRequirement?: string;
+  javaExperienceScope?: JavaExperienceScope;
+  whyCandidateMatches?: string[];
+  gaps?: string[];
   applicationChannel: ApplicationChannel;
   nativePlatform?: NativePlatform;
   externalAts?: ExternalAts;

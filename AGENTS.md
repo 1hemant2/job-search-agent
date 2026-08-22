@@ -8,8 +8,11 @@ This file contains only bootstrapping, command modes, and invariants.
 - `search` runs discovery with the default evaluation limit.
 - `search 100` evaluates approximately 100 unique opportunities across the
   configured query variants and sources; the number is not result-card count.
+- `search java 100` uses the Java-backend profile and Java-specific query plan.
 - `apply native` processes the persisted supported native-application queue.
+- `apply native java` processes only Java-profile native queue records.
 - `show external` shows the highest-value pending external applications.
+- `show external java` filters the manual external queue to the Java profile.
 - `mark external <id> applied|skipped` updates the manual external queue.
 - `start` is retained as a compatibility alias for an authorized run, but it
   now means discovery, evaluation, classification, and queue routing. It does

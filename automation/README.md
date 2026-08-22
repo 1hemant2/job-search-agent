@@ -188,10 +188,20 @@ Workspace commands are:
 
 ```text
 npm run search -- 100
+npm run search -- java 100
 npm run apply-native
+npm run workspace -- apply native java
 npm run show-external
+npm run workspace -- show external java
 npm run workspace -- mark external <opportunity-id> applied
 ```
+
+The Java mode loads
+`.agents/skills/job-application/search-profiles/java-backend.md`, uses the
+Java-specific title/location plan and 100-point scorer, and persists
+`searchProfile: "java_backend"` plus the Java requirement scope,
+classification, match reasons, gaps, and selected resume in normalized records
+and queues. Unqualified commands retain the existing Node/general behavior.
 
 Qualifying native records go to `state/queues/native-apply.jsonl`; qualifying
 external records go to `state/queues/external-apply.jsonl`; unresolved routes

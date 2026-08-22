@@ -1,11 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ExternalAts, JobOpportunity, NativePlatform } from "./types.js";
+import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
+import type { SearchProfileId } from "./search-profiles.js";
+
+interface ProfileQueueFields {
+  searchProfile?: SearchProfileId;
+  matchClassification?: JavaMatchClassification;
+  requiredYoe?: string;
+  javaSpringRequirement?: string;
+  javaExperienceScope?: JavaExperienceScope;
+  whyCandidateMatches?: string[];
+  gaps?: string[];
+}
 
 export type NativeQueueStatus = "pending" | "in_progress" | "blocked" | "failed" | "submitted" | "native_unsupported" | "skipped";
 export type ExternalQueueStatus = "pending_manual" | "opened" | "applied" | "skipped" | "expired";
 
-export interface NativeQueueItem {
+export interface NativeQueueItem extends ProfileQueueFields {
   opportunityId: string;
   company: string;
   role: string;
@@ -21,7 +33,7 @@ export interface NativeQueueItem {
   applicationUrl?: string;
 }
 
-export interface ExternalQueueItem {
+export interface ExternalQueueItem extends ProfileQueueFields {
   opportunityId: string;
   company: string;
   role: string;
@@ -38,7 +50,7 @@ export interface ExternalQueueItem {
   status: ExternalQueueStatus;
 }
 
-export interface UnknownRouteItem {
+export interface UnknownRouteItem extends ProfileQueueFields {
   opportunityId: string;
   company: string;
   role: string;
@@ -46,6 +58,8 @@ export interface UnknownRouteItem {
   jobUrl: string;
   applicationUrl?: string;
   matchScore?: number;
+  selectedResume?: string;
+  postingAge?: string | number;
   reasonCodes: string[];
   discoveredAt: string;
   queuedAt: string;
@@ -93,12 +107,14 @@ export class OpportunityQueues {
   externalItems(): ExternalQueueItem[] { return readLatest<ExternalQueueItem>(this.paths.external); }
   unknownItems(): UnknownRouteItem[] { return readLatest<UnknownRouteItem>(this.paths.unknown); }
 
-  pendingNative(): NativeQueueItem[] {
-    return this.nativeItems().filter((item) => ["pending", "failed", "native_unsupported"].includes(item.status));
+  pendingNative(searchProfile?: SearchProfileId): NativeQueueItem[] {
+    return this.nativeItems().filter((item) => ["pending", "failed", "native_unsupported"].includes(item.status)
+      && (!searchProfile || item.searchProfile === searchProfile));
   }
 
-  pendingExternal(): ExternalQueueItem[] {
-    return this.externalItems().filter((item) => item.status === "pending_manual");
+  pendingExternal(searchProfile?: SearchProfileId): ExternalQueueItem[] {
+    return this.externalItems().filter((item) => item.status === "pending_manual"
+      && (!searchProfile || item.searchProfile === searchProfile));
   }
 }
 
@@ -106,7 +122,8 @@ export type RouteResult =
   | { route: "native"; item: NativeQueueItem }
   | { route: "external"; item: ExternalQueueItem }
   | { route: "unknown"; item: UnknownRouteItem }
-  | { route: "duplicate"; opportunityId: string };
+  | { route: "duplicate"; opportunityId: string }
+  | { route: "not_queued"; opportunityId: string };
 
 const SUPPORTED_NATIVE_EXECUTION = new Set(["linkedin"]);
 
@@ -125,8 +142,15 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
       jobUrl: opportunity.jobUrl,
       applicationUrl: opportunity.applicationUrl,
       matchScore: opportunity.matchScore,
+      matchClassification: opportunity.matchClassification,
+      searchProfile: opportunity.searchProfile,
       postingAge: opportunity.postingAge,
       selectedResume: opportunity.selectedResume,
+      requiredYoe: opportunity.requiredYoe,
+      javaSpringRequirement: opportunity.javaSpringRequirement,
+      javaExperienceScope: opportunity.javaExperienceScope,
+      whyCandidateMatches: opportunity.whyCandidateMatches,
+      gaps: opportunity.gaps,
       queuedAt,
       status: isNativeExecutionSupported(opportunity) ? "pending" : "native_unsupported",
       retryCount: 0,
@@ -144,7 +168,14 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
       externalApplicationUrl: opportunity.applicationUrl,
       detectedAts: opportunity.externalAts,
       matchScore: opportunity.matchScore,
+      matchClassification: opportunity.matchClassification,
+      searchProfile: opportunity.searchProfile,
       selectedResume: opportunity.selectedResume,
+      requiredYoe: opportunity.requiredYoe,
+      javaSpringRequirement: opportunity.javaSpringRequirement,
+      javaExperienceScope: opportunity.javaExperienceScope,
+      whyCandidateMatches: opportunity.whyCandidateMatches,
+      gaps: opportunity.gaps,
       postingAge: opportunity.postingAge,
       reasonMatched: opportunity.reasonCodes,
       discoveredAt: opportunity.discoveredAt,
@@ -162,7 +193,16 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
     jobUrl: opportunity.jobUrl,
     applicationUrl: opportunity.applicationUrl,
     matchScore: opportunity.matchScore,
+    selectedResume: opportunity.selectedResume,
+    postingAge: opportunity.postingAge,
+    matchClassification: opportunity.matchClassification,
+    searchProfile: opportunity.searchProfile,
     reasonCodes: opportunity.reasonCodes,
+    requiredYoe: opportunity.requiredYoe,
+    javaSpringRequirement: opportunity.javaSpringRequirement,
+    javaExperienceScope: opportunity.javaExperienceScope,
+    whyCandidateMatches: opportunity.whyCandidateMatches,
+    gaps: opportunity.gaps,
     discoveredAt: opportunity.discoveredAt,
     queuedAt,
     status: "review",

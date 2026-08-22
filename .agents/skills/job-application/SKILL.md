@@ -30,14 +30,22 @@ not 100 result cards or one page. The controller continues across queries,
 pages, and sources until the target is reached or the planned search space is
 actually exhausted.
 
+`search java 100` selects the reusable policy in
+`search-profiles/java-backend.md`, its Java query/location plan, and the Java
+resume-selection/scoring rules. The unqualified `search` command retains the
+existing Node/general-backend behavior.
+
 `apply native` loads `state/queues/native-apply.jsonl`, removes opportunities
 already confirmed in history, verifies that supported native work is still
 available, resolves reusable answers, and invokes the local Playwright runner
 only for implemented native flows. It never consumes the external queue.
+`apply native java` applies the same rules while filtering to records created
+by the Java profile.
 
 `show external` presents pending manual external applications sorted by match
 score, recency, and preference alignment. `mark external <id> applied` and
 `mark external <id> skipped` append a status event to the external queue.
+`show external java` filters this view to pending Java-profile records.
 
 `start` is a compatibility alias for an authorized continuous discovery run.
 It no longer means “submit every qualifying ATS job.” A migration, test, or

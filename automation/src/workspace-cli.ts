@@ -4,6 +4,8 @@ import { buildDefaultDiscoveryPlan, DiscoveryCoordinator, type DiscoveryPlan } f
 import { makeJobOpportunity } from "./opportunity.js";
 import { OpportunityQueues, sortExternalForReview } from "./queues.js";
 import { SOURCE_CAPABILITIES } from "./sources/index.js";
+import { evaluateJavaBackendJob, type ExperienceRequirement, type JavaRequirement } from "./matching/java-backend.js";
+import { searchProfileFromToken, type SearchProfileId } from "./search-profiles.js";
 
 interface FixtureRecord {
   source: string;
@@ -22,6 +24,10 @@ interface FixtureRecord {
   reasonCodes?: string[];
   query?: string;
   queryVariant?: string;
+  requiredYoe?: ExperienceRequirement | string;
+  javaRequirement?: JavaRequirement | string;
+  indiaEligible?: boolean;
+  recencyClass?: "within_window" | "too_old" | "unknown";
 }
 
 const workspaceRoot = path.resolve(process.cwd(), "..");
@@ -42,6 +48,8 @@ function printCapabilities(): void {
 }
 
 function search(args: string[]): void {
+  const explicitProfile = searchProfileFromToken(args[0]);
+  const profile: SearchProfileId = explicitProfile ?? "node_backend";
   const target = Number(args.find((arg) => /^\d+$/.test(arg)) ?? "50");
   const id = argValue(args, "--run-id") ?? runId();
   const fixturePath = argValue(args, "--fixture");
@@ -49,8 +57,8 @@ function search(args: string[]): void {
     ? JSON.parse(fs.readFileSync(path.resolve(workspaceRoot, fixturePath), "utf8")) as FixtureRecord[]
     : [];
   const plan: DiscoveryPlan = fixture.length
-    ? { runId: id, sources: [{ source: "fixture", queries: [{ query: "fixture", queryVariant: "fixture", location: "India" }] }] }
-    : buildDefaultDiscoveryPlan(id, { sources: SOURCE_CAPABILITIES.map((item) => item.source), location: "India" });
+    ? { runId: id, searchProfile: explicitProfile, sources: [{ source: "fixture", queries: [{ query: "fixture", queryVariant: "fixture", location: "India" }] }] }
+    : buildDefaultDiscoveryPlan(id, { sources: SOURCE_CAPABILITIES.map((item) => item.source), searchProfile: profile });
   const coordinator = new DiscoveryCoordinator(workspaceRoot, plan, {
     persistRunState: !fixture.length,
     queueDirectory: fixture.length ? path.join(workspaceRoot, "state", "runs", id, "queues") : undefined,
@@ -78,6 +86,7 @@ function search(args: string[]): void {
     });
     console.log(JSON.stringify({
       mode: "discovery-only",
+      searchProfile: profile,
       requestedUniqueEvaluations: target,
       runId: id,
       collectors: SOURCE_CAPABILITIES,
@@ -89,23 +98,58 @@ function search(args: string[]): void {
 
   const capped = fixture.slice(0, target);
   for (const [index, item] of capped.entries()) {
+    const javaAssessment = profile === "java_backend" ? evaluateJavaBackendJob({
+      company: item.company,
+      role: item.role,
+      description: item.description,
+      location: item.location,
+      requiredYoe: item.requiredYoe,
+      javaRequirement: item.javaRequirement,
+      indiaEligible: item.indiaEligible,
+      searchProfile: profile,
+    }) : undefined;
+    const matchScore = javaAssessment?.score ?? item.matchScore;
+    const selectedResume = javaAssessment?.selectedResume ?? item.selectedResume;
+    const decision = javaAssessment
+      ? javaAssessment.classification === "APPLY" ? "apply"
+        : javaAssessment.classification === "APPLY_STRETCH" ? "apply_stretch"
+          : javaAssessment.classification.toLowerCase()
+      : (matchScore ?? 0) >= 70 ? "qualifying" : "skipped";
     const opportunity = makeJobOpportunity({
       ...item,
       descriptionReadComplete: item.descriptionReadComplete ?? true,
+      matchScore,
+      matchClassification: javaAssessment?.classification,
+      searchProfile: explicitProfile,
+      selectedResume,
+      requiredYoe: javaAssessment?.requiredYoe,
+      javaSpringRequirement: javaAssessment?.javaRequirement,
+      javaExperienceScope: javaAssessment?.javaExperienceScope,
+      whyCandidateMatches: javaAssessment?.whyCandidateMatches,
+      gaps: javaAssessment?.gaps,
       status: "evaluated",
-      reasonCodes: item.reasonCodes ?? ["MATCHED_CANDIDATE_PROFILE"],
+      reasonCodes: javaAssessment
+        ? [...javaAssessment.reasonCodes, ...(javaAssessment.whyCandidateMatches.length ? ["MATCHED_CANDIDATE_PROFILE"] : [])]
+        : item.reasonCodes ?? ["MATCHED_CANDIDATE_PROFILE"],
     });
     const result = coordinator.recordOpportunity(opportunity, {
       query: item.query ?? "fixture",
       queryVariant: item.queryVariant ?? "fixture",
       pageNumber: 1,
       resultPosition: index + 1,
-      decision: (item.matchScore ?? 0) >= 70 ? "qualifying" : "skipped",
-      recencyClass: "within_window",
+      decision,
+      recencyClass: item.recencyClass ?? "within_window",
     });
-    console.log(JSON.stringify({ opportunityId: opportunity.id, route: result.route, company: opportunity.company, role: opportunity.role }));
+    console.log(JSON.stringify({ opportunityId: opportunity.id, route: result.route, company: opportunity.company, role: opportunity.role, searchProfile: profile, score: matchScore, classification: javaAssessment?.classification, selectedResume }));
   }
-  const visible = capped.map((item) => makeJobOpportunity(item).id);
+  const visible = capped.map((item) => makeJobOpportunity({
+    source: item.source,
+    company: item.company,
+    role: item.role,
+    jobUrl: item.jobUrl,
+    applicationUrl: item.applicationUrl,
+    jobId: item.jobId,
+  }).id);
   coordinator.recordSearchPage({
     source: "fixture",
     query: "fixture",
@@ -120,11 +164,15 @@ function search(args: string[]): void {
     scrollCompleted: true,
     visibleJobIds: visible,
   });
-  console.log(JSON.stringify({ mode: "discovery-only", runId: id, evaluated: capped.length, runSummary: `state/runs/${id}/run-summary.json` }, null, 2));
+  console.log(JSON.stringify({ mode: "discovery-only", searchProfile: profile, runId: id, evaluated: capped.length, runSummary: `state/runs/${id}/run-summary.json` }, null, 2));
 }
 
-function showExternal(): void {
-  const items = sortExternalForReview(new OpportunityQueues(workspaceRoot).pendingExternal());
+function profileArgument(args: string[]): SearchProfileId | undefined {
+  return searchProfileFromToken(args[0]);
+}
+
+function showExternal(args: string[]): void {
+  const items = sortExternalForReview(new OpportunityQueues(workspaceRoot).pendingExternal(profileArgument(args)));
   console.log(JSON.stringify(items, null, 2));
 }
 
@@ -139,11 +187,13 @@ function markExternal(args: string[]): void {
   console.log(JSON.stringify({ opportunityId: id, status }));
 }
 
-function applyNative(): void {
+function applyNative(args: string[]): void {
   const queues = new OpportunityQueues(workspaceRoot);
-  const pending = queues.pendingNative();
+  const profile = profileArgument(args);
+  const pending = queues.pendingNative(profile);
   console.log(JSON.stringify({
     mode: "native-apply",
+    searchProfile: profile,
     queued: pending.length,
     ready: pending.filter((item) => item.status !== "native_unsupported").length,
     unsupported: pending.filter((item) => item.status === "native_unsupported").map((item) => ({ opportunityId: item.opportunityId, platform: item.platform })),
@@ -152,9 +202,9 @@ function applyNative(): void {
 }
 
 function help(): void {
-  console.log("search [count] [--fixture path] [--run-id id]");
-  console.log("apply native");
-  console.log("show external");
+  console.log("search [java|node] [count] [--fixture path] [--run-id id]");
+  console.log("apply native [java|node]");
+  console.log("show external [java|node]");
   console.log("mark external <opportunity-id> applied|skipped");
   console.log("capabilities");
 }
@@ -163,8 +213,8 @@ const args = process.argv.slice(2);
 const command = args.shift();
 try {
   if (command === "search") search(args);
-  else if (command === "apply" && args.shift() === "native") applyNative();
-  else if (command === "show" && args.shift() === "external") showExternal();
+  else if (command === "apply" && args.shift() === "native") applyNative(args);
+  else if (command === "show" && args.shift() === "external") showExternal(args);
   else if (command === "mark" && args.shift() === "external") markExternal(args);
   else if (command === "capabilities") printCapabilities();
   else help();
