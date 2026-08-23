@@ -82,6 +82,17 @@ recovery codes. Never complete assessments or interviews. A visible CAPTCHA,
 MFA, or required human action blocks only that native application and the queue
 continues. External applications are already manual-first.
 
+## Batch tab continuity
+
+For ordinary batch application runs, when a native application is blocked,
+incomplete, or requires human input, persist the non-secret blocker and keep
+the current browser tab open for follow-up. Mark the tab as a handoff and
+continue with the next queued task in a separate new browser tab, preserving
+the blocked opening's identity and state. Do not reuse the blocked tab for a
+different job, close it, or overwrite its progress. This rule applies only to
+ordinary batch runs; `DIRECT_LINK_HANDOFF` remains terminal on failure and must
+stop after recording the blocker.
+
 ## User workflow preference
 
 When the user explicitly hands off a website task, fill ordinary application

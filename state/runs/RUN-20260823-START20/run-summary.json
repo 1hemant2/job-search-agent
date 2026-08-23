@@ -1,0 +1,19 @@
+{
+  "run_id": "RUN-20260823-START20",
+  "generated_at": "2026-08-23T06:07:55.444Z",
+  "evaluated": 20,
+  "qualifying": 4,
+  "recency_too_old": 0,
+  "recency_unknown": 0,
+  "score_too_low": 10,
+  "hard_blockers": 9,
+  "native_easy": 4,
+  "external": 16,
+  "unknown_route": 0,
+  "queue_paths": {
+    "native": "D:\\Job Apply\\state\\runs\\RUN-20260823-START20\\queues\\native-apply.jsonl",
+    "external": "D:\\Job Apply\\state\\runs\\RUN-20260823-START20\\queues\\external-apply.jsonl",
+    "unknown": "D:\\Job Apply\\state\\runs\\RUN-20260823-START20\\queues\\unknown-review.jsonl"
+  },
+  "discovery_state": "SEARCH_SPACE_REASONABLY_EXHAUSTED"
+}

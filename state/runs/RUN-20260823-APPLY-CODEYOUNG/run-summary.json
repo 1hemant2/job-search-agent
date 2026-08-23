@@ -1,0 +1,12 @@
+{
+  "run_id": "RUN-20260823-APPLY-CODEYOUNG",
+  "generated_at": "2026-08-23T06:26:19.933Z",
+  "mode": "native_apply",
+  "evaluated": 1,
+  "qualifying": 1,
+  "submitted": 0,
+  "blocked": 1,
+  "failed": 0,
+  "assessments": 0,
+  "reason": "Blocked on malformed required compensation question; no submission."
+}

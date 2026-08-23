@@ -178,3 +178,15 @@ After the user completes the CAPTCHA in the existing browser session, reconstruc
 - URL: https://careers-jcpenney.icims.com/jobs/8885/engineer-1/candidate
 - Reason: JCPenney iCIMS displayed successful submission after the Work Opportunity questionnaire Opt-Out path.
 - State: Submitted; success page preserved. Resume: `Hemant_Kumar_NodeJS_Resume.pdf`.
+
+## LinkedIn Easy Apply — Codeyoung — Full Stack Engineer
+
+- Status: blocked_unknown_required_question
+- Platform: LinkedIn Easy Apply
+- Job ID: 4457301425
+- URL: https://www.linkedin.com/jobs/view/4457301425/
+- Reason: Required question `What is your expected CTC ?` is rendered as a Yes/No dropdown; LinkedIn rejects the unanswered field with `Please enter a valid answer`.
+- State: Contact step, existing Node.js resume, and deterministic questions were prepared; no final review or submission was completed.
+- Resume: `resumes/Hemant_Kumar_NodeJS_Resume.pdf`
+- Unresolved question: What is your expected CTC ?
+- Available options: Yes; No

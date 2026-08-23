@@ -1698,3 +1698,15 @@
 - Resume used: Hemant_Kumar_NodeJS_Resume.pdf
 - Verification: iCIMS displayed "Your application was submitted successfully. Thank you for applying." and "You are currently submitted to this job."
 - Notes: Work Opportunity questionnaire was opted out; no assessment was completed.
+
+## Codeyoung — Full Stack Engineer
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4457301425/
+- Job ID: 4457301425
+- Location: Bengaluru, Karnataka, India (on-site)
+- Application status: Blocked before review/submission
+- Resume used: Existing selected `Hemant_Kumar_NodeJS_Resume.pdf`; not re-uploaded
+- Progress: Contact information, resume selection, and deterministic application questions were prepared.
+- Blocker: Required `What is your expected CTC ?` field is malformed as a Yes/No dropdown and LinkedIn reports `Please enter a valid answer` while it remains unanswered. No application was submitted.
