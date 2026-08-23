@@ -379,7 +379,7 @@
 - Application status: Blocked — visible CAPTCHA on external Keka form
 - Date applied: Not applied
 - Resume used: Hemant_Kumar_NodeJS_Resume.pdf
-- Recruiter: Not identified
+- Recruiter: Gurveen Kaur — Talent Scout, GoKwik (https://www.linkedin.com/in/gurveen-kaur-084b93256/)
 - Hiring manager: Not identified
 - Connection request: Not sent
 - Message sent: Not sent
