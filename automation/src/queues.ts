@@ -2,10 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ExternalAts, JobOpportunity, NativePlatform } from "./types.js";
 import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
-import type { SearchProfileId } from "./search-profiles.js";
+import { resolveResumeSelection, type ResumeProfileId, type SearchProfileId } from "./search-profiles.js";
 
 interface ProfileQueueFields {
+  runId?: string;
   searchProfile?: SearchProfileId;
+  resumeProfile?: ResumeProfileId;
   matchClassification?: JavaMatchClassification;
   requiredYoe?: string;
   javaSpringRequirement?: string;
@@ -15,7 +17,7 @@ interface ProfileQueueFields {
 }
 
 export type NativeQueueStatus = "pending" | "in_progress" | "blocked" | "failed" | "submitted" | "native_unsupported" | "skipped";
-export type ExternalQueueStatus = "pending_manual" | "opened" | "applied" | "skipped" | "expired";
+export type ExternalQueueStatus = "pending" | "pending_manual" | "in_progress" | "blocked" | "failed" | "opened" | "submitted" | "applied" | "skipped" | "expired";
 
 export interface NativeQueueItem extends ProfileQueueFields {
   opportunityId: string;
@@ -81,7 +83,9 @@ function readLatest<T extends QueueItem>(filePath: string): T[] {
   if (!fs.existsSync(filePath)) return [];
   const latest = new Map<string, T>();
   for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/).filter(Boolean)) {
-    const item = JSON.parse(line) as T;
+    const parsed = JSON.parse(line) as T;
+    const resumeSelection = resolveResumeSelection(parsed);
+    const item = resumeSelection ? { ...parsed, ...resumeSelection } as T : parsed;
     latest.set(item.opportunityId, item);
   }
   return [...latest.values()];
@@ -113,7 +117,7 @@ export class OpportunityQueues {
   }
 
   pendingExternal(searchProfile?: SearchProfileId): ExternalQueueItem[] {
-    return this.externalItems().filter((item) => item.status === "pending_manual"
+    return this.externalItems().filter((item) => ["pending", "pending_manual", "failed"].includes(item.status)
       && (!searchProfile || item.searchProfile === searchProfile));
   }
 }
@@ -131,10 +135,20 @@ export function isNativeExecutionSupported(opportunity: JobOpportunity): boolean
   return Boolean(opportunity.nativePlatform && SUPPORTED_NATIVE_EXECUTION.has(opportunity.nativePlatform));
 }
 
-export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportunity, queues = new OpportunityQueues(workspaceRoot)): RouteResult {
+export function routeOpportunity(
+  workspaceRoot: string,
+  opportunity: JobOpportunity,
+  queues = new OpportunityQueues(workspaceRoot),
+  context: { runId?: string } = {},
+): RouteResult {
   const queuedAt = new Date().toISOString();
+  const resumeSelection = resolveResumeSelection(opportunity);
+  if (!resumeSelection) {
+    throw new Error(`Qualifying opportunity ${opportunity.id} is missing canonical resume-selection metadata`);
+  }
   if (opportunity.applicationChannel === "native_easy_apply") {
     const item: NativeQueueItem = {
+      runId: context.runId,
       opportunityId: opportunity.id,
       company: opportunity.company,
       role: opportunity.role,
@@ -145,7 +159,7 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
       matchClassification: opportunity.matchClassification,
       searchProfile: opportunity.searchProfile,
       postingAge: opportunity.postingAge,
-      selectedResume: opportunity.selectedResume,
+      ...resumeSelection,
       requiredYoe: opportunity.requiredYoe,
       javaSpringRequirement: opportunity.javaSpringRequirement,
       javaExperienceScope: opportunity.javaExperienceScope,
@@ -160,6 +174,7 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
   }
   if (opportunity.applicationChannel === "external_application") {
     const item: ExternalQueueItem = {
+      runId: context.runId,
       opportunityId: opportunity.id,
       company: opportunity.company,
       role: opportunity.role,
@@ -170,7 +185,7 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
       matchScore: opportunity.matchScore,
       matchClassification: opportunity.matchClassification,
       searchProfile: opportunity.searchProfile,
-      selectedResume: opportunity.selectedResume,
+      ...resumeSelection,
       requiredYoe: opportunity.requiredYoe,
       javaSpringRequirement: opportunity.javaSpringRequirement,
       javaExperienceScope: opportunity.javaExperienceScope,
@@ -180,12 +195,13 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
       reasonMatched: opportunity.reasonCodes,
       discoveredAt: opportunity.discoveredAt,
       queuedAt,
-      status: "pending_manual",
+      status: "pending",
     };
     queues.upsertExternal(item);
     return { route: "external", item };
   }
   const item: UnknownRouteItem = {
+    runId: context.runId,
     opportunityId: opportunity.id,
     company: opportunity.company,
     role: opportunity.role,
@@ -193,7 +209,7 @@ export function routeOpportunity(workspaceRoot: string, opportunity: JobOpportun
     jobUrl: opportunity.jobUrl,
     applicationUrl: opportunity.applicationUrl,
     matchScore: opportunity.matchScore,
-    selectedResume: opportunity.selectedResume,
+    ...resumeSelection,
     postingAge: opportunity.postingAge,
     matchClassification: opportunity.matchClassification,
     searchProfile: opportunity.searchProfile,

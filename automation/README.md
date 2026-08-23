@@ -19,6 +19,7 @@ This subsystem is a deterministic browser executor for the existing job-agent wo
 
 - `src/types.ts` — payload, lifecycle, blocker, and result contracts.
 - `src/application-payload.ts` — validation, resume-path guards, domain allowlisting, and history deduplication.
+- `src/application-batch.ts` — freezes one run-scoped Stage 2 manifest after discovery ends.
 - `src/browser.ts` — persistent Playwright profile/session and safe navigation.
 - `src/ats/` — LinkedIn, Workday, Greenhouse, Lever, Ashby, and conservative generic adapters.
 - `src/captcha-state.ts` — idempotent non-secret CAPTCHA queue/checkpoint persistence and resolution.
@@ -40,6 +41,7 @@ Codex should write a temporary JSON payload outside the candidate source-of-trut
   "role": "Backend Engineer",
   "jobUrl": "https://boards.greenhouse.io/example/jobs/123",
   "ats": "greenhouse",
+  "resumeProfile": "hemant_kumar_nodejs_resume",
   "resume": "resumes/Hemant_Kumar_NodeJS_Resume.pdf",
   "candidate": {
     "name": "Hemant Kumar",
@@ -53,7 +55,13 @@ Codex should write a temporary JSON payload outside the candidate source-of-trut
 }
 ```
 
-The resume must resolve inside the workspace `resumes/` directory. Values are never hard-coded in ATS adapters. For a LinkedIn listing that redirects to another domain, set `applicationUrl` to the actual application URL and include its host in `allowedApplicationDomains`.
+The resume must resolve inside the workspace `resumes/` directory. Canonical
+batch payloads pair `hemant_kumar_nodejs_resume` with
+`resumes/Hemant_Kumar_NodeJS_Resume.pdf` or
+`hemant_kumar_java_resume` with `resumes/Hemant_Kumar_Java_Resume.pdf`; a
+mismatch is rejected. Values are never hard-coded in ATS adapters. For a
+LinkedIn listing that redirects to another domain, set `applicationUrl` to the
+actual application URL and include its host in `allowedApplicationDomains`.
 
 Required questions are matched only by deterministic field keys/labels. If a required question is not in `answers`, the result is:
 
@@ -134,7 +142,8 @@ state/runs/<RUN_ID>/executor-telemetry.jsonl
 Job records contain the run identity, source, query variant, company, role,
 source/application URLs, job ID, card location and location filter,
 application route, description-read status, page/cursor, result position, posting-age confidence, recency class,
-score, resume, decision, standardized reason codes, and executor outcome.
+score, canonical resume profile/path, decision, standardized reason codes, and
+executor outcome.
 Search records contain every visible job ID, scroll completion, new/duplicate/
 evaluated IDs, pagination state, page-transition evidence, and query-level stop
 reason. Executor records contain the adapter, starting/final URL, page title,
@@ -169,6 +178,8 @@ Workspace commands are:
 ```text
 npm run search -- 100
 npm run search -- java 100
+npm run workspace -- start 20 --fixture automation/test/fixtures/discovery-first-dry-run.json
+npm run workspace -- freeze <run-id>
 npm run apply-native
 npm run workspace -- apply native java
 npm run show-external
@@ -176,18 +187,31 @@ npm run workspace -- show external java
 npm run workspace -- mark external <opportunity-id> applied
 ```
 
+`start <count>` is the two-stage command. It completes discovery and queue
+routing first, then writes the immutable Stage 2 list to
+`state/runs/<RUN_ID>/application-batch.json`. Browser/session discovery without
+a local collector can call `freeze <run-id>` after all run-scoped queue records
+have been persisted. Every frozen item contains the job identity, application
+route, selected resume profile/path, chosen-profile score, and queue status;
+candidate facts are not duplicated in the manifest.
+Freezing is idempotent: once the manifest exists, later queue changes do not
+alter that run's Stage 2 list.
+
 The Java mode loads
 `.agents/skills/job-application/search-profiles/java-backend.md`, uses the
 Java-specific title/location plan and 100-point scorer, and persists
 `searchProfile: "java_backend"` plus the Java requirement scope,
-classification, match reasons, gaps, and selected resume in normalized records
-and queues. Unqualified commands retain the existing Node/general behavior.
+classification, match reasons, gaps, canonical `resumeProfile`, and selected
+resume path in normalized records and queues. Unqualified commands retain the
+existing Node/general behavior. Existing JSONL records without `resumeProfile`
+are upgraded in memory when their canonical `selectedResume` path is read.
 
 Qualifying native records go to `state/queues/native-apply.jsonl`; qualifying
 external records go to `state/queues/external-apply.jsonl`; unresolved routes
-go to `state/queues/unknown-review.jsonl`. External jobs are manual-first and
-the runner blocks `applicationChannel: "external_application"` unless an
-explicit future policy override is supplied.
+go to `state/queues/unknown-review.jsonl`. New external records use `pending`
+and may be processed interactively in an authorized `start` batch. The local
+runner still blocks `applicationChannel: "external_application"` unless its
+explicit `--allow-external` safety flag is supplied.
 
 The capability registry currently reports no bundled local collectors for
 LinkedIn, Naukri, Indeed, Wellfound, or external job boards. It reports native

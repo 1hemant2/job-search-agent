@@ -1,4 +1,4 @@
-import { selectResumeForJob, type SearchProfileId } from "../search-profiles.js";
+import { RESUME_PATH_BY_PROFILE, selectResumeProfileForJob, type ResumeProfileId, type SearchProfileId } from "../search-profiles.js";
 
 export type JavaMatchClassification = "APPLY" | "APPLY_STRETCH" | "REVIEW" | "SKIP";
 export type JavaExperienceScope = "general" | "professional" | "production" | "commercial" | "preferred" | "unknown" | "none";
@@ -45,6 +45,7 @@ export interface JavaJobAssessment {
   reasonCodes: string[];
   whyCandidateMatches: string[];
   gaps: string[];
+  resumeProfile: ResumeProfileId;
   selectedResume: string;
   requiredYoe: string;
   javaRequirement: string;
@@ -223,6 +224,7 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
 
   const resultClassification = classification(score, hardBlockers);
   if (!hardBlockers.length && resultClassification === "SKIP") reasonCodes.push("INSUFFICIENT_MATCH_SCORE");
+  const resumeProfile = selectResumeProfileForJob({ role: input.role, description, searchProfile: input.searchProfile ?? "java_backend" });
   return {
     score,
     classification: resultClassification,
@@ -230,7 +232,8 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
     reasonCodes,
     whyCandidateMatches,
     gaps,
-    selectedResume: selectResumeForJob({ role: input.role, description, searchProfile: input.searchProfile ?? "java_backend" }),
+    resumeProfile,
+    selectedResume: RESUME_PATH_BY_PROFILE[resumeProfile],
     requiredYoe: experienceLabel(experience),
     javaRequirement: javaRequirement.text ?? javaRequirement.level,
     javaExperienceScope: javaRequirement.scope ?? "unknown",

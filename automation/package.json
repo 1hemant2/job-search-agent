@@ -12,6 +12,8 @@
     "execute": "tsx src/runner.ts",
     "workspace": "tsx src/workspace-cli.ts",
     "search": "tsx src/workspace-cli.ts search",
+    "start-batch": "tsx src/workspace-cli.ts start",
+    "freeze-batch": "tsx src/workspace-cli.ts freeze",
     "apply-native": "tsx src/workspace-cli.ts apply native",
     "show-external": "tsx src/workspace-cli.ts show external"
   },

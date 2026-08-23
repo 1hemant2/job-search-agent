@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ApplicationPayload, AtsName } from "./types.js";
+import { resolveResumeSelection } from "./search-profiles.js";
 
 const ATS_NAMES = new Set<AtsName>([
   "linkedin",
@@ -133,9 +134,21 @@ export function validateApplicationPayload(
     else if (!fs.existsSync(resumePath)) errors.push(`resume file does not exist: ${value.resume}`);
   }
 
+  let resumeSelection: ReturnType<typeof resolveResumeSelection> = undefined;
+  try {
+    resumeSelection = resolveResumeSelection({
+      resumeProfile: value.resumeProfile,
+      selectedResume: value.resume,
+    });
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error));
+  }
+
   const payload = {
     ...value,
     ats,
+    resumeProfile: resumeSelection?.resumeProfile ?? value.resumeProfile,
+    resume: resumeSelection?.selectedResume ?? value.resume,
   } as ApplicationPayload;
   return { payload, errors };
 }

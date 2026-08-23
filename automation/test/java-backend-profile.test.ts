@@ -6,7 +6,14 @@ import { buildDefaultDiscoveryPlan, DiscoveryCoordinator } from "../src/discover
 import { evaluateJavaBackendJob, type JavaJobAssessmentInput } from "../src/matching/java-backend.js";
 import { makeJobOpportunity } from "../src/opportunity.js";
 import { OpportunityQueues } from "../src/queues.js";
-import { JAVA_BACKEND_RESUME, NODE_BACKEND_RESUME, selectResumeForJob } from "../src/search-profiles.js";
+import {
+  JAVA_BACKEND_RESUME,
+  JAVA_RESUME_PROFILE,
+  NODE_BACKEND_RESUME,
+  NODE_RESUME_PROFILE,
+  selectResumeForJob,
+  selectResumeProfileForJob,
+} from "../src/search-profiles.js";
 
 const cases: Record<string, JavaJobAssessmentInput> = {
   A: {
@@ -51,6 +58,7 @@ describe("Java backend profile dry-run cases", () => {
     const result = evaluateJavaBackendJob(cases.A);
     expect(result.score).toBeGreaterThanOrEqual(75);
     expect(result.classification).toBe("APPLY");
+    expect(result.resumeProfile).toBe(JAVA_RESUME_PROFILE);
     expect(result.selectedResume).toBe(JAVA_BACKEND_RESUME);
   });
 
@@ -102,6 +110,12 @@ describe("Java profile integration", () => {
     expect(selectResumeForJob({ role: "Software Engineer", description: "Backend role; Java preferred with SQL and Redis." })).toBe(JAVA_BACKEND_RESUME);
   });
 
+  it("uses profile scores for a genuinely mixed Node.js and Java role and defaults ties to Node.js", () => {
+    const mixed = { role: "Node.js and Java Backend Engineer", description: "Build TypeScript and Spring Boot services." };
+    expect(selectResumeProfileForJob({ ...mixed, profileScores: { [NODE_RESUME_PROFILE]: 78, [JAVA_RESUME_PROFILE]: 82 } })).toBe(JAVA_RESUME_PROFILE);
+    expect(selectResumeProfileForJob({ ...mixed, profileScores: { [NODE_RESUME_PROFILE]: 82, [JAVA_RESUME_PROFILE]: 82 } })).toBe(NODE_RESUME_PROFILE);
+  });
+
   it("persists Java evaluation fields into the ledger and profile-filterable queues", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "java-profile-"));
     fs.mkdirSync(path.join(root, "state"), { recursive: true });
@@ -125,6 +139,7 @@ describe("Java profile integration", () => {
       matchScore: result.score,
       matchClassification: result.classification,
       searchProfile: "java_backend",
+      resumeProfile: result.resumeProfile,
       selectedResume: result.selectedResume,
       requiredYoe: result.requiredYoe,
       javaSpringRequirement: result.javaRequirement,
@@ -138,9 +153,11 @@ describe("Java profile integration", () => {
     expect(queue.pendingNative("java_backend")).toHaveLength(1);
     expect(queue.pendingNative("node_backend")).toHaveLength(0);
     expect(queue.pendingNative("java_backend")[0].selectedResume).toBe(JAVA_BACKEND_RESUME);
+    expect(queue.pendingNative("java_backend")[0].resumeProfile).toBe(JAVA_RESUME_PROFILE);
     const ledger = fs.readFileSync(path.join(root, "state", "runs", "RUN-JAVA-PERSIST", "discovery-ledger.jsonl"), "utf8");
     expect(ledger).toContain('"search_profile":"java_backend"');
     expect(ledger).toContain('"java_experience_scope":"general"');
     expect(ledger).toContain('"match_classification":"APPLY"');
+    expect(ledger).toContain('"resume_profile":"hemant_kumar_java_resume"');
   });
 });

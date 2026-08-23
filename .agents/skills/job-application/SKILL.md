@@ -1,13 +1,13 @@
 ---
 name: job-application
-description: Persistent truthful job discovery, matching, deduplication, application-channel classification, queue routing, supported native application automation, and manual external-application handoff.
+description: Persistent truthful job discovery, matching, deduplication, queue freezing, resume-aware routing, supported native automation, and browser-assisted external application processing.
 ---
 
 # Discovery-first job workflow
 
 This skill owns discovery, matching, deduplication, application-channel
-classification, queue routing, supported native automation, and manual
-external handoff. Candidate facts remain in `candidate/`; resume selection
+classification, queue routing and freezing, supported native automation, and
+browser-assisted external processing. Candidate facts remain in `candidate/`; resume selection
 remains in `resumes/`; `application-history.md` remains the human-readable
 audit trail; `state/run-state.md` remains operational checkpoint state.
 
@@ -42,8 +42,11 @@ SEARCH -> DISCOVER -> NORMALIZE -> READ COMPLETE DESCRIPTION
 ```
 
 The default workflow does not automatically submit external ATS or company
-portal applications. Existing ATS adapters are reusable legacy components but
-are default-disabled for external submission.
+portal applications. An authorized two-stage `start <count>` batch is the
+exception: external applications are opened, filled, and submitted
+interactively in Chrome when every required answer is confirmed and no
+human-only or prohibited step is present. Existing ATS adapters are reusable
+legacy components but remain default-disabled for external submission.
 
 ## Modes and commands
 
@@ -65,7 +68,7 @@ only for implemented native flows. It never consumes the external queue.
 `apply native java` applies the same rules while filtering to records created
 by the Java profile.
 
-`show external` presents pending manual external applications sorted by match
+`show external` presents pending external applications sorted by match
 score, recency, and preference alignment. `mark external <id> applied` and
 `mark external <id> skipped` append a status event to the external queue.
 `show external java` filters this view to pending Java-profile records.
@@ -80,10 +83,21 @@ must still be persisted and verified before its profile is opened for sending.
 Read [references/outreach.md](references/outreach.md) for the complete batch,
 personalization, verification, and logging rules.
 
-`start` is a compatibility alias for an authorized continuous discovery run.
-It no longer means “submit every qualifying ATS job.” A migration, test, or
-dry run is simulation-only and must not create accounts, upload resumes, or
-submit applications.
+`start <count>` is an authorized autonomous two-stage batch. Stage 1 completes
+discovery, evaluation, classification, persistence, and a frozen qualifying
+queue before any application work begins. Stage 2 stops searching and processes
+every frozen native and external queue item one at a time in separate Chrome
+tabs. Native applications may be submitted when all required answers are known
+and the batch is authorized. External applications may also be submitted when
+all required answers are confirmed; `start <count>` itself supplies that batch
+authorization. A migration, test, or dry run is
+simulation-only and must not create accounts, upload resumes, or submit
+applications. Follow the complete two-stage and blocked-tab invariants in root
+`AGENTS.md`; never interleave Stage 1 search with Stage 2 application work. Each
+Stage 2 application must use the resume profile frozen into its queue record.
+The frozen list is persisted at
+`state/runs/<RUN_ID>/application-batch.json`; Stage 2 reads that manifest rather
+than a changing live queue.
 
 When a specific URL is present, do not invoke `search`, `start`, or any batch
 queue command as a substitute for the direct-link task. The direct-link
@@ -123,7 +137,8 @@ opportunity contains:
 
 - source, company, role, job URL, optional application URL and job ID;
 - location, work arrangement, posting age and confidence;
-- complete-description evidence, match score, selected truthful resume;
+- complete-description evidence, chosen-profile match score, canonical resume
+  profile, and selected truthful resume path;
 - application channel, native platform, external ATS, lifecycle status;
 - reason codes and discovery timestamp.
 
@@ -179,6 +194,33 @@ Hard blockers include incompatible authorization/citizenship/clearance,
 unavailable sponsorship, location conflict, unrelated work, unsupported
 required skills, and clear seniority mismatch.
 
+## Resume selection and minimal queue metadata
+
+Select the resume during discovery before queue routing. The only canonical
+profile IDs and paths are:
+
+- `hemant_kumar_nodejs_resume` ->
+  `resumes/Hemant_Kumar_NodeJS_Resume.pdf`
+- `hemant_kumar_java_resume` ->
+  `resumes/Hemant_Kumar_Java_Resume.pdf`
+
+Choose `hemant_kumar_java_resume` when Java or Spring is core required or a
+meaningful preferred backend technology. Choose
+`hemant_kumar_nodejs_resume` for Node.js, TypeScript, or JavaScript-specific
+roles and by default for general backend roles where Java is incidental. For a
+genuinely mixed role, apply the same truthful matching model to both profiles,
+choose the higher score, and use the Node.js profile on a tie. Preserve the
+confirmed distinction between hands-on Java experience and professional Java
+production experience.
+
+Persist only `resumeProfile`, `selectedResume`, and `matchScore` as
+resume-selection metadata. `matchScore` is the score for the chosen profile.
+Do not duplicate resume skills, projects, experience, or candidate answers in
+the queue. During application, load those facts from the selected resume and
+candidate source files. Stage 2 must select or upload the exact queued resume
+and must not rescore or silently change it. An already attached user-provided
+resume remains governed by the preservation rule above.
+
 ## Channel classification and routing
 
 Every qualifying opportunity must be classified before routing:
@@ -193,23 +235,29 @@ Every qualifying opportunity must be classified before routing:
 `automation/src/queues.ts` writes durable JSONL queues:
 
 - `state/queues/native-apply.jsonl` stores opportunity ID, company, role,
-  platform, URLs, score, age, resume, timestamp, status, retry count, and
-  last error;
+  platform, URLs, discovery run ID, chosen `resumeProfile`, `selectedResume`,
+  chosen-profile score, age, timestamp, status, retry count, and last error;
 - `state/queues/external-apply.jsonl` stores opportunity ID, company, role,
-  discovery source, original URL, external URL, ATS, score, resume, age,
-  match reasons, timestamps, and manual status;
-- `state/queues/unknown-review.jsonl` stores unresolved route opportunities.
+  discovery source, original URL, external URL, ATS, discovery run ID, chosen
+  `resumeProfile`, `selectedResume`, chosen-profile score, age, match reasons,
+  timestamps, and status;
+- `state/queues/unknown-review.jsonl` stores unresolved route opportunities and
+  the same minimal resume-selection metadata when a resume was selected.
 
 Native statuses include `pending`, `in_progress`, `blocked`, `failed`,
 `submitted`, `native_unsupported`, and `skipped`. External statuses are
-`pending_manual`, `opened`, `applied`, `skipped`, and `expired`.
+`pending`, `in_progress`, `blocked`, `failed`, `opened`, `submitted`, `applied`,
+`skipped`, and `expired`; legacy `pending_manual` records remain readable.
 
-Only supported native flows may enter execution. LinkedIn native execution is
-currently enabled. Naukri, Indeed, and Wellfound native detection is modeled,
-but native execution remains `native_unsupported` until separately tested.
-External applications are manual-first. The local runner refuses a payload
-marked `external_application` unless an explicit future policy override is
-passed; normal queue processing never supplies that override.
+Only supported native flows may enter local runner execution. LinkedIn native
+execution is currently enabled. Naukri, Indeed, and Wellfound native detection
+is modeled, but local native execution remains `native_unsupported` until
+separately tested; an authorized batch may still use their visible Chrome flow
+when it can be completed safely. External applications never enter the local
+runner. An authorized `start` batch instead opens them interactively in Chrome,
+fills confirmed ordinary fields, submits when safely complete, preserves
+blocked tabs, and continues the frozen queue. The local runner refuses a payload marked
+`external_application` unless an explicit future policy override is passed.
 
 ## Sources and capability honesty
 
@@ -232,6 +280,7 @@ Every run writes under `state/runs/<RUN_ID>/`:
 - `discovery-ledger.jsonl` for every evaluated opening;
 - `search-telemetry.jsonl` for every visible page and page transition;
 - `executor-telemetry.jsonl` for local execution outcomes;
+- `application-batch.json` for the frozen ordered Stage 2 list;
 - `run-summary.json` with evaluated, qualifying, recency-too-old,
   recency-unknown, score-too-low, hard-blocker, native, external, and
   unknown-route metrics.
@@ -246,22 +295,26 @@ search stop, after all planned pagination and sources are complete. Twenty
 cards, one page, one blocked application, or one empty qualifying page is not
 search exhaustion.
 
-## Native blockers and human handoff
+## Application blockers and human handoff
 
-If a native application encounters visible CAPTCHA, MFA, authentication,
-unknown required material questions, an assessment, or a broken form, mark
-that queue item blocked, preserve only non-secret operational state, and
-continue with the next native item. Never bypass security controls or complete
-assessments/interviews. Genuine human-only blockers remain in
-`candidate/human-input-queue.md`; that file is not the job queue.
+If a native or external application encounters visible CAPTCHA, MFA,
+authentication, unknown required material questions, an assessment, or a
+broken form, mark
+that queue item with the closest supported durable status, record the exact
+non-secret blocker, mark the current tab as a handoff, leave it open, and
+continue with the next frozen item in a separate new tab. Never bypass security
+controls or complete assessments/interviews. Genuine human-only blockers remain
+in `candidate/human-input-queue.md`; that file is not the job queue.
 
 The preceding continue-with-the-next-item rule applies only to ordinary batch
 runs. In `DIRECT_LINK_HANDOFF` mode, the blocker is recorded for the handed-off
 opening, the user is told the application was not completed, and the run stops.
 
-External applications are already handed to the user through the external
-queue, so no external CAPTCHA-resume or automatic ATS-confirmation workflow is
-part of the default policy.
+External browser processing may continue through standard navigation and an
+authorized standard terms acknowledgment. In an authorized `start` batch it
+may submit when all required answers are confirmed and no human-only or
+prohibited step is present. Otherwise the external tab remains open at its
+furthest safe point while the ordinary batch continues.
 
 ## History and migration boundary
 

@@ -91,23 +91,30 @@ learnable backend tools must not automatically force `SKIP`.
 
 ## Resume and persistence
 
-Select `resumes/Hemant_Kumar_Java_Resume.pdf` only when Java/Spring is
-meaningful to the backend role. An incidental Java mention is insufficient. A
-clearly Node.js/TypeScript-specific role keeps the Node.js resume even if Java
-is merely nice to have.
+Select queue profile `hemant_kumar_java_resume` and
+`resumes/Hemant_Kumar_Java_Resume.pdf` only when Java/Spring is meaningful to
+the backend role. An incidental Java mention is insufficient. A clearly
+Node.js/TypeScript-specific role keeps `hemant_kumar_nodejs_resume` and the
+Node.js resume even if Java is merely nice to have. A genuinely mixed role is
+scored against both profiles; choose the higher profile score and use Node.js
+on a tie.
 
 Every Java evaluation persists the shared canonical opportunity ID plus company,
 role, location, source and application URLs, source/platform, required YOE,
 Java/Spring requirement, Java experience scope, score, classification, match
-reasons, gaps, selected resume, channel, status, and posting age. Qualifying
-native records route to the native queue, qualifying external records remain
-manual-first, and unknown routes go to review. Profile filtering never changes
-the shared dedupe identity.
+reasons, gaps, `resumeProfile`, `selectedResume`, channel, status, discovery run
+ID, and posting age. Do not copy resume content into queue metadata. Qualifying
+native and external records route to their queues, and unknown routes go to
+review. After discovery ends, freeze the run-scoped native and external records
+into `state/runs/<RUN_ID>/application-batch.json`. Profile filtering never
+changes the shared dedupe identity.
 
 ## Commands
 
 - `search java 100` evaluates approximately 100 unique Java/backend jobs.
+- `start java 100` discovers first, freezes the batch, then processes the
+  manifest autonomously under the shared safety rules.
 - `apply native java` processes only eligible Java-profile native records.
-- `show external java` shows pending manual Java-profile external records.
+- `show external java` shows pending Java-profile external records.
 
 Migration and dry-run use never uploads a resume or submits an application.

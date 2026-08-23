@@ -6,12 +6,14 @@ import { buildDefaultDiscoveryPlan, DiscoveryCoordinator } from "../src/discover
 import { canonicalOpportunityId, classifyApplicationChannel, makeJobOpportunity } from "../src/opportunity.js";
 import { OpportunityQueues, sortExternalForReview } from "../src/queues.js";
 import { executeApplication } from "../src/runner.js";
+import { NODE_BACKEND_RESUME, NODE_RESUME_PROFILE } from "../src/search-profiles.js";
 
 function workspace(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "discovery-first-"));
   fs.mkdirSync(path.join(root, "state"), { recursive: true });
   fs.writeFileSync(path.join(root, "state", "run-state.md"), "# Run State\n\n## Active Run\n\n- Run ID: RUN-DISCOVERY-FIRST\n", "utf8");
   fs.mkdirSync(path.join(root, "resumes"), { recursive: true });
+  fs.writeFileSync(path.join(root, NODE_BACKEND_RESUME), "fixture", "utf8");
   fs.writeFileSync(path.join(root, "resumes", "resume.pdf"), "fixture", "utf8");
   return root;
 }
@@ -42,7 +44,7 @@ describe("discovery-first routing", () => {
   it("routes qualifying native, external, and unknown opportunities to durable queues", () => {
     const root = workspace();
     const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "India" }));
-    const base = { company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/1", descriptionReadComplete: true, matchScore: 88, postingAge: "1 day", selectedResume: "resumes/resume.pdf", reasonCodes: ["MATCHED_CANDIDATE_PROFILE"] };
+    const base = { company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/1", descriptionReadComplete: true, matchScore: 88, postingAge: "1 day", resumeProfile: NODE_RESUME_PROFILE, selectedResume: NODE_BACKEND_RESUME, reasonCodes: ["MATCHED_CANDIDATE_PROFILE"] };
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", applicationRoute: "easy_apply" }), { decision: "qualifying" }).route).toBe("native");
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", jobUrl: "https://www.linkedin.com/jobs/view/2", applicationUrl: "https://jobs.example.com/2", applicationRoute: "external" }), { decision: "qualifying" }).route).toBe("external");
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", role: "Platform Engineer", jobUrl: "https://www.linkedin.com/jobs/view/3" }), { decision: "qualifying" }).route).toBe("unknown");
@@ -51,14 +53,17 @@ describe("discovery-first routing", () => {
     expect(queues.externalItems()).toHaveLength(1);
     expect(queues.unknownItems()).toHaveLength(1);
     expect(queues.nativeItems()[0].status).toBe("pending");
+    expect(queues.nativeItems()[0].runId).toBe("RUN-DISCOVERY-FIRST");
+    expect(queues.nativeItems()[0].resumeProfile).toBe(NODE_RESUME_PROFILE);
   });
 
   it("deduplicates a second source without adding a second queue item", () => {
     const root = workspace();
     const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin", "greenhouse"], location: "India" }));
     const official = "https://boards.greenhouse.io/acme/jobs/42";
-    const first = makeJobOpportunity({ source: "linkedin", company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/9", applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90 });
-    const second = makeJobOpportunity({ source: "greenhouse", company: "Acme", role: "Backend Engineer", jobUrl: official, applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90 });
+    const resume = { resumeProfile: NODE_RESUME_PROFILE, selectedResume: NODE_BACKEND_RESUME };
+    const first = makeJobOpportunity({ source: "linkedin", company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/9", applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90, ...resume });
+    const second = makeJobOpportunity({ source: "greenhouse", company: "Acme", role: "Backend Engineer", jobUrl: official, applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90, ...resume });
     expect(first.id).toBe(second.id);
     expect(coordinator.recordOpportunity(first, { decision: "qualifying" }).route).toBe("external");
     expect(coordinator.recordOpportunity(second, { decision: "qualifying" }).route).toBe("duplicate");
@@ -74,6 +79,59 @@ describe("discovery-first routing", () => {
     expect(queues.pendingNative()).toHaveLength(0);
   });
 
+  it("backfills canonical resumeProfile when reading legacy queue records", () => {
+    const root = workspace();
+    const queues = new OpportunityQueues(root);
+    queues.upsertExternal({
+      opportunityId: "legacy",
+      company: "Legacy Co",
+      role: "Backend Engineer",
+      discoverySource: "linkedin",
+      originalJobUrl: "https://www.linkedin.com/jobs/view/legacy",
+      selectedResume: NODE_BACKEND_RESUME,
+      reasonMatched: [],
+      discoveredAt: "2026-08-22T00:00:00Z",
+      queuedAt: "2026-08-22T00:00:00Z",
+      status: "pending_manual",
+    });
+    expect(queues.externalItems()[0].resumeProfile).toBe(NODE_RESUME_PROFILE);
+  });
+
+  it("freezes one minimal Stage 2 manifest after discovery", () => {
+    const root = workspace();
+    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "India" }));
+    const opportunity = makeJobOpportunity({
+      source: "linkedin",
+      company: "Acme",
+      role: "Backend Engineer",
+      jobUrl: "https://www.linkedin.com/jobs/view/77",
+      applicationRoute: "easy_apply",
+      descriptionReadComplete: true,
+      matchScore: 88,
+      resumeProfile: NODE_RESUME_PROFILE,
+      selectedResume: NODE_BACKEND_RESUME,
+    });
+    coordinator.recordOpportunity(opportunity, { decision: "qualifying" });
+    const frozen = coordinator.freezeApplicationBatch();
+    expect(frozen.manifest.status).toBe("ready");
+    expect(frozen.manifest.items).toEqual([expect.objectContaining({
+      sequence: 1,
+      opportunityId: opportunity.id,
+      resumeProfile: NODE_RESUME_PROFILE,
+      selectedResume: NODE_BACKEND_RESUME,
+    })]);
+    expect(fs.existsSync(path.join(root, "state", "runs", "RUN-DISCOVERY-FIRST", "application-batch.json"))).toBe(true);
+    const summary = JSON.parse(fs.readFileSync(path.join(root, "state", "runs", "RUN-DISCOVERY-FIRST", "run-summary.json"), "utf8"));
+    expect(summary.workflow_stage).toBe("stage_2_ready");
+    expect(summary.application_batch.items).toBe(1);
+
+    coordinator.recordOpportunity(makeJobOpportunity({
+      ...opportunity,
+      jobUrl: "https://www.linkedin.com/jobs/view/78",
+    }), { decision: "qualifying" });
+    expect(coordinator.freezeApplicationBatch().manifest.items).toHaveLength(1);
+  });
+
   it("refuses external execution by default", async () => {
     const result = await executeApplication({
       opportunityId: "opp-test",
@@ -87,6 +145,6 @@ describe("discovery-first routing", () => {
       answers: {},
     }, { workspaceRoot: workspace(), dryRun: true });
     expect(result.status).toBe("blocked");
-    expect(result.blocker?.message).toContain("manual-first");
+    expect(result.blocker?.message).toContain("allow-external");
   });
 });

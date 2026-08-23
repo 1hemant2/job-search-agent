@@ -22,7 +22,7 @@ Terminal non-success states are `skipped`, `duplicate`, `failed`,
 
 Persist a checkpoint in `state/run-state.md` and record material outcomes in
 `application-history.md` after each transition. A checkpoint contains job
-identity, ATS, lifecycle state, selected resume filename, pending field keys,
+identity, ATS, lifecycle state, canonical resume profile/path, pending field keys,
 blocker reference, retry count, and next action. It does not contain answer
 values, credentials, cookies, or browser state.
 
@@ -44,6 +44,10 @@ At restart:
    the failure and continue with another suitable job. For
    `DIRECT_LINK_HANDOFF`, record the failure, report that the specific
    application was not completed, and stop; never substitute another job.
+
+For a two-stage batch, reconstruct the ordered application list from the frozen
+`state/runs/<RUN_ID>/application-batch.json` manifest. Never add newly discovered
+jobs to that manifest or silently change a queued resume profile during resume.
 
 The direct-link target remains authoritative across restarts. An official ATS
 URL reached by a redirect is valid only when it is clearly the same opening;

@@ -1,7 +1,20 @@
 export type SearchProfileId = "node_backend" | "java_backend";
+export type ResumeProfileId = "hemant_kumar_nodejs_resume" | "hemant_kumar_java_resume";
 
 export const NODE_BACKEND_RESUME = "resumes/Hemant_Kumar_NodeJS_Resume.pdf";
 export const JAVA_BACKEND_RESUME = "resumes/Hemant_Kumar_Java_Resume.pdf";
+export const NODE_RESUME_PROFILE: ResumeProfileId = "hemant_kumar_nodejs_resume";
+export const JAVA_RESUME_PROFILE: ResumeProfileId = "hemant_kumar_java_resume";
+
+export const RESUME_PATH_BY_PROFILE: Record<ResumeProfileId, string> = {
+  [NODE_RESUME_PROFILE]: NODE_BACKEND_RESUME,
+  [JAVA_RESUME_PROFILE]: JAVA_BACKEND_RESUME,
+};
+
+export interface ResumeSelection {
+  resumeProfile: ResumeProfileId;
+  selectedResume: string;
+}
 
 export interface SearchProfileConfig {
   id: SearchProfileId;
@@ -62,16 +75,45 @@ export function searchProfileFromToken(token: string | undefined): SearchProfile
   return (Object.values(SEARCH_PROFILES).find((profile) => profile.aliases.includes(normalized))?.id);
 }
 
+function normalizedResumePath(value: string): string {
+  return value.replace(/\\/g, "/").toLowerCase();
+}
+
+export function resumeProfileForPath(value: string | undefined): ResumeProfileId | undefined {
+  if (!value) return undefined;
+  const normalized = normalizedResumePath(value);
+  return (Object.entries(RESUME_PATH_BY_PROFILE) as Array<[ResumeProfileId, string]>)
+    .find(([, resumePath]) => normalizedResumePath(resumePath) === normalized)?.[0];
+}
+
+export function resolveResumeSelection(input: {
+  resumeProfile?: ResumeProfileId;
+  selectedResume?: string;
+}): ResumeSelection | undefined {
+  if (input.resumeProfile && !Object.hasOwn(RESUME_PATH_BY_PROFILE, input.resumeProfile)) {
+    throw new Error(`Unknown resumeProfile ${String(input.resumeProfile)}`);
+  }
+  const inferredProfile = resumeProfileForPath(input.selectedResume);
+  const resumeProfile = input.resumeProfile ?? inferredProfile;
+  if (!resumeProfile) return undefined;
+  const selectedResume = RESUME_PATH_BY_PROFILE[resumeProfile];
+  if (input.selectedResume && normalizedResumePath(input.selectedResume) !== normalizedResumePath(selectedResume)) {
+    throw new Error(`resumeProfile ${resumeProfile} does not match selectedResume ${input.selectedResume}`);
+  }
+  return { resumeProfile, selectedResume };
+}
+
 /**
  * Resume selection is semantic. A Java-profile run is not enough by itself:
  * Java must be meaningful to the backend role, and a clearly Node.js-specific
  * role keeps the Node.js resume even when Java is merely mentioned.
  */
-export function selectResumeForJob(input: {
+export function selectResumeProfileForJob(input: {
   role: string;
   description?: string;
   searchProfile?: SearchProfileId;
-}): string {
+  profileScores?: Partial<Record<ResumeProfileId, number>>;
+}): ResumeProfileId {
   const role = input.role.toLowerCase();
   const description = (input.description ?? "").toLowerCase();
   const text = `${role}\n${description}`;
@@ -83,7 +125,24 @@ export function selectResumeForJob(input: {
     || /\bjava\b.{0,35}\b(required|preferred|experience|backend|must|core)\b/.test(text)
     || /\b(required|preferred|experience|must|core)\b.{0,35}\bjava\b/.test(text);
 
-  if (nodeTitle && !javaTitle && !springSignal) return NODE_BACKEND_RESUME;
-  if (meaningfulJava) return JAVA_BACKEND_RESUME;
-  return NODE_BACKEND_RESUME;
+  if (nodeTitle && !javaTitle && !springSignal) return NODE_RESUME_PROFILE;
+  if ((javaTitle || springSignal) && !nodeTitle) return JAVA_RESUME_PROFILE;
+  if (nodeTitle && meaningfulJava) {
+    const nodeScore = input.profileScores?.[NODE_RESUME_PROFILE];
+    const javaScore = input.profileScores?.[JAVA_RESUME_PROFILE];
+    if (nodeScore !== undefined && javaScore !== undefined) {
+      return javaScore > nodeScore ? JAVA_RESUME_PROFILE : NODE_RESUME_PROFILE;
+    }
+  }
+  if (meaningfulJava) return JAVA_RESUME_PROFILE;
+  return NODE_RESUME_PROFILE;
+}
+
+export function selectResumeForJob(input: {
+  role: string;
+  description?: string;
+  searchProfile?: SearchProfileId;
+  profileScores?: Partial<Record<ResumeProfileId, number>>;
+}): string {
+  return RESUME_PATH_BY_PROFILE[selectResumeProfileForJob(input)];
 }

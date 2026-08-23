@@ -76,7 +76,7 @@ export async function executeApplication(input: unknown, options: ExecutionOptio
 
   if (payload.applicationChannel === "external_application" && !options.allowExternalAutomation) {
     return finish("blocked", "blocked", {
-      blocker: applicationBlocker(payload, "unsupported_form", "External applications are manual-first; automatic ATS submission is disabled by policy"),
+      blocker: applicationBlocker(payload, "unsupported_form", "Local-runner external execution requires the explicit allow-external policy flag"),
     });
   }
 

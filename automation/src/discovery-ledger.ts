@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { canonicalOpportunityId, canonicalizeUrl } from "./opportunity.js";
 
-export const DISCOVERY_LEDGER_SCHEMA_VERSION = 3;
+export const DISCOVERY_LEDGER_SCHEMA_VERSION = 4;
 
 export type PostingAgeConfidence = "exact" | "high" | "medium" | "low" | "unknown";
 
@@ -66,6 +66,7 @@ export interface DiscoveryJobRecord {
   match_score?: number;
   match_classification?: string;
   search_profile?: string;
+  resume_profile?: string;
   selected_resume?: string;
   required_yoe?: string;
   java_spring_requirement?: string;
@@ -140,6 +141,7 @@ export interface DiscoveryLedgerPaths {
   discoveryLedger: string;
   searchTelemetry: string;
   executorTelemetry: string;
+  applicationBatch: string;
   runSummary: string;
 }
 
@@ -171,6 +173,7 @@ export function runLedgerPaths(workspaceRoot: string, runId: string): DiscoveryL
     discoveryLedger: path.join(directory, "discovery-ledger.jsonl"),
     searchTelemetry: path.join(directory, "search-telemetry.jsonl"),
     executorTelemetry: path.join(directory, "executor-telemetry.jsonl"),
+    applicationBatch: path.join(directory, "application-batch.json"),
     runSummary: path.join(directory, "run-summary.json"),
   };
 }

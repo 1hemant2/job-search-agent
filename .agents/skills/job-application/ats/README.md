@@ -65,8 +65,8 @@ period for normal page verification to finish, then return the blocker if it
 remains. Do not click challenge controls, inspect or inject tokens, retry the
 same challenge in a loop, or use solver/stealth/anti-detection mechanisms.
 
-Preserve the official URL, company, role, ATS, job ID, selected resume
-filename, workflow step, and completed field keys only. Queue one
+Preserve the official URL, company, role, ATS, job ID, canonical resume profile
+and path, workflow step, and completed field keys only. Queue one
 `blocked_captcha` entry in `candidate/human-input-queue.md`, leave the target
 counter unchanged, and continue with another suitable application in a normal
 batch. For `DIRECT_LINK_HANDOFF`, preserve the same checkpoint, report the

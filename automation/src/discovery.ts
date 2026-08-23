@@ -1,10 +1,11 @@
 import fs from "node:fs";
+import { freezeApplicationBatch as freezeBatchManifest } from "./application-batch.js";
 import { DiscoveryLedger, normalizedJobId, type DiscoveryJobRecord, type DiscoveryReasonCode, type DiscoveryState, type PageTransitionStatus, type PostingAgeConfidence, type SearchTelemetryRecord } from "./discovery-ledger.js";
 import { makeJobOpportunity, opportunityAliases } from "./opportunity.js";
 import { OpportunityQueues, routeOpportunity, type RouteResult } from "./queues.js";
 import type { ApplicationChannel, ExternalAts, JobOpportunity, NativePlatform, OpportunityStatus } from "./types.js";
 import { updateDiscoveryRunState } from "./run-state.js";
-import { SEARCH_PROFILES, type SearchProfileId } from "./search-profiles.js";
+import { SEARCH_PROFILES, type ResumeProfileId, type SearchProfileId } from "./search-profiles.js";
 import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
 
 export interface DiscoveryQueryPlan {
@@ -107,6 +108,7 @@ export interface JobDiscoveryInput {
   matchScore?: number;
   matchClassification?: JavaMatchClassification;
   searchProfile?: SearchProfileId;
+  resumeProfile?: ResumeProfileId;
   selectedResume?: string;
   requiredYoe?: string;
   javaSpringRequirement?: string;
@@ -320,6 +322,7 @@ export class DiscoveryCoordinator {
       matchScore: input.matchScore,
       matchClassification: input.matchClassification,
       searchProfile: input.searchProfile,
+      resumeProfile: input.resumeProfile,
       selectedResume: input.selectedResume,
       requiredYoe: input.requiredYoe,
       javaSpringRequirement: input.javaSpringRequirement,
@@ -379,6 +382,7 @@ export class DiscoveryCoordinator {
       match_score: input.matchScore,
       match_classification: input.matchClassification,
       search_profile: input.searchProfile,
+      resume_profile: opportunity.resumeProfile,
       selected_resume: input.selectedResume,
       required_yoe: input.requiredYoe,
       java_spring_requirement: input.javaSpringRequirement,
@@ -423,6 +427,7 @@ export class DiscoveryCoordinator {
       matchScore: opportunity.matchScore,
       matchClassification: opportunity.matchClassification,
       searchProfile: opportunity.searchProfile,
+      resumeProfile: opportunity.resumeProfile,
       selectedResume: opportunity.selectedResume,
       requiredYoe: opportunity.requiredYoe,
       javaSpringRequirement: opportunity.javaSpringRequirement,
@@ -448,7 +453,7 @@ export class DiscoveryCoordinator {
     if (!["qualifying", "apply", "apply_stretch"].includes(metadata.decision ?? "")) {
       return { route: "not_queued", opportunityId: opportunity.id };
     }
-    return routeOpportunity(this.workspaceRoot, opportunity, this.queues);
+    return routeOpportunity(this.workspaceRoot, opportunity, this.queues, { runId: this.plan.runId });
   }
 
   private opportunityStatus(input: JobDiscoveryInput): OpportunityStatus {
@@ -469,6 +474,10 @@ export class DiscoveryCoordinator {
 
   canStopForSearchExhaustion(): boolean {
     return this.lastState === "SEARCH_SPACE_REASONABLY_EXHAUSTED";
+  }
+
+  freezeApplicationBatch(): ReturnType<typeof freezeBatchManifest> {
+    return freezeBatchManifest(this.workspaceRoot, this.plan.runId, this.queues);
   }
 
   snapshot(): DiscoverySnapshot {

@@ -25,6 +25,18 @@ The queue may contain `pending`, `in_progress`, `blocked`, `failed`,
 `submitted`, and `skipped` records, but only confirmed suitable submissions
 advance the active target.
 
+For every qualifying record, persist the discovery run ID and minimal resume
+selection: canonical `resumeProfile`, exact `selectedResume` path, and the
+chosen-profile `matchScore`. Do not copy resume content or candidate answers
+into queue metadata. Existing canonical profile/path mappings live in
+`resumes/index.md`.
+
+Discovery and application are separate stages. Complete discovery and write
+the run summary before opening any application. Then freeze only that run's
+qualifying native and external records into
+`state/runs/<RUN_ID>/application-batch.json`; Stage 2 processes the immutable
+manifest, not a changing live queue.
+
 ## Breadth and exhaustion telemetry
 
 Every run must use a planned set of query variants and sources rather than a
@@ -56,7 +68,8 @@ one blocked application, or one exhausted query is never run-level exhaustion.
 The coordinator writes append-only JSONL under
 `state/runs/<RUN_ID>/`: `discovery-ledger.jsonl` for every evaluated opening,
 `search-telemetry.jsonl` for every search page, and
-`executor-telemetry.jsonl` for every local Playwright result. Each job record
+`executor-telemetry.jsonl` for every local Playwright result, plus
+`application-batch.json` for the frozen Stage 2 list. Each job record
 uses standardized reason codes and records recency as within-window, too-old,
 or unknown so the impact of the seven-day rule can be measured without
 loosening it. Search records also preserve scroll completion, visible job IDs,

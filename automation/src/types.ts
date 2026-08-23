@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
-import type { SearchProfileId } from "./search-profiles.js";
+import type { ResumeProfileId, SearchProfileId } from "./search-profiles.js";
 
 export type AtsName =
   | "linkedin"
@@ -52,6 +52,7 @@ export interface JobOpportunity {
   matchScore?: number;
   matchClassification?: JavaMatchClassification;
   searchProfile?: SearchProfileId;
+  resumeProfile?: ResumeProfileId;
   selectedResume?: string;
   requiredYoe?: string;
   javaSpringRequirement?: string;
@@ -104,10 +105,11 @@ export interface ApplicationPayload {
   applicationUrl?: string;
   jobId?: string;
   ats: AtsName;
+  resumeProfile?: ResumeProfileId;
   resume: string;
   candidate: CandidatePayload;
   answers: Record<string, AnswerValue>;
-  /** External applications are manual-first and require an explicit policy override. */
+  /** Local-runner external execution requires an explicit policy override. */
   applicationChannel?: ApplicationChannel;
   /** Required when a LinkedIn listing redirects to a non-ATS company domain. */
   allowedApplicationDomains?: string[];

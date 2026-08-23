@@ -7,7 +7,7 @@ import type {
   OpportunityStatus,
 } from "./types.js";
 import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
-import type { SearchProfileId } from "./search-profiles.js";
+import { resolveResumeSelection, type ResumeProfileId, type SearchProfileId } from "./search-profiles.js";
 
 const TRACKING_PARAMS = /^(utm_[^=]+|fbclid|gclid|mc_cid|mc_eid|ref|referrer|source)$/i;
 
@@ -27,6 +27,7 @@ export interface OpportunityInput {
   matchScore?: number;
   matchClassification?: JavaMatchClassification;
   searchProfile?: SearchProfileId;
+  resumeProfile?: ResumeProfileId;
   selectedResume?: string;
   requiredYoe?: string;
   javaSpringRequirement?: string;
@@ -148,6 +149,7 @@ export function makeJobOpportunity(input: OpportunityInput): JobOpportunity {
   const applicationChannel = classifyApplicationChannel(input);
   const nativePlatform = input.nativePlatform ?? nativePlatformFor(input.source);
   const externalAts = input.externalAts ?? detectExternalAts(input.applicationUrl);
+  const resumeSelection = resolveResumeSelection(input);
   return {
     id: canonicalOpportunityId(input),
     source: input.source,
@@ -165,7 +167,8 @@ export function makeJobOpportunity(input: OpportunityInput): JobOpportunity {
     matchScore: input.matchScore,
     matchClassification: input.matchClassification,
     searchProfile: input.searchProfile,
-    selectedResume: input.selectedResume,
+    resumeProfile: resumeSelection?.resumeProfile,
+    selectedResume: resumeSelection?.selectedResume,
     requiredYoe: input.requiredYoe,
     javaSpringRequirement: input.javaSpringRequirement,
     javaExperienceScope: input.javaExperienceScope,

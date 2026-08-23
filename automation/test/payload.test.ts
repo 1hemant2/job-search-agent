@@ -1,6 +1,7 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findDuplicate, validateApplicationPayload } from "../src/application-payload.js";
+import { JAVA_RESUME_PROFILE, NODE_RESUME_PROFILE } from "../src/search-profiles.js";
 
 const workspaceRoot = path.resolve(process.cwd(), "..");
 
@@ -26,6 +27,12 @@ describe("application payload validation", () => {
   it("accepts a source-of-truth resume inside resumes/", () => {
     const result = validateApplicationPayload(payload(), workspaceRoot);
     expect(result.errors).toEqual([]);
+    expect(result.payload.resumeProfile).toBe(NODE_RESUME_PROFILE);
+  });
+
+  it("rejects mismatched frozen resume metadata", () => {
+    const result = validateApplicationPayload(payload({ resumeProfile: JAVA_RESUME_PROFILE }), workspaceRoot);
+    expect(result.errors.join(" ")).toContain("does not match selectedResume");
   });
 
   it("rejects a resume outside the workspace resumes directory", () => {

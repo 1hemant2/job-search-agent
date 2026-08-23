@@ -44,7 +44,7 @@ export const SOURCE_CAPABILITIES: SourceCapability[] = [
     discoveryImplemented: false,
     nativeApplicationDetectionImplemented: false,
     nativeApplicationExecutionImplemented: false,
-    notes: "External destinations are manual-first; no collector is bundled.",
+    notes: "External destinations can be browser-processed after discovery; no collector is bundled.",
   },
   {
     source: "greenhouse",
@@ -79,4 +79,3 @@ export const SOURCE_CAPABILITIES: SourceCapability[] = [
 export function sourceCapability(source: string): SourceCapability | undefined {
   return SOURCE_CAPABILITIES.find((item) => item.source.toLowerCase() === source.toLowerCase());
 }
-

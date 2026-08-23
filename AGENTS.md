@@ -12,15 +12,18 @@ This file contains only bootstrapping, command modes, and invariants.
 - `apply native` processes the persisted supported native-application queue.
 - `apply native java` processes only Java-profile native queue records.
 - `show external` shows the highest-value pending external applications.
-- `show external java` filters the manual external queue to the Java profile.
-- `mark external <id> applied|skipped` updates the manual external queue.
+- `show external java` filters the pending external queue to the Java profile.
+- `mark external <id> applied|skipped` updates the external queue.
 - `outreach prepare <count>` researches relevant recruiting contacts and saves
   an exact, personalized, deduplicated message batch locally without sending.
 - `outreach send <batch-id>` opens the saved profiles and sends the prepared
   messages one at a time, with exact pre-send read-back and durable logging.
-- `start` is retained as a compatibility alias for an authorized run, but it
-  now means discovery, evaluation, classification, and queue routing. It does
-  not authorize automatic external ATS submission.
+- `start <count>` runs one authorized autonomous batch in two strictly ordered
+  stages: first discover, evaluate, and persist approximately `<count>` unique
+  opportunities; then stop searching and process every qualifying saved queue
+  item one by one in Chrome. The command authorizes final submission of both
+  native and external applications in that frozen batch when every required
+  answer is confirmed and no human-only or prohibited step is present.
 
 Migration and dry-run commands never submit applications.
 
@@ -64,29 +67,116 @@ the discovery ledger, queues, history reconciliation, and executor payloads.
 Qualifying opportunities are classified as `native_easy_apply`,
 `external_application`, or `unknown`. Native opportunities go to
 `state/queues/native-apply.jsonl`; external opportunities go to
-`state/queues/external-apply.jsonl` for manual handling; unknown routes go to
+`state/queues/external-apply.jsonl`; unknown routes go to
 `state/queues/unknown-review.jsonl`. External applications never reach the
-Playwright submission executor by default.
+Playwright submission executor by default, but an authorized `start` batch may
+open and fill them interactively in Chrome under the two-stage rules below.
+
+## Two-stage autonomous start invariant
+
+`start <count>` must complete these stages in order. Never interleave searching
+with applying.
+
+### Stage 1: discover and freeze the queue
+
+Search, open, fully read, evaluate, deduplicate, and durably record each unique
+opportunity until the requested evaluation count is reached or the planned
+search space is reasonably exhausted. Save every evaluated job URL and its
+decision in the discovery ledger. Route every qualifying opportunity to its
+native, external, or unknown queue with the canonical opportunity ID, original
+job URL, application URL when available, minimal resume-selection metadata,
+score, status, and discovery run ID.
+
+### Resume-selection queue contract
+
+During Stage 1, select the resume before routing the opportunity. Use only
+these canonical queue values:
+
+- `hemant_kumar_nodejs_resume` maps to
+  `resumes/Hemant_Kumar_NodeJS_Resume.pdf`.
+- `hemant_kumar_java_resume` maps to
+  `resumes/Hemant_Kumar_Java_Resume.pdf`.
+
+Use the Java profile when Java or Spring is a core required or meaningfully
+preferred backend technology. Use the Node.js profile for Node.js, TypeScript,
+or JavaScript-specific roles and as the default for general backend roles where
+Java is incidental. For a genuinely mixed role, score the job truthfully
+against both resume profiles with the same matching model and choose the higher
+score; a tie defaults to the Node.js profile. Never broaden the candidate's
+Java production experience while scoring.
+
+Queue metadata must stay minimal. Persist only `resumeProfile`,
+`selectedResume`, and the existing `matchScore` for the chosen profile; do not
+copy skills, projects, experience, or other resume content into the queue item.
+All application facts are resolved later from the selected resume and the
+candidate source-of-truth files in the workspace.
+
+Before any application is opened, finish discovery, persist the run summary and
+search checkpoint, reconcile against application history, and freeze the list
+of queue records belonging to this batch as
+`state/runs/<RUN_ID>/application-batch.json`. Stage 2 processes only this frozen
+manifest; newly encountered jobs belong to a later search run.
+
+### Stage 2: process the frozen queue
+
+After Stage 1 has stopped, process every qualifying native and external record
+from the frozen application manifest, one job at a time. Open each saved job
+link in a new Chrome tab, verify that it is the same canonical opening, and follow only apply
+controls or redirects belonging to that opening. Read `resumeProfile` and
+`selectedResume` from that manifest record and use exactly that resume throughout
+the application; do not rescore or silently switch variants during Stage 2.
+
+For supported native flows such as LinkedIn Easy Apply, fill and submit the
+application autonomously when every required answer is known from confirmed
+workspace facts and the batch is authorized. Select or upload the resume named
+by the queue metadata. For platform-specific native
+flows that are not supported by the local executor, use the visible Chrome
+workflow when it can be completed safely; otherwise preserve the tab as a
+handoff and continue.
+
+For external applications, open the external ATS in Chrome and fill ordinary
+fields autonomously with confirmed workspace facts, preserving any existing
+user-provided resume attachment when the preservation rule below applies;
+otherwise upload the exact `selectedResume` from the queue when needed.
+Continue through standard navigation and the authorized standard terms
+acknowledgment. Submit autonomously when every required answer is confirmed and
+the application contains no CAPTCHA, MFA, assessment, unknown material fact,
+or new material legal attestation. Otherwise leave the application at its
+furthest safe point, preserve the tab as a handoff, and continue the batch.
+
+If any native or external application is blocked, ambiguous, unsupported,
+expired, or requires human action, persist its exact non-secret status and
+blocker, add genuine unknowns to the human-input queue, mark the tab as a
+handoff, and leave it open without losing progress. Immediately continue with
+the next frozen queue record in another new tab. Do not reuse a blocked tab for
+another job and do not stop the batch because one application is blocked.
+
+The autonomous batch ends only after every frozen queue record has a durable
+outcome such as submitted, completed to the furthest authorized safe point,
+blocked, failed, expired, skipped with reason, or unknown-route review. Update
+executor telemetry, queue status, application history, and the run summary
+after each record so the run can resume safely after interruption.
 
 ## Safety and persistence
 
 Do not modify candidate facts during migration. Preserve resumes, answer
 learning, browser profile, telemetry, ATS adapters, and existing history.
 Persist each discovery run under `state/runs/<RUN_ID>/`, including the
-discovery ledger, search telemetry, executor telemetry, and run summary.
+discovery ledger, search telemetry, executor telemetry, run summary, and frozen
+application-batch manifest when Stage 2 is authorized.
 Keep `candidate/human-input-queue.md` for genuine human-required blockers; it
 is not the primary job queue.
 
 Never store passwords, OTPs, MFA codes, CAPTCHA values, cookies, tokens, or
 recovery codes. Never complete assessments or interviews. A visible CAPTCHA,
-MFA, or required human action blocks only that native application and the queue
-continues. External applications are already manual-first.
+MFA, or required human action blocks only that application and the queue
+continues in another tab.
 
 ## Batch tab continuity
 
-For ordinary batch application runs, when a native application is blocked,
-incomplete, or requires human input, persist the non-secret blocker and keep
-the current browser tab open for follow-up. Mark the tab as a handoff and
+For ordinary batch application runs, when any native or external application
+is blocked, incomplete, or requires human input, persist the non-secret blocker
+and keep the current browser tab open for follow-up. Mark the tab as a handoff and
 continue with the next queued task in a separate new browser tab, preserving
 the blocked opening's identity and state. Do not reuse the blocked tab for a
 different job, close it, or overwrite its progress. This rule applies only to
@@ -97,14 +187,16 @@ stop after recording the blocker.
 
 When the user explicitly hands off a website task, fill ordinary application
 details using confirmed facts already persisted in the workspace and continue
-through the workflow without asking the user to repeat them. For external job applications,
-the user authorizes checking a standard terms-and-conditions acknowledgment
-needed to reach the final review page, then stop and notify the user before any
-final submission. This preference does not authorize guessing unknown material
-facts, accepting new material legal attestations (such as background checks,
+through the workflow without asking the user to repeat them. Outside an
+authorized `start <count>` batch, an external job handoff authorizes checking a
+standard terms-and-conditions acknowledgment needed to reach the final review
+page, then stopping before final submission. Inside an authorized `start`
+batch, the two-stage autonomous submission rule above applies. Neither mode
+authorizes guessing unknown material facts, accepting new material legal
+attestations (such as background checks,
 criminal-history declarations, conflicts, or work-authorization statements),
 bypassing CAPTCHA/MFA, completing assessments or interviews, transmitting
-secrets, or submitting the final application.
+secrets, or misrepresenting candidate facts.
 
 When the user explicitly authorizes both preparation and sending of a recruiter
 outreach batch, save the exact personalized notes locally and proceed through
