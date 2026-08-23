@@ -14,11 +14,40 @@ audit trail; `state/run-state.md` remains operational checkpoint state.
 ## Specific-link handoff override
 
 If the user provides a specific job or application URL and explicitly hands off
-that task, the run enters `DIRECT_LINK_HANDOFF` mode. The URL is the
-authoritative target. Continue from that URL and follow only redirects, login
-gates, or apply controls that clearly belong to the same job opening. Do not
-fall back to `search`, discovery, query expansion, queue processing, alternate
-job URLs, alternate listings, or another job if the handed-off workflow fails.
+that task, first reconcile it against any active unfinished authorized batch.
+Match using canonical/original/application URL, job ID, company/role identity,
+ATS redirect evidence, and persisted blockers. A matching item enters
+`BATCH_HANDOFF_RESUME`, even for an external ATS URL or after the user manually
+completed a blocked field. Only an unmatched URL enters
+`DIRECT_LINK_HANDOFF` mode.
+
+For `BATCH_HANDOFF_RESUME`, inspect existing controlled and user-open Chrome
+tabs and reuse/claim the matching live tab; open a duplicate only when the
+matching tab no longer exists. Preserve all user-entered progress. Before
+acting, call `markHandoff()` again on every other surviving unresolved batch
+handoff tab so turn cleanup cannot close them. Never close, navigate, or reuse
+another handoff tab. The original `start` authorization remains valid for the
+matched item and remaining frozen records. Browser safety still requires one
+action-time confirmation immediately before transmitting sensitive candidate
+data or uploading the resume. Group the specific imminent data, file, and
+employer destination into one confirmation; after approval, do not repeat it
+unless the data or destination changes. After the item reaches a durable
+outcome, return to manifest order and continue.
+
+If resume upload is needed after confirmation, use the Chrome file-chooser flow
+with the queued resume's absolute path and verify the visible attached filename.
+On the first failure or missing attachment, refresh the snapshot/locator state
+and retry once. Ask the user to change Chrome/extension file-access permissions
+only after that retry produces real upload-failure evidence. If the user says
+access is already enabled, retry once from fresh browser state rather than
+repeating the permission instruction. A remaining failure is an item-level
+blocker: mark the tab as a handoff and continue other batch items.
+
+For an unmatched `DIRECT_LINK_HANDOFF`, the URL is the authoritative target.
+Continue from that URL and follow only redirects, login gates, or apply controls
+that clearly belong to the same job opening. Do not fall back to `search`,
+discovery, query expansion, queue processing, alternate job URLs, alternate
+listings, or another job if the handed-off workflow fails.
 
 On any failure or blocker, persist the real non-secret outcome, report that the
 specific application was not completed, and stop. The normal batch rule to
@@ -97,11 +126,36 @@ applications. Follow the complete two-stage and blocked-tab invariants in root
 Stage 2 application must use the resume profile frozen into its queue record.
 The frozen list is persisted at
 `state/runs/<RUN_ID>/application-batch.json`; Stage 2 reads that manifest rather
-than a changing live queue.
+than a changing live queue. The frozen manifest is read-only. `queueStatus` in
+each item is only the status captured at freeze time; never write blockers or
+Stage 2 progress back into the manifest. Record outcomes in queue events,
+executor telemetry, history, and the run checkpoint using `runId` plus
+`opportunityId`. On resume, walk manifest `sequence` and skip only items with a
+durable terminal outcome in those progress records.
+
+All URLs opened from that manifest remain ordinary batch items. Processing a
+specific saved URL does not activate `DIRECT_LINK_HANDOFF`; that mode exists
+only when the user supplied the URL as the task target outside the batch. Use
+the connected Chrome browser-control surface throughout `start` Stage 2. Do
+not use the local Playwright executor for this stage because its owned browser
+context closes when execution returns and cannot preserve a live handoff tab.
+
+`continue` and `resume` are first-class aliases for resuming the active
+unfinished authorized `start` batch. The user does not need to provide a run
+ID or repeat the browser, blocker, resume, queue, or authorization rules. Load
+the active run from `state/run-state.md`, verify its immutable application
+manifest, reconcile per-item outcomes by `runId` plus `opportunityId`, and
+continue the first sequence without a durable terminal outcome. The original
+authorization carries only across the remaining records in that same frozen
+manifest; never discover or append replacement jobs. If an item blocker alone
+caused `stage_2_paused`, normalize the batch back to `stage_2_running`, preserve
+the blocker, and advance. Ask the user only when the active unfinished batch is
+ambiguous or a real browser-wide failure blocks all further processing.
 
 When a specific URL is present, do not invoke `search`, `start`, or any batch
-queue command as a substitute for the direct-link task. The direct-link
-workflow is single-opening and terminal on failure.
+queue command as a substitute. Reconcile it with an active batch first; a match
+uses `BATCH_HANDOFF_RESUME`, while only an unmatched direct-link workflow is
+single-opening and terminal on failure.
 
 ## Bootstrap and candidate truth
 
@@ -221,6 +275,19 @@ candidate source files. Stage 2 must select or upload the exact queued resume
 and must not rescore or silently change it. An already attached user-provided
 resume remains governed by the preservation rule above.
 
+Long-form ATS employment fields such as `Role Description`, `Job Description`,
+or `Responsibilities` must be populated from the complete professional Work
+Experience entry in the queued `selectedResume`, reconciled with
+`candidate/experience.md`. Do not replace that entry with a generated one-line
+stack summary or copy the target job description. Preserve all material
+truthful achievements and metrics when the field permits, using plain-text
+bullets. The selected profile controls phrasing and emphasis: the Node.js
+profile may retain its confirmed Node.js/BullMQ/Redis/PostgreSQL employment
+details, while the Java profile must not imply professional Java employment.
+Independent project technologies never become employment responsibilities.
+Only compress for a real field limit, retaining quantified impact and the most
+profile-relevant supported achievements.
+
 ## Channel classification and routing
 
 Every qualifying opportunity must be classified before routing:
@@ -258,6 +325,12 @@ runner. An authorized `start` batch instead opens them interactively in Chrome,
 fills confirmed ordinary fields, submits when safely complete, preserves
 blocked tabs, and continues the frozen queue. The local runner refuses a payload marked
 `external_application` unless an explicit future policy override is passed.
+
+When an external ATS is detected, read its matching guidance under `ats/`
+before filling tenant-specific pages. In particular, read `ats/workday.md`
+before processing Workday's `My Experience` page; generic visible-input filling
+is insufficient because Workday hides record forms behind section-scoped Add
+controls.
 
 ## Sources and capability honesty
 
@@ -301,14 +374,30 @@ If a native or external application encounters visible CAPTCHA, MFA,
 authentication, unknown required material questions, an assessment, or a
 broken form, mark
 that queue item with the closest supported durable status, record the exact
-non-secret blocker, mark the current tab as a handoff, leave it open, and
-continue with the next frozen item in a separate new tab. Never bypass security
-controls or complete assessments/interviews. Genuine human-only blockers remain
-in `candidate/human-input-queue.md`; that file is not the job queue.
+non-secret blocker, call `await currentTab.markHandoff()` on the actual Chrome
+tab, leave it open, and continue with the next frozen item in a separate new
+tab. Merely writing "handoff" in status or telemetry does not preserve an
+agent-created tab. Never bypass security controls or complete
+assessments/interviews. Genuine human-only blockers remain in
+`candidate/human-input-queue.md`; that file is not the job queue.
+
+An item-level `blocked`, `failed`, `assessment`, `unsupported`, or human-input
+outcome must return control to the manifest loop, not terminate the batch or
+produce the run's final response. Do not call `tab.close()`, close the browser
+binding/context, or reuse a handoff tab. Open the next manifest record in a new
+tab, advance the manifest pointer, and keep the run `stage_2_running`. An item
+blocker must not set `stage_2_paused`; that state is only for an explicit user
+pause or a browser-wide failure that makes the next item unreachable. Before
+any final response, interruption, or turn end, call
+`markHandoff()` again on every still-controlled blocked/incomplete tab that
+must survive because Chrome marks are turn-scoped. Finalize the batch only
+after every frozen item has a durable outcome or a genuine batch-level browser
+failure makes continuation impossible.
 
 The preceding continue-with-the-next-item rule applies only to ordinary batch
 runs. In `DIRECT_LINK_HANDOFF` mode, the blocker is recorded for the handed-off
 opening, the user is told the application was not completed, and the run stops.
+Opening a manifest URL during `start` never converts the run into this mode.
 
 External browser processing may continue through standard navigation and an
 authorized standard terms acknowledgment. In an authorized `start` batch it

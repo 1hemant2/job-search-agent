@@ -1,17 +1,30 @@
 # Local Playwright execution adapter
 
 For a user-provided URL, the caller must treat the payload as a
-`DIRECT_LINK_HANDOFF`: execute only that opening and same-opening redirects or
-apply controls. A failed or blocked result is final for that handoff; do not
-replace the payload with a search result, alternate listing, queued item, or
-other job. The caller must report that the specific application was not
-completed and stop. This does not change ordinary batch queue behavior.
+`DIRECT_LINK_HANDOFF` only after checking that it does not match an active
+unfinished frozen-batch item. A match is `BATCH_HANDOFF_RESUME` and retains the
+original batch authorization and continuation behavior. An unmatched direct
+link executes only that opening and same-opening redirects or apply controls.
+A failed or blocked result is final for that unmatched handoff; do not replace
+the payload with a search result, alternate listing, queued item, or other job.
+The caller must report that the specific application was not completed and
+stop. This does not change ordinary batch queue behavior.
 
 If the user hands off an ATS page after already uploading a resume, the caller
 must preserve the visible attachment and current form progress. It should skip
 duplicate upload/parsing, backfill blanks, and correct parser errors with
 confirmed workspace facts. Re-upload is appropriate only when the attachment
 is visibly absent, rejected/lost by the ATS, or the user requests replacement.
+
+The local runner is not the browser surface for `start <count>` Stage 2. It
+owns and closes its Playwright context when a payload finishes, so it cannot
+satisfy the batch requirement to leave blocked tabs open while continuing.
+Authorized Stage 2 batches use connected Chrome tabs, call
+`tab.markHandoff()` on every blocked/incomplete tab, and process the next
+manifest item in a new tab. URLs loaded from the frozen manifest remain batch
+items and do not become `DIRECT_LINK_HANDOFF` tasks. The frozen manifest stays
+read-only; Stage 2 progress is reconciled from queue events, executor telemetry,
+history, and run state by `runId` and `opportunityId`.
 
 This subsystem is a deterministic browser executor for the existing job-agent workspace. It does not discover jobs, score them, derive candidate answers, or write candidate memory/history. Codex prepares one JSON payload, the runner executes routine browser actions, and Codex records the returned result in `application-history.md`, `state/run-state.md`, and—when a reusable answer was learned—`candidate/application-answers.md`.
 
@@ -29,7 +42,7 @@ This subsystem is a deterministic browser executor for the existing job-agent wo
 - `src/runner.ts` — state-machine execution and structured JSON output.
 - `test/` — payload, detection, form-filling, unknown-question, CAPTCHA, deduplication, and dry-run integration tests.
 
-The lifecycle is explicit: `prepared → executing → blocked | blocked_captcha | assessment | failed | submitted`. A blocked application returns to Codex as a result and does not stop other jobs in an ordinary batch; a `DIRECT_LINK_HANDOFF` stops after reporting that its specific application was not completed.
+The lifecycle is explicit: `prepared → executing → blocked | blocked_captcha | assessment | failed | submitted`. A blocked application returns to Codex as a per-item result and does not stop other jobs in an ordinary batch; the controller must continue the frozen manifest. A `DIRECT_LINK_HANDOFF` stops after reporting that its user-supplied specific application was not completed.
 
 ## Payload contract
 

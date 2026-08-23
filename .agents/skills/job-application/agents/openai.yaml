@@ -1,4 +1,4 @@
 interface:
   display_name: "Job Application"
   short_description: "Run truthful autonomous job applications"
-  default_prompt: "Use $job-application to run an authorized truthful two-stage batch: finish and freeze discovery with per-job resume metadata, then process the frozen native and external manifest while preserving blocked tabs and candidate truth."
+  default_prompt: "Use $job-application to run an authorized truthful two-stage batch: finish and freeze discovery with per-job resume metadata, then process every frozen native and external item in Chrome. Treat blockers as item-level outcomes, call tab.markHandoff() on each blocked or incomplete tab so it survives turn cleanup, and continue the manifest in a new tab without switching to DIRECT_LINK_HANDOFF."
