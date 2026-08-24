@@ -1710,3 +1710,83 @@
 - Resume used: Existing selected `Hemant_Kumar_NodeJS_Resume.pdf`; not re-uploaded
 - Progress: Contact information, resume selection, and deterministic application questions were prepared.
 - Blocker: Required `What is your expected CTC ?` field is malformed as a Yes/No dropdown and LinkedIn reports `Please enter a valid answer` while it remains unanswered. No application was submitted.
+
+## Rubrik — Software Engineer - Cloud Native Protection
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn → Rubrik careers
+- Job URL: https://www.linkedin.com/jobs/view/4456704901/
+- Application status: Blocked before form completion
+- Resume used: Not transmitted; frozen selection `Hemant_Kumar_NodeJS_Resume.pdf`
+- Blocker: Rubrik requires a typed full-name acknowledgment of a nondisclosure agreement. This is a new material legal attestation, so the application tab was left open as a browser handoff and no personal fields, resume, or submission were sent.
+
+## Arcadia — Software Engineer II - Connector Engineering
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn → Greenhouse short link
+- Job URL: https://www.linkedin.com/jobs/view/4217131706/
+- Application status: Blocked before form completion
+- Resume used: Not transmitted; frozen selection `Hemant_Kumar_Java_Resume.pdf`
+- Blocker: The saved `grnh.se` application link returned “Sorry, but we can't find that page.” Application tab preserved as handoff.
+
+## Zebra Technologies — Software Engineer I
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn → Zebra Workday
+- Job URL: https://www.linkedin.com/jobs/view/4454645177/
+- Application status: Ready at final review; not submitted
+- Resume used: `Hemant_Kumar_NodeJS_Resume.pdf` uploaded successfully
+- Progress: Under the existing Workday account email `hk443957@gmail.com`, the provided autofill link was completed through Review. Confirmed contact details, LinkedIn referral, no prior Zebra employment, eligibility/sponsorship answers, export-control nationality answers, Male gender, and standard terms consent were entered. The Review page shows the attached resume, Enterprise Bot work experience from 09/2024, Arya College bachelor's education with Computer and Information Science and GPA 8.62, and selected skills Node.js, TypeScript, and PostgreSQL. Certifications remains blank because Workday's catalog did not offer the confirmed RHCSA; Languages remains blank because no confirmed language list is stored.
+- Blocker: Final job-application submission requires the user's immediate confirmation. The application tab is preserved as a handoff; no final submission was made.
+
+## Flexiple — Backend Engineer
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn → Flexiple
+- Job URL: https://www.linkedin.com/jobs/view/4457881558/
+- Application status: Blocked before form completion
+- Resume used: Frozen selection `Hemant_Kumar_NodeJS_Resume.pdf`; upload not completed
+- Blocker: The resume upload control did not expose a usable file chooser in Chrome. Tab preserved as handoff.
+
+## Somewhere — Back End Developer
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn → RecruitCRM
+- Job URL: https://www.linkedin.com/jobs/view/4455421293/
+- Application status: Blocked before form completion
+- Resume used: Frozen selection `Hemant_Kumar_NodeJS_Resume.pdf`; upload not completed
+- Blocker: The Upload File control did not expose a usable file chooser in Chrome. Tab preserved as handoff.
+
+## WorkIndia — SDE 2 - Full Stack
+
+- Date accessed: 2026-08-23
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4457077767/
+- Application status: Blocked at final review; not submitted
+- Resume used: `Hemant_Kumar_NodeJS_Resume.pdf`
+- Progress: Contact information, resume selection, PostgreSQL = 2 years, JavaScript = 2 years, onsite = Yes, joining = 60 days, current CTC = 6.93 LPA, and expected CTC = 14 LPA were prepared.
+- Blocker: Required Python-experience question had no confirmed source-of-truth answer; LinkedIn rendered the unanswered field as `0` on review. Final submission was withheld and the review tab preserved as handoff.
+
+## SolarWinds — Associate Software Engineer (SDE-1)
+
+- Date applied: 2026-08-24
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4458102052/
+- Job ID: 4458102052
+- Location: Bengaluru, Karnataka, India
+- Application status: Submitted
+- Resume used: `Hemant_Kumar_NodeJS_Resume.pdf`
+- Verification: LinkedIn job page showed “Submitted resume” and “Applied on company site” after submission.
+- Notes: Submitted with confirmed India work authorization, no sponsorship required in India, Bangalore preference, and relocation openness.
+
+## Navi — SDE I (Backend)
+
+- Date applied: 2026-08-24
+- Platform: LinkedIn Easy Apply
+- Job URL: https://www.linkedin.com/jobs/view/4456814308/
+- Job ID: 4456814308
+- Location: Bengaluru, Karnataka, India
+- Application status: Submitted
+- Resume used: `Hemant_Kumar_Java_Resume.pdf`
+- Verification: LinkedIn job page showed “Submitted resume” and “Applied on company site” after submission.
+- Notes: Submitted with current CTC 6.93 LPA, Bangalore = Yes, and notice period = 60 days.

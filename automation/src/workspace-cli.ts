@@ -63,6 +63,7 @@ function search(args: string[], freezeForStart = false): void {
   const target = Number(args.find((arg) => /^\d+$/.test(arg)) ?? "50");
   const id = argValue(args, "--run-id") ?? runId();
   const fixturePath = argValue(args, "--fixture");
+  const useLiveQueues = args.includes("--live-queues");
   const fixture = fixturePath
     ? JSON.parse(fs.readFileSync(path.resolve(workspaceRoot, fixturePath), "utf8")) as FixtureRecord[]
     : [];
@@ -70,8 +71,8 @@ function search(args: string[], freezeForStart = false): void {
     ? { runId: id, searchProfile: profile, sources: [{ source: "fixture", queries: [{ query: "fixture", queryVariant: "fixture", location: "India" }] }] }
     : buildDefaultDiscoveryPlan(id, { sources: SOURCE_CAPABILITIES.map((item) => item.source), searchProfile: profile });
   const coordinator = new DiscoveryCoordinator(workspaceRoot, plan, {
-    persistRunState: !fixture.length,
-    queueDirectory: fixture.length ? path.join(workspaceRoot, "state", "runs", id, "queues") : undefined,
+    persistRunState: !fixture.length || useLiveQueues,
+    queueDirectory: fixture.length && !useLiveQueues ? path.join(workspaceRoot, "state", "runs", id, "queues") : undefined,
   });
 
   if (!fixture.length) {
