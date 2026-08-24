@@ -26,6 +26,12 @@ This file contains only bootstrapping, command modes, and invariants.
   candidate data/files or finally submitting job applications. Group those
   confirmations across the frozen batch as specified below instead of asking
   once per job.
+  Treat this command as authorization for every qualifying item that is frozen
+  into the batch: do not ask whether to apply to an individual job, whether to
+  fill an ordinary known field, whether to use its frozen resume, or whether to
+  continue to the next queued item. Ask only the grouped browser confirmations
+  below, and never repeat them for a job already covered by the same confirmed
+  destination, data, resume, and application set.
   Every URL opened from the frozen manifest remains part of this batch; it does
   not become a `DIRECT_LINK_HANDOFF` merely because Stage 2 is processing one
   specific saved link.
@@ -240,6 +246,12 @@ frozen jobs can be grouped:
    confirmation listing every review-ready company and role. Submit all listed
    applications after approval without asking again unless the destination,
    transmitted data, or set of applications materially changes.
+
+Between these two checkpoints, do not ask the user to confirm ordinary fields,
+resume selection, navigation, or continuation. Resolve those mechanically from
+the candidate source-of-truth and frozen queue metadata. A bare `continue` or
+`resume` carries the original batch authorization and does not create a new
+approval prompt.
 
 If an additional destination or data category becomes known only after the
 first checkpoint, ask one supplemental grouped confirmation covering only the

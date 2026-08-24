@@ -127,6 +127,12 @@ application and submit the approved set. Do not ask per job when frozen jobs
 can be grouped, and do not repeat an approved confirmation unless its
 destination, data, resume, or application set materially changes. A one-item
 batch still requires separate transmission and final-submission confirmations.
+The `start` command itself authorizes processing every qualifying frozen item;
+do not ask whether to apply to a particular job, fill an ordinary known field,
+use the frozen resume, or continue to the next item. Between the two grouped
+browser checkpoints, resolve ordinary answers from workspace truth and proceed
+autonomously. A bare `continue` or `resume` carries the original authorization
+for the remaining frozen manifest and does not require a new approval prompt.
 A migration, test, or dry run is
 simulation-only and must not create accounts, upload resumes, or submit
 applications. Follow the complete two-stage and blocked-tab invariants in root
