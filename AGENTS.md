@@ -18,12 +18,14 @@ This file contains only bootstrapping, command modes, and invariants.
   an exact, personalized, deduplicated message batch locally without sending.
 - `outreach send <batch-id>` opens the saved profiles and sends the prepared
   messages one at a time, with exact pre-send read-back and durable logging.
-- `start <count>` runs one authorized autonomous batch in two strictly ordered
+- `start <count>` runs one authorized batch in two strictly ordered
   stages: first discover, evaluate, and persist approximately `<count>` unique
   opportunities; then stop searching and process every qualifying saved queue
-  item one by one in Chrome. The command authorizes final submission of both
-  native and external applications in that frozen batch when every required
-  answer is confirmed and no human-only or prohibited step is present.
+  item one by one in Chrome. The command authorizes the batch workflow, but it
+  cannot waive Chrome's mandatory action-time confirmations for transmitting
+  candidate data/files or finally submitting job applications. Group those
+  confirmations across the frozen batch as specified below instead of asking
+  once per job.
   Every URL opened from the frozen manifest remains part of this batch; it does
   not become a `DIRECT_LINK_HANDOFF` merely because Stage 2 is processing one
   specific saved link.
@@ -100,15 +102,14 @@ handoff tabs to close at turn cleanup. Never close, navigate, or repurpose those
 other tabs.
 
 `BATCH_HANDOFF_RESUME` inherits the original workflow authorization for that
-manifest item and for the remaining frozen batch. This does not replace any
-mandatory live-browser action-time confirmation. Immediately before the first
-transmission to an employer, group the imminent queued-resume upload and
-specific confirmed personal fields into one precise confirmation naming the
-destination. After the user confirms, do not repeat that confirmation unless
-the destination or transmitted data materially changes. Continue from the
-current page, then return to manifest order. Material legal attestations,
-unknown facts, CAPTCHA/MFA, assessments, and genuine browser permissions remain
-blockers.
+manifest item and for the remaining frozen batch. It also inherits any valid
+grouped action-time confirmation already given for that exact employer,
+resume, and candidate-data set. Do not ask again unless the destination or
+transmitted data materially changes. If the item was not covered, include it
+in the next precise grouped confirmation under the Stage 2 rules below.
+Continue from the current page, then return to manifest order. Material legal
+attestations, unknown facts, CAPTCHA/MFA, assessments, and genuine browser
+permissions remain blockers.
 
 For Chrome resume uploads, use the documented file-chooser flow with the exact
 absolute path for the queued resume and verify the visible attached filename.
@@ -214,23 +215,57 @@ invoke the local Playwright executor for this stage: it owns and closes its
 browser context and therefore cannot preserve a blocked live tab while the
 batch continues.
 
-For supported native flows such as LinkedIn Easy Apply, fill and submit the
-application autonomously when every required answer is known from confirmed
-workspace facts and the batch is authorized. Select or upload the resume named
-by the queue metadata. For platform-specific native
+### Mandatory grouped browser confirmations
+
+Chrome requires action-time confirmation immediately before sensitive
+candidate data or a resume is transmitted to an employer and again immediately
+before a job application is finally submitted. The initial `start <count>`
+command is workflow authorization; it does not satisfy either browser safety
+confirmation.
+
+Minimize interruptions by using exactly two batch checkpoints whenever the
+frozen jobs can be grouped:
+
+1. After Stage 1 freezes the manifest, inspect every frozen record far enough
+   to identify its exact employer/application destination, selected resume,
+   and candidate-data categories that will be transmitted. Then ask once for
+   confirmation covering all currently actionable frozen jobs. Name every
+   company and role, its destination, its exact resume filename, and the
+   specific data categories. Do not ask for SolarWinds alone when another
+   frozen job can be included in the same imminent batch transmission.
+2. After that confirmation, fill every covered application to its furthest safe
+   point, leaving each successful flow at final review/submit. Continue past
+   item-level blockers under the tab-continuity rules. Once all frozen items
+   are either review-ready or durably blocked, ask once for final-submission
+   confirmation listing every review-ready company and role. Submit all listed
+   applications after approval without asking again unless the destination,
+   transmitted data, or set of applications materially changes.
+
+If an additional destination or data category becomes known only after the
+first checkpoint, ask one supplemental grouped confirmation covering only the
+new transmissions. A one-item batch still requires the transmission and final
+submission confirmations because they authorize different actions.
+
+For supported native flows such as LinkedIn Easy Apply, after the grouped
+transmission confirmation fill the application autonomously when every required
+answer is known from confirmed workspace facts. Select or upload the resume
+named by the queue metadata, stop at final review/submit, and include the job in
+the grouped final-submission checkpoint. For platform-specific native
 flows that are not supported by the local executor, use the visible Chrome
 workflow when it can be completed safely; otherwise preserve the tab as a
 handoff and continue.
 
-For external applications, open the external ATS in Chrome and fill ordinary
-fields autonomously with confirmed workspace facts, preserving any existing
-user-provided resume attachment when the preservation rule below applies;
-otherwise upload the exact `selectedResume` from the queue when needed.
-Continue through standard navigation and the authorized standard terms
-acknowledgment. Submit autonomously when every required answer is confirmed and
-the application contains no CAPTCHA, MFA, assessment, unknown material fact,
-or new material legal attestation. Otherwise leave the application at its
-furthest safe point, preserve the tab as a handoff, and continue the batch.
+For external applications, after the grouped transmission confirmation open the
+external ATS in Chrome and fill ordinary fields autonomously with confirmed
+workspace facts, preserving any existing user-provided resume attachment when
+the preservation rule below applies; otherwise upload the exact
+`selectedResume` from the queue when needed. Continue through standard
+navigation and the authorized standard terms acknowledgment. Stop at final
+review/submit and include the job in the grouped final-submission checkpoint
+when every required answer is confirmed and the application contains no
+CAPTCHA, MFA, assessment, unknown material fact, or new material legal
+attestation. Otherwise leave the application at its furthest safe point,
+preserve the tab as a handoff, and continue the batch.
 
 If any native or external application is blocked, ambiguous, unsupported,
 expired, or requires human action, persist its exact non-secret status and
@@ -306,7 +341,8 @@ through the workflow without asking the user to repeat them. Outside an
 authorized `start <count>` batch, an external job handoff authorizes checking a
 standard terms-and-conditions acknowledgment needed to reach the final review
 page, then stopping before final submission. Inside an authorized `start`
-batch, the two-stage autonomous submission rule above applies. Neither mode
+batch, the two-stage workflow and grouped action-time confirmation rules above
+apply. Neither mode
 authorizes guessing unknown material facts, accepting new material legal
 attestations (such as background checks,
 criminal-history declarations, conflicts, or work-authorization statements),

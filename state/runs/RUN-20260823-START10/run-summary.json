@@ -1,0 +1,30 @@
+{
+  "run_id": "RUN-20260823-START10",
+  "search_profile": "node_backend",
+  "generated_at": "2026-08-23T07:32:35.304Z",
+  "evaluated": 10,
+  "qualifying": 6,
+  "recency_too_old": 0,
+  "recency_unknown": 0,
+  "score_too_low": 3,
+  "hard_blockers": 3,
+  "native_easy": 1,
+  "external": 9,
+  "unknown_route": 0,
+  "queue_paths": {
+    "native": "D:\\Job Apply\\state\\runs\\RUN-20260823-START10\\queues\\native-apply.jsonl",
+    "external": "D:\\Job Apply\\state\\runs\\RUN-20260823-START10\\queues\\external-apply.jsonl",
+    "unknown": "D:\\Job Apply\\state\\runs\\RUN-20260823-START10\\queues\\unknown-review.jsonl"
+  },
+  "discovery_state": "SEARCH_SPACE_REASONABLY_EXHAUSTED",
+  "workflow_stage": "stage_2_complete",
+  "stage_2_processed": 6,
+  "blocked_before_submission": 6,
+  "submitted": 0,
+  "pending": 0,
+  "application_batch": {
+    "path": "state/runs/RUN-20260823-START10/application-batch.json",
+    "frozen_at": "2026-08-23T07:32:35.321Z",
+    "items": 6
+  }
+}

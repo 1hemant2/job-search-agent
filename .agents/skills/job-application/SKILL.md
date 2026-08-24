@@ -27,12 +27,12 @@ matching tab no longer exists. Preserve all user-entered progress. Before
 acting, call `markHandoff()` again on every other surviving unresolved batch
 handoff tab so turn cleanup cannot close them. Never close, navigate, or reuse
 another handoff tab. The original `start` authorization remains valid for the
-matched item and remaining frozen records. Browser safety still requires one
-action-time confirmation immediately before transmitting sensitive candidate
-data or uploading the resume. Group the specific imminent data, file, and
-employer destination into one confirmation; after approval, do not repeat it
-unless the data or destination changes. After the item reaches a durable
-outcome, return to manifest order and continue.
+matched item and remaining frozen records. Reuse any valid batch-wide
+action-time confirmation already given for that exact employer, resume, and
+candidate-data set. Do not ask again unless the data or destination changes.
+If it was not covered, include the item in the next grouped confirmation under
+the root `AGENTS.md` Stage 2 rules. After the item reaches a durable outcome,
+return to manifest order and continue.
 
 If resume upload is needed after confirmation, use the Chrome file-chooser flow
 with the queued resume's absolute path and verify the visible attached filename.
@@ -72,10 +72,11 @@ SEARCH -> DISCOVER -> NORMALIZE -> READ COMPLETE DESCRIPTION
 
 The default workflow does not automatically submit external ATS or company
 portal applications. An authorized two-stage `start <count>` batch is the
-exception: external applications are opened, filled, and submitted
-interactively in Chrome when every required answer is confirmed and no
-human-only or prohibited step is present. Existing ATS adapters are reusable
-legacy components but remain default-disabled for external submission.
+exception: external applications are opened and filled interactively in Chrome
+when every required answer is confirmed and no human-only or prohibited step
+is present, then submitted only after the mandatory grouped final-submission
+confirmation. Existing ATS adapters are reusable legacy components but remain
+default-disabled for external submission.
 
 ## Modes and commands
 
@@ -112,14 +113,21 @@ must still be persisted and verified before its profile is opened for sending.
 Read [references/outreach.md](references/outreach.md) for the complete batch,
 personalization, verification, and logging rules.
 
-`start <count>` is an authorized autonomous two-stage batch. Stage 1 completes
+`start <count>` is an authorized two-stage batch. Stage 1 completes
 discovery, evaluation, classification, persistence, and a frozen qualifying
 queue before any application work begins. Stage 2 stops searching and processes
 every frozen native and external queue item one at a time in separate Chrome
-tabs. Native applications may be submitted when all required answers are known
-and the batch is authorized. External applications may also be submitted when
-all required answers are confirmed; `start <count>` itself supplies that batch
-authorization. A migration, test, or dry run is
+tabs. The command supplies workflow authorization but cannot waive Chrome's
+mandatory action-time confirmations. After the manifest is frozen, inspect all
+frozen items and ask once to transmit the listed candidate-data categories and
+exact resume files to every currently actionable named destination. After
+approval, fill all covered applications to final review while continuing past
+item-level blockers. Then ask once to submit every review-ready named
+application and submit the approved set. Do not ask per job when frozen jobs
+can be grouped, and do not repeat an approved confirmation unless its
+destination, data, resume, or application set materially changes. A one-item
+batch still requires separate transmission and final-submission confirmations.
+A migration, test, or dry run is
 simulation-only and must not create accounts, upload resumes, or submit
 applications. Follow the complete two-stage and blocked-tab invariants in root
 `AGENTS.md`; never interleave Stage 1 search with Stage 2 application work. Each
@@ -322,8 +330,10 @@ is modeled, but local native execution remains `native_unsupported` until
 separately tested; an authorized batch may still use their visible Chrome flow
 when it can be completed safely. External applications never enter the local
 runner. An authorized `start` batch instead opens them interactively in Chrome,
-fills confirmed ordinary fields, submits when safely complete, preserves
-blocked tabs, and continues the frozen queue. The local runner refuses a payload marked
+fills confirmed ordinary fields after grouped transmission approval, stages
+safe applications at final review, submits the review-ready set after grouped
+final-submission approval, preserves blocked tabs, and continues the frozen
+queue. The local runner refuses a payload marked
 `external_application` unless an explicit future policy override is passed.
 
 When an external ATS is detected, read its matching guidance under `ats/`
@@ -401,9 +411,10 @@ Opening a manifest URL during `start` never converts the run into this mode.
 
 External browser processing may continue through standard navigation and an
 authorized standard terms acknowledgment. In an authorized `start` batch it
-may submit when all required answers are confirmed and no human-only or
-prohibited step is present. Otherwise the external tab remains open at its
-furthest safe point while the ordinary batch continues.
+may be included in the grouped final-submission checkpoint when all required
+answers are confirmed and no human-only or prohibited step is present, and may
+be submitted only after that approval. Otherwise the external tab remains open
+at its furthest safe point while the ordinary batch continues.
 
 ## History and migration boundary
 

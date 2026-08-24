@@ -190,3 +190,12 @@ After the user completes the CAPTCHA in the existing browser session, reconstruc
 - Resume: `resumes/Hemant_Kumar_NodeJS_Resume.pdf`
 - Unresolved question: What is your expected CTC ?
 - Available options: Yes; No
+
+## LinkedIn Easy Apply — WorkIndia — SDE 2 - Full Stack
+
+- Status: blocked_unknown_required_question
+- Job ID: 4457077767
+- URL: https://www.linkedin.com/jobs/view/4457077767/
+- Reason: Required question `How many years of work experience do you have with Python (Programming Language)?` was not confirmed by candidate source-of-truth. LinkedIn rendered the unanswered field as `0` on review.
+- State: Confirmed fields and Node.js resume were prepared; final review reached; no submission made. Review tab remains open.
+- Needed: Candidate-confirmed Python work-experience duration, if any.

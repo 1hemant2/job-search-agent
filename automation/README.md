@@ -26,6 +26,14 @@ items and do not become `DIRECT_LINK_HANDOFF` tasks. The frozen manifest stays
 read-only; Stage 2 progress is reconciled from queue events, executor telemetry,
 history, and run state by `runId` and `opportunityId`.
 
+The `start` command authorizes this workflow but does not replace Chrome's
+action-time safety confirmations. Stage 2 groups them into two batch
+checkpoints: one confirmation naming every currently actionable destination,
+candidate-data category, and exact resume before transmission; then one
+confirmation naming every review-ready application before final submission.
+Covered jobs are not reconfirmed individually unless the destination, data,
+resume, or application set materially changes.
+
 This subsystem is a deterministic browser executor for the existing job-agent workspace. It does not discover jobs, score them, derive candidate answers, or write candidate memory/history. Codex prepares one JSON payload, the runner executes routine browser actions, and Codex records the returned result in `application-history.md`, `state/run-state.md`, and—when a reusable answer was learned—`candidate/application-answers.md`.
 
 ## Architecture
@@ -209,6 +217,12 @@ route, selected resume profile/path, chosen-profile score, and queue status;
 candidate facts are not duplicated in the manifest.
 Freezing is idempotent: once the manifest exists, later queue changes do not
 alter that run's Stage 2 list.
+
+After freezing, connected Chrome inspects the frozen items, groups all known
+resume/data transmissions into one confirmation, fills the approved jobs to
+final review while preserving blocked tabs, and then groups all review-ready
+submissions into one final confirmation. It must not prompt for only the first
+job when other frozen jobs can be included in the same checkpoint.
 
 The Java mode loads
 `.agents/skills/job-application/search-profiles/java-backend.md`, uses the
