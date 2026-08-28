@@ -134,6 +134,15 @@ After the user completes the CAPTCHA in the existing browser session, reconstruc
 - queued_at: 2026-08-21T04:37:14.307Z
 - resume_action: After manual CAPTCHA completion, rerun the same payload with --resume-captcha.
 
+## Philips Workday — Software Technologist I
+
+- Status: resolved_user_instruction
+- Platform: Philips Workday
+- Job ID: 588096
+- URL: https://philips.wd3.myworkdayjobs.com/en-US/jobs-and-careers/job/Bangalore/Software-Technologist-I_588096/apply/autofillWithResume?source=LinkedIn
+- Reason: User confirmed selecting Yes for Philips retaining personal data for one year to contact the candidate about future job positions, and requested this preference be reused for equivalent questions.
+- State: Final Review reached; awaiting the candidate's review and manual submission. No submission made.
+
 ## CAPTCHA — Octillion Media LLC — Senior Software Engineer - MERN Stack
 <!-- captcha-queue-key: octillion media llc senior software engineer mern stack generic https jobs smartrecruiters com oneclick ui company octillionmediallc publication 4828a3fc 444e 4562 b108 b0a10139f2a3 dcr ci octillionmediallc 743999762741699 -->
 
