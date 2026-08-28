@@ -1790,3 +1790,33 @@
 - Resume used: `Hemant_Kumar_Java_Resume.pdf`
 - Verification: LinkedIn job page showed “Submitted resume” and “Applied on company site” after submission.
 - Notes: Submitted with current CTC 6.93 LPA, Bangalore = Yes, and notice period = 60 days.
+
+## AiPrise — Software Engineer I (Bangalore, India)
+
+- Date processed: 2026-08-26
+- Run ID: `RUN-20260826-START30`
+- Opportunity ID: `opp-ef067b75f6b6ae6e9e70`
+- Platform: LinkedIn → YC Work at a Startup
+- Job URL: https://www.linkedin.com/jobs/view/4457651871/
+- Official destination: https://www.ycombinator.com/companies/aiprise/jobs/Yy2ZIqq-software-engineer-i-bangalore-india
+- Application status: Blocked before candidate-data transmission; not submitted
+- Frozen resume: `Hemant_Kumar_NodeJS_Resume.pdf`
+- Blocker: The official listing states `Visa: US citizen/visa only`; the candidate is an Indian citizen with no confirmed U.S. visa or U.S. work authorization.
+
+## IFTAS — Trainee Engineer (Java Backend)
+
+- Date processed: 2026-08-26
+- Run ID: `RUN-20260826-START30`
+- Opportunity ID: `opp-2c9b27dc68a97b172c8f`
+- Job URL: https://www.linkedin.com/jobs/view/4458589863/
+- Application status: Skipped before candidate-data transmission; not submitted
+- Reason: User excluded trainee, internship, and apprenticeship roles from this and all future searches.
+
+## RUN-20260826-START30 — Stage 2 review checkpoint
+
+- CareerXperts Consulting — Associate Software Engineer — LinkedIn Easy Apply — `review_ready`; contact details verified, `Hemant_Kumar_NodeJS_Resume.pdf` selected, stopped at `Submit application`.
+- Flexiple — Software Engineer — Flexiple job 12923 — `already_applied`; destination displayed `You've already applied`; no duplicate submission attempted.
+- revolte.ai — Software Engineer I – Backend — LinkedIn Easy Apply — `review_ready`; contact details verified, `Hemant_Kumar_NodeJS_Resume.pdf` selected, stopped at `Submit application`.
+- LG Ad Solutions — Software Engineer I — Ashby — `review_ready`; name and professional email filled, `Hemant_Kumar_NodeJS_Resume.pdf` visibly attached, stopped at `Submit Application`.
+- Flexiple — Backend Engineer — Flexiple job 13051 — `already_applied`; destination displayed `You've already applied`; no duplicate submission attempted.
+- Checkpoint recorded: 2026-08-26T04:23:39.254Z. No final submit action was taken at this checkpoint.

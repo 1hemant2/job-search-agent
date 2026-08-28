@@ -28,6 +28,9 @@
 - Mobile roles
 - QA or manual testing
 - Support engineering
+- Trainee roles
+- Internships
+- Apprenticeships
 - WordPress
 - Low-code or no-code roles
 - Clearly senior, staff, or principal roles requiring substantially more experience
@@ -39,6 +42,7 @@
 - Save scores of 60-69 for review.
 - Skip scores below 60.
 - A small experience gap is acceptable when the technical match is strong.
+- Never qualify, queue, or apply to roles whose title or employment type is trainee, intern/internship, or apprentice/apprenticeship, including close spelling variants. Record them as preference exclusions during discovery.
 - Java screening answers must follow the separate general and professional/production concepts in `technology-experience.md`.
 
 ## Confirmed Personal Preferences

@@ -1,0 +1,26 @@
+{
+  "run_id": "RUN-20260826-START30",
+  "search_profile": "node_backend",
+  "generated_at": "2026-08-26T04:07:36.512Z",
+  "evaluated": 30,
+  "qualifying": 7,
+  "recency_too_old": 0,
+  "recency_unknown": 0,
+  "score_too_low": 8,
+  "hard_blockers": 12,
+  "native_easy": 8,
+  "external": 23,
+  "unknown_route": 0,
+  "queue_paths": {
+    "native": "D:\\Job search agent\\state\\queues\\native-apply.jsonl",
+    "external": "D:\\Job search agent\\state\\queues\\external-apply.jsonl",
+    "unknown": "D:\\Job search agent\\state\\queues\\unknown-review.jsonl"
+  },
+  "discovery_state": "SEARCH_SPACE_REASONABLY_EXHAUSTED",
+  "workflow_stage": "stage_2_ready",
+  "application_batch": {
+    "path": "state/runs/RUN-20260826-START30/application-batch.json",
+    "frozen_at": "2026-08-26T04:07:36.535Z",
+    "items": 7
+  }
+}
