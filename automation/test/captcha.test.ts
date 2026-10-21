@@ -14,8 +14,8 @@ function payload(root: string, url: string, company: string, role: string) {
     role,
     jobUrl: url,
     ats: "generic" as const,
-    resume: "resumes/test-resume.pdf",
-    candidate: { name: "Test Candidate", email: "candidate@example.test", phone: "+91 0000000000", location: "Bengaluru" },
+    resume: "candidate/resumes/primary.pdf",
+    candidate: { name: "Example Candidate", email: "candidate@example.test", phone: "+1 0000000000", location: "Remote" },
     answers: {},
     workspaceRoot: root,
   };
@@ -25,8 +25,8 @@ describe("CAPTCHA queue persistence", () => {
   it("is idempotent, stores only non-secret resume/application metadata, and resolves", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "captcha-queue-"));
     const item = payload(root, "https://jobs.example.test/apply/1", "Example Company", "Backend Engineer");
-    fs.mkdirSync(path.join(root, "resumes"), { recursive: true });
-    fs.writeFileSync(path.join(root, "resumes", "test-resume.pdf"), "fixture");
+    fs.mkdirSync(path.join(root, "candidate", "resumes"), { recursive: true });
+    fs.writeFileSync(path.join(root, "candidate", "resumes", "primary.pdf"), "fixture");
 
     const first = recordCaptchaBlocker(root, item, { workflowStep: "profile_filled", fieldsCompleted: ["candidate_fields"] });
     const second = recordCaptchaBlocker(root, item, { workflowStep: "profile_filled", fieldsCompleted: ["candidate_fields"] });
@@ -50,8 +50,8 @@ describe("CAPTCHA queue persistence", () => {
 describe("application-level CAPTCHA routing", () => {
   it("returns blocked_captcha for Job A and still executes Job B", async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "captcha-runner-"));
-    fs.mkdirSync(path.join(root, "resumes"), { recursive: true });
-    fs.writeFileSync(path.join(root, "resumes", "test-resume.pdf"), "fixture");
+    fs.mkdirSync(path.join(root, "candidate", "resumes"), { recursive: true });
+    fs.writeFileSync(path.join(root, "candidate", "resumes", "primary.pdf"), "fixture");
     const server = http.createServer((request, response) => {
       response.writeHead(200, { "content-type": "text/html" });
       if (request.url?.includes("captcha")) {

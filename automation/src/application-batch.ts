@@ -34,8 +34,9 @@ function frozenItem(
   item: NativeQueueItem | ExternalQueueItem,
   applicationChannel: FrozenApplicationItem["applicationChannel"],
   sequence: number,
+  workspaceRoot: string,
 ): FrozenApplicationItem {
-  const selection = resolveResumeSelection(item);
+  const selection = resolveResumeSelection(item, workspaceRoot);
   if (!selection) {
     throw new Error(`Queue item ${item.opportunityId} is missing canonical resume-selection metadata`);
   }
@@ -83,7 +84,7 @@ export function freezeApplicationBatch(
   const items = ordered.map(({ item, channel }, index) => {
     if (seen.has(item.opportunityId)) throw new Error(`Duplicate opportunity in frozen batch: ${item.opportunityId}`);
     seen.add(item.opportunityId);
-    return frozenItem(item, channel, index + 1);
+    return frozenItem(item, channel, index + 1, workspaceRoot);
   });
   const manifest: ApplicationBatchManifest = {
     schemaVersion: APPLICATION_BATCH_SCHEMA_VERSION,

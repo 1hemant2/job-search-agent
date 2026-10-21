@@ -6,15 +6,15 @@ import { buildDefaultDiscoveryPlan, DiscoveryCoordinator } from "../src/discover
 import { canonicalOpportunityId, classifyApplicationChannel, makeJobOpportunity } from "../src/opportunity.js";
 import { OpportunityQueues, sortExternalForReview } from "../src/queues.js";
 import { executeApplication } from "../src/runner.js";
-import { NODE_BACKEND_RESUME, NODE_RESUME_PROFILE } from "../src/search-profiles.js";
+import { PRIMARY_RESUME, PRIMARY_RESUME_PROFILE } from "../src/search-profiles.js";
 
 function workspace(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "discovery-first-"));
   fs.mkdirSync(path.join(root, "state"), { recursive: true });
   fs.writeFileSync(path.join(root, "state", "run-state.md"), "# Run State\n\n## Active Run\n\n- Run ID: RUN-DISCOVERY-FIRST\n", "utf8");
-  fs.mkdirSync(path.join(root, "resumes"), { recursive: true });
-  fs.writeFileSync(path.join(root, NODE_BACKEND_RESUME), "fixture", "utf8");
-  fs.writeFileSync(path.join(root, "resumes", "resume.pdf"), "fixture", "utf8");
+  fs.mkdirSync(path.join(root, "candidate", "resumes"), { recursive: true });
+  fs.writeFileSync(path.join(root, PRIMARY_RESUME), "fixture", "utf8");
+  fs.writeFileSync(path.join(root, "candidate", "resumes", "specialized.pdf"), "fixture", "utf8");
   return root;
 }
 
@@ -37,14 +37,14 @@ describe("discovery-first routing", () => {
 
   it("keeps same-titled openings in different locations distinct without a shared official URL", () => {
     const base = { source: "linkedin", company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/search" };
-    expect(canonicalOpportunityId({ ...base, location: "Bengaluru" }))
-      .not.toBe(canonicalOpportunityId({ ...base, location: "Hyderabad" }));
+    expect(canonicalOpportunityId({ ...base, location: "Region A" }))
+      .not.toBe(canonicalOpportunityId({ ...base, location: "Region B" }));
   });
 
   it("routes qualifying native, external, and unknown opportunities to durable queues", () => {
     const root = workspace();
-    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "India" }));
-    const base = { company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/1", descriptionReadComplete: true, matchScore: 88, postingAge: "1 day", resumeProfile: NODE_RESUME_PROFILE, selectedResume: NODE_BACKEND_RESUME, reasonCodes: ["MATCHED_CANDIDATE_PROFILE"] };
+    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "Example Region" }));
+    const base = { company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/1", descriptionReadComplete: true, matchScore: 88, postingAge: "1 day", resumeProfile: PRIMARY_RESUME_PROFILE, selectedResume: PRIMARY_RESUME, reasonCodes: ["MATCHED_CANDIDATE_PROFILE"] };
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", applicationRoute: "easy_apply" }), { decision: "qualifying" }).route).toBe("native");
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", jobUrl: "https://www.linkedin.com/jobs/view/2", applicationUrl: "https://jobs.example.com/2", applicationRoute: "external" }), { decision: "qualifying" }).route).toBe("external");
     expect(coordinator.recordOpportunity(makeJobOpportunity({ ...base, source: "linkedin", role: "Platform Engineer", jobUrl: "https://www.linkedin.com/jobs/view/3" }), { decision: "qualifying" }).route).toBe("unknown");
@@ -54,14 +54,14 @@ describe("discovery-first routing", () => {
     expect(queues.unknownItems()).toHaveLength(1);
     expect(queues.nativeItems()[0].status).toBe("pending");
     expect(queues.nativeItems()[0].runId).toBe("RUN-DISCOVERY-FIRST");
-    expect(queues.nativeItems()[0].resumeProfile).toBe(NODE_RESUME_PROFILE);
+    expect(queues.nativeItems()[0].resumeProfile).toBe(PRIMARY_RESUME_PROFILE);
   });
 
   it("deduplicates a second source without adding a second queue item", () => {
     const root = workspace();
-    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin", "greenhouse"], location: "India" }));
+    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin", "greenhouse"], location: "Example Region" }));
     const official = "https://boards.greenhouse.io/acme/jobs/42";
-    const resume = { resumeProfile: NODE_RESUME_PROFILE, selectedResume: NODE_BACKEND_RESUME };
+    const resume = { resumeProfile: PRIMARY_RESUME_PROFILE, selectedResume: PRIMARY_RESUME };
     const first = makeJobOpportunity({ source: "linkedin", company: "Acme", role: "Backend Engineer", jobUrl: "https://www.linkedin.com/jobs/view/9", applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90, ...resume });
     const second = makeJobOpportunity({ source: "greenhouse", company: "Acme", role: "Backend Engineer", jobUrl: official, applicationUrl: official, applicationRoute: "external", descriptionReadComplete: true, matchScore: 90, ...resume });
     expect(first.id).toBe(second.id);
@@ -88,18 +88,18 @@ describe("discovery-first routing", () => {
       role: "Backend Engineer",
       discoverySource: "linkedin",
       originalJobUrl: "https://www.linkedin.com/jobs/view/legacy",
-      selectedResume: NODE_BACKEND_RESUME,
+      selectedResume: PRIMARY_RESUME,
       reasonMatched: [],
       discoveredAt: "2026-08-22T00:00:00Z",
       queuedAt: "2026-08-22T00:00:00Z",
       status: "pending_manual",
     });
-    expect(queues.externalItems()[0].resumeProfile).toBe(NODE_RESUME_PROFILE);
+    expect(queues.externalItems()[0].resumeProfile).toBe(PRIMARY_RESUME_PROFILE);
   });
 
   it("freezes one minimal Stage 2 manifest after discovery", () => {
     const root = workspace();
-    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "India" }));
+    const coordinator = new DiscoveryCoordinator(root, buildDefaultDiscoveryPlan("RUN-DISCOVERY-FIRST", { sources: ["linkedin"], location: "Example Region" }));
     const opportunity = makeJobOpportunity({
       source: "linkedin",
       company: "Acme",
@@ -108,8 +108,8 @@ describe("discovery-first routing", () => {
       applicationRoute: "easy_apply",
       descriptionReadComplete: true,
       matchScore: 88,
-      resumeProfile: NODE_RESUME_PROFILE,
-      selectedResume: NODE_BACKEND_RESUME,
+      resumeProfile: PRIMARY_RESUME_PROFILE,
+      selectedResume: PRIMARY_RESUME,
     });
     coordinator.recordOpportunity(opportunity, { decision: "qualifying" });
     const frozen = coordinator.freezeApplicationBatch();
@@ -117,8 +117,8 @@ describe("discovery-first routing", () => {
     expect(frozen.manifest.items).toEqual([expect.objectContaining({
       sequence: 1,
       opportunityId: opportunity.id,
-      resumeProfile: NODE_RESUME_PROFILE,
-      selectedResume: NODE_BACKEND_RESUME,
+      resumeProfile: PRIMARY_RESUME_PROFILE,
+      selectedResume: PRIMARY_RESUME,
     })]);
     expect(fs.existsSync(path.join(root, "state", "runs", "RUN-DISCOVERY-FIRST", "application-batch.json"))).toBe(true);
     const summary = JSON.parse(fs.readFileSync(path.join(root, "state", "runs", "RUN-DISCOVERY-FIRST", "run-summary.json"), "utf8"));
@@ -140,8 +140,8 @@ describe("discovery-first routing", () => {
       jobUrl: "https://boards.greenhouse.io/example/jobs/123",
       applicationChannel: "external_application",
       ats: "greenhouse",
-      resume: "resumes/resume.pdf",
-      candidate: { name: "Test Candidate", email: "candidate@example.com", phone: "+91 0000000000", location: "India" },
+      resume: "candidate/resumes/primary.pdf",
+      candidate: { name: "Example Candidate", email: "candidate@example.com", phone: "+1 0000000000", location: "Remote" },
       answers: {},
     }, { workspaceRoot: workspace(), dryRun: true });
     expect(result.status).toBe("blocked");

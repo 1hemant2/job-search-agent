@@ -1,11 +1,12 @@
 import fs from "node:fs";
+import path from "node:path";
 import { freezeApplicationBatch as freezeBatchManifest } from "./application-batch.js";
 import { DiscoveryLedger, normalizedJobId, type DiscoveryJobRecord, type DiscoveryReasonCode, type DiscoveryState, type PageTransitionStatus, type PostingAgeConfidence, type SearchTelemetryRecord } from "./discovery-ledger.js";
 import { makeJobOpportunity, opportunityAliases } from "./opportunity.js";
 import { OpportunityQueues, routeOpportunity, type RouteResult } from "./queues.js";
 import type { ApplicationChannel, ExternalAts, JobOpportunity, NativePlatform, OpportunityStatus } from "./types.js";
 import { updateDiscoveryRunState } from "./run-state.js";
-import { SEARCH_PROFILES, type ResumeProfileId, type SearchProfileId } from "./search-profiles.js";
+import { searchProfiles, type ResumeProfileId, type SearchProfileId } from "./search-profiles.js";
 import type { JavaExperienceScope, JavaMatchClassification } from "./matching/java-backend.js";
 
 export interface DiscoveryQueryPlan {
@@ -37,12 +38,15 @@ export interface DefaultDiscoveryPlanOptions {
   locations?: string[];
   recencyDays?: number;
   searchProfile?: SearchProfileId;
+  workspaceRoot?: string;
 }
 
 export function buildDefaultDiscoveryPlan(runId: string, options: DefaultDiscoveryPlanOptions = {}): DiscoveryPlan {
   const sources = options.sources?.length ? options.sources : ["linkedin", "company-careers", "greenhouse", "lever", "ashby", "workday", "wellfound", "yc-jobs"];
   const recencyDays = options.recencyDays ?? 7;
-  const profile = SEARCH_PROFILES[options.searchProfile ?? "node_backend"];
+  const configuredProfiles = searchProfiles(options.workspaceRoot);
+  const profile = configuredProfiles[options.searchProfile ?? "node_backend"] ?? Object.values(configuredProfiles)[0];
+  if (!profile) throw new Error("No search profile is configured; add profiles to candidate/resume-profiles.json");
   const locations = options.locations?.length ? options.locations : options.location ? [options.location] : profile.locations;
   return {
     runId,
@@ -335,7 +339,7 @@ export class DiscoveryCoordinator {
       externalAts: input.externalAts,
       status: this.opportunityStatus(input),
       reasonCodes: input.reasonCodes ?? [],
-    });
+    }, this.workspaceRoot);
     const normalizedId = opportunity.id || normalizedJobId(input.jobId, input.jobUrl, input.applicationUrl);
     this.evaluatedJobIds.add(normalizedId);
     if (input.decision === "duplicate" || input.reasonCodes?.includes("DUPLICATE") || input.reasonCodes?.includes("ALREADY_APPLIED")) {
@@ -540,9 +544,9 @@ export class DiscoveryCoordinator {
     updateDiscoveryRunState(this.workspaceRoot, {
       ...snapshot,
       discoveryState: snapshot.state,
-      discoveryLedger: this.ledger.paths.discoveryLedger.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
-      searchTelemetry: this.ledger.paths.searchTelemetry.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
-      executorTelemetry: this.ledger.paths.executorTelemetry.replace(`${this.workspaceRoot}\\`, "").replace(/\\/g, "/"),
+      discoveryLedger: path.relative(this.workspaceRoot, this.ledger.paths.discoveryLedger).replace(/\\/g, "/"),
+      searchTelemetry: path.relative(this.workspaceRoot, this.ledger.paths.searchTelemetry).replace(/\\/g, "/"),
+      executorTelemetry: path.relative(this.workspaceRoot, this.ledger.paths.executorTelemetry).replace(/\\/g, "/"),
     });
   }
 

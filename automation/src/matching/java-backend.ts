@@ -1,4 +1,4 @@
-import { RESUME_PATH_BY_PROFILE, selectResumeProfileForJob, type ResumeProfileId, type SearchProfileId } from "../search-profiles.js";
+import { loadMatchingConfig, resolveResumeSelection, selectResumeProfileForJob, type CandidateMatchingConfig, type ResumeProfileId, type SearchProfileId } from "../search-profiles.js";
 
 export type JavaMatchClassification = "APPLY" | "APPLY_STRETCH" | "REVIEW" | "SKIP";
 export type JavaExperienceScope = "general" | "professional" | "production" | "commercial" | "preferred" | "unknown" | "none";
@@ -25,8 +25,10 @@ export interface JavaJobAssessmentInput {
   location?: string;
   requiredYoe?: ExperienceRequirement | string;
   javaRequirement?: JavaRequirement | string;
-  indiaEligible?: boolean;
+  authorizationEligible?: boolean;
   searchProfile?: SearchProfileId;
+  workspaceRoot?: string;
+  candidateMatching?: CandidateMatchingConfig;
 }
 
 export interface JavaCategoryScores {
@@ -99,9 +101,9 @@ function backendRelevance(role: string, text: string): { score: number; blocker?
   return { score: /\b(java|spring|api|backend)\b/i.test(text) ? 15 : 5 };
 }
 
-function experienceScore(requirement: ExperienceRequirement | undefined): number {
+function experienceScore(requirement: ExperienceRequirement | undefined, candidateYears?: number): number {
   if (!requirement) return 12;
-  if (requirement.minimum >= 4 && requirement.strict) return 0;
+  if (candidateYears !== undefined && requirement.minimum > candidateYears && requirement.strict) return 0;
   if (requirement.minimum <= 1 && (requirement.maximum ?? 2) <= 2) return 20;
   if (requirement.minimum === 2 && requirement.maximum === 2) return 20;
   if (requirement.minimum === 2) return 18;
@@ -146,11 +148,10 @@ function engineeringScore(text: string): { score: number; matches: string[] } {
   return { score: Math.min(10, matches.length * 2), matches };
 }
 
-function locationScore(location: string | undefined, indiaEligible: boolean | undefined): { score: number; blocker?: string } {
+function locationScore(location: string | undefined, authorizationEligible: boolean | undefined): { score: number; blocker?: string } {
   if (!location) return { score: 5 };
-  if (/\b(india|bengaluru|bangalore|hyderabad|pune|gurgaon|gurugram|ncr|noida|delhi)\b/i.test(location)) return { score: 5 };
-  if (/\bremote\b/i.test(location) && indiaEligible !== false) return { score: 5 };
-  if (indiaEligible === false) return { score: 0, blocker: "Role is not open to candidates located and authorized in India" };
+  if (/\bremote\b/i.test(location) && authorizationEligible !== false) return { score: 5 };
+  if (authorizationEligible === false) return { score: 0, blocker: "Role is not open to candidates located and authorized under the confirmed work-authorization rules" };
   return { score: 2 };
 }
 
@@ -173,11 +174,14 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
   const description = input.description ?? "";
   const text = `${input.role}\n${description}`;
   const experience = parseExperience(input.requiredYoe, text);
+  const matching = input.candidateMatching ?? loadMatchingConfig(input.workspaceRoot);
+  const candidateYears = matching.professionalExperienceYears;
+  const candidateJava = matching.technologyExperience?.java;
   const javaRequirement = parseJavaRequirement(input.javaRequirement, input.role, description);
   const backend = backendRelevance(input.role, text);
   const technology = technologyScore(text);
   const engineering = engineeringScore(text);
-  const location = locationScore(input.location, input.indiaEligible);
+  const location = locationScore(input.location, input.authorizationEligible);
   const hardBlockers: string[] = [];
   const reasonCodes: string[] = [];
 
@@ -185,15 +189,24 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
     hardBlockers.push(backend.blocker);
     reasonCodes.push("ROLE_MISMATCH");
   }
-  if (experience && experience.minimum >= 4 && experience.strict) {
-    hardBlockers.push(`Strict ${experience.minimum}+ years total experience requirement`);
+  if (experience && experience.strict && candidateYears !== undefined && experience.minimum > candidateYears) {
+    hardBlockers.push(`Strict ${experience.minimum}+ years total experience requirement exceeds the configured candidate experience`);
     reasonCodes.push("EXPERIENCE_HARD_BLOCKER");
   }
   if (["professional", "production", "commercial"].includes(javaRequirement.scope ?? "")
-      && javaRequirement.strict
-      && (javaRequirement.minimumYears ?? 1) > 0) {
-    hardBlockers.push(`Explicit ${javaRequirement.scope} Java experience requirement exceeds the canonical candidate scope`);
-    reasonCodes.push("PROFESSIONAL_JAVA_REQUIRED");
+      && javaRequirement.strict) {
+    const configuredYears = javaRequirement.scope === "professional"
+      ? candidateJava?.professionalYears
+      : javaRequirement.scope === "production"
+        ? candidateJava?.productionYears
+        : candidateJava?.commercialYears;
+    if (configuredYears === undefined) {
+      hardBlockers.push(`Candidate ${javaRequirement.scope} Java experience is not configured`);
+      reasonCodes.push("CANDIDATE_SCOPE_UNKNOWN");
+    } else if (configuredYears < (javaRequirement.minimumYears ?? 1)) {
+      hardBlockers.push(`Explicit ${javaRequirement.scope} Java experience requirement exceeds the configured candidate scope`);
+      reasonCodes.push("PROFESSIONAL_JAVA_REQUIRED");
+    }
   }
   if (location.blocker) {
     hardBlockers.push(location.blocker);
@@ -202,7 +215,7 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
 
   const categoryScores: JavaCategoryScores = {
     backendRelevance: backend.score,
-    experienceAlignment: experienceScore(experience),
+    experienceAlignment: experienceScore(experience, candidateYears),
     javaAlignment: javaScore(javaRequirement, text),
     backendTechnologyMatch: technology.score,
     engineeringQuality: engineering.score,
@@ -211,20 +224,24 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
   const score = Object.values(categoryScores).reduce((sum, value) => sum + value, 0);
   const whyCandidateMatches = [
     backend.score >= 15 ? "Role is meaningfully backend-focused" : undefined,
-    categoryScores.experienceAlignment >= 18 ? "Experience requirement aligns with nearly two years of professional backend work" : undefined,
-    categoryScores.javaAlignment >= 15 ? "Java is central and the candidate has substantial hands-on Java backend experience" : categoryScores.javaAlignment === 10 ? "Java is an accepted or preferred backend option" : undefined,
+    categoryScores.experienceAlignment >= 18 ? "Experience requirement aligns with the configured candidate experience" : undefined,
+    categoryScores.javaAlignment >= 15 && (candidateJava?.generalYears ?? 0) > 0
+      ? "Java is central and the candidate has configured hands-on Java experience"
+      : categoryScores.javaAlignment >= 15 ? "Java is central to the role" : categoryScores.javaAlignment === 10 ? "Java is an accepted or preferred backend option" : undefined,
     technology.matches.length ? `Transferable backend overlap: ${technology.matches.join(", ")}` : undefined,
     engineering.matches.length ? `Engineering depth signals: ${engineering.matches.join(", ")}` : undefined,
   ].filter((value): value is string => Boolean(value));
   const gaps: string[] = [];
-  if (/\bkafka\b/i.test(text)) gaps.push("Kafka differs from RabbitMQ/BullMQ, but queue and event-driven experience transfers");
-  if (/\bmysql\b/i.test(text)) gaps.push("MySQL differs from PostgreSQL, but relational query and indexing experience transfers");
-  if (/\baws\b/i.test(text)) gaps.push("AWS differs from OCI; treat it as learnable unless deep AWS production expertise is a strict core requirement");
-  if (javaRequirement.scope && ["professional", "production", "commercial"].includes(javaRequirement.scope)) gaps.push("Canonical candidate records show no professional/production Java employment; do not substitute general hands-on Java experience");
+  if (javaRequirement.scope && ["professional", "production", "commercial"].includes(javaRequirement.scope)
+      && candidateJava?.[`${javaRequirement.scope}Years` as "professionalYears" | "productionYears" | "commercialYears"] === undefined) {
+    gaps.push("Confirm the candidate's Java experience scope before applying; general hands-on work must not be substituted for professional or production experience");
+  }
 
   const resultClassification = classification(score, hardBlockers);
   if (!hardBlockers.length && resultClassification === "SKIP") reasonCodes.push("INSUFFICIENT_MATCH_SCORE");
-  const resumeProfile = selectResumeProfileForJob({ role: input.role, description, searchProfile: input.searchProfile ?? "java_backend" });
+  const resumeProfile = selectResumeProfileForJob({ role: input.role, description, searchProfile: input.searchProfile ?? "java_backend" }, input.workspaceRoot);
+  const selection = resolveResumeSelection({ resumeProfile }, input.workspaceRoot);
+  if (!selection) throw new Error(`No resume configured for ${resumeProfile}`);
   return {
     score,
     classification: resultClassification,
@@ -233,7 +250,7 @@ export function evaluateJavaBackendJob(input: JavaJobAssessmentInput): JavaJobAs
     whyCandidateMatches,
     gaps,
     resumeProfile,
-    selectedResume: RESUME_PATH_BY_PROFILE[resumeProfile],
+    selectedResume: selection.selectedResume,
     requiredYoe: experienceLabel(experience),
     javaRequirement: javaRequirement.text ?? javaRequirement.level,
     javaExperienceScope: javaRequirement.scope ?? "unknown",

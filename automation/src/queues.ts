@@ -79,12 +79,12 @@ function append<T extends QueueItem>(filePath: string, item: T): void {
   fs.appendFileSync(filePath, `${JSON.stringify(item)}\n`, "utf8");
 }
 
-function readLatest<T extends QueueItem>(filePath: string): T[] {
+function readLatest<T extends QueueItem>(filePath: string, workspaceRoot?: string): T[] {
   if (!fs.existsSync(filePath)) return [];
   const latest = new Map<string, T>();
   for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/).filter(Boolean)) {
     const parsed = JSON.parse(line) as T;
-    const resumeSelection = resolveResumeSelection(parsed);
+    const resumeSelection = resolveResumeSelection(parsed, workspaceRoot);
     const item = resumeSelection ? { ...parsed, ...resumeSelection } as T : parsed;
     latest.set(item.opportunityId, item);
   }
@@ -93,8 +93,10 @@ function readLatest<T extends QueueItem>(filePath: string): T[] {
 
 export class OpportunityQueues {
   readonly paths: { native: string; external: string; unknown: string };
+  private readonly workspaceRoot: string;
 
   constructor(workspaceRoot: string, queueDirectory?: string) {
+    this.workspaceRoot = workspaceRoot;
     const directory = queueDirectory ?? path.join(workspaceRoot, "state", "queues");
     this.paths = {
       native: queuePath(directory, "native-apply.jsonl"),
@@ -107,9 +109,9 @@ export class OpportunityQueues {
   upsertExternal(item: ExternalQueueItem): void { append(this.paths.external, item); }
   upsertUnknown(item: UnknownRouteItem): void { append(this.paths.unknown, item); }
 
-  nativeItems(): NativeQueueItem[] { return readLatest<NativeQueueItem>(this.paths.native); }
-  externalItems(): ExternalQueueItem[] { return readLatest<ExternalQueueItem>(this.paths.external); }
-  unknownItems(): UnknownRouteItem[] { return readLatest<UnknownRouteItem>(this.paths.unknown); }
+  nativeItems(): NativeQueueItem[] { return readLatest<NativeQueueItem>(this.paths.native, this.workspaceRoot); }
+  externalItems(): ExternalQueueItem[] { return readLatest<ExternalQueueItem>(this.paths.external, this.workspaceRoot); }
+  unknownItems(): UnknownRouteItem[] { return readLatest<UnknownRouteItem>(this.paths.unknown, this.workspaceRoot); }
 
   pendingNative(searchProfile?: SearchProfileId): NativeQueueItem[] {
     return this.nativeItems().filter((item) => ["pending", "failed", "native_unsupported"].includes(item.status)
@@ -142,7 +144,7 @@ export function routeOpportunity(
   context: { runId?: string } = {},
 ): RouteResult {
   const queuedAt = new Date().toISOString();
-  const resumeSelection = resolveResumeSelection(opportunity);
+  const resumeSelection = resolveResumeSelection(opportunity, workspaceRoot);
   if (!resumeSelection) {
     throw new Error(`Qualifying opportunity ${opportunity.id} is missing canonical resume-selection metadata`);
   }

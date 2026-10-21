@@ -6,8 +6,11 @@ import { makeJobOpportunity } from "./opportunity.js";
 import { OpportunityQueues, sortExternalForReview } from "./queues.js";
 import { SOURCE_CAPABILITIES } from "./sources/index.js";
 import { evaluateJavaBackendJob, type ExperienceRequirement, type JavaRequirement } from "./matching/java-backend.js";
+import { onboardResume } from "./onboarding.js";
 import {
   RESUME_PATH_BY_PROFILE,
+  loadMatchingConfig,
+  resumePaths,
   resolveResumeSelection,
   searchProfileFromToken,
   selectResumeProfileForJob,
@@ -36,7 +39,7 @@ interface FixtureRecord {
   queryVariant?: string;
   requiredYoe?: ExperienceRequirement | string;
   javaRequirement?: JavaRequirement | string;
-  indiaEligible?: boolean;
+  authorizationEligible?: boolean;
   recencyClass?: "within_window" | "too_old" | "unknown";
 }
 
@@ -58,7 +61,7 @@ function printCapabilities(): void {
 }
 
 function search(args: string[], freezeForStart = false): void {
-  const explicitProfile = searchProfileFromToken(args[0]);
+  const explicitProfile = searchProfileFromToken(args[0], workspaceRoot);
   const profile: SearchProfileId = explicitProfile ?? "node_backend";
   const target = Number(args.find((arg) => /^\d+$/.test(arg)) ?? "50");
   const id = argValue(args, "--run-id") ?? runId();
@@ -68,8 +71,8 @@ function search(args: string[], freezeForStart = false): void {
     ? JSON.parse(fs.readFileSync(path.resolve(workspaceRoot, fixturePath), "utf8")) as FixtureRecord[]
     : [];
   const plan: DiscoveryPlan = fixture.length
-    ? { runId: id, searchProfile: profile, sources: [{ source: "fixture", queries: [{ query: "fixture", queryVariant: "fixture", location: "India" }] }] }
-    : buildDefaultDiscoveryPlan(id, { sources: SOURCE_CAPABILITIES.map((item) => item.source), searchProfile: profile });
+    ? { runId: id, searchProfile: profile, sources: [{ source: "fixture", queries: [{ query: "fixture", queryVariant: "fixture", location: "Remote" }] }] }
+    : buildDefaultDiscoveryPlan(id, { sources: SOURCE_CAPABILITIES.map((item) => item.source), searchProfile: profile, workspaceRoot });
   const coordinator = new DiscoveryCoordinator(workspaceRoot, plan, {
     persistRunState: !fixture.length || useLiveQueues,
     queueDirectory: fixture.length && !useLiveQueues ? path.join(workspaceRoot, "state", "runs", id, "queues") : undefined,
@@ -117,16 +120,19 @@ function search(args: string[], freezeForStart = false): void {
       location: item.location,
       requiredYoe: item.requiredYoe,
       javaRequirement: item.javaRequirement,
-      indiaEligible: item.indiaEligible,
+      authorizationEligible: item.authorizationEligible,
       searchProfile: profile,
+      workspaceRoot,
+      candidateMatching: loadMatchingConfig(workspaceRoot),
     }) : undefined;
     const matchScore = javaAssessment?.score ?? item.matchScore;
-    const suppliedSelection = resolveResumeSelection(item);
+    const suppliedSelection = resolveResumeSelection(item, workspaceRoot);
     const resumeProfile = javaAssessment?.resumeProfile
       ?? suppliedSelection?.resumeProfile
-      ?? selectResumeProfileForJob({ role: item.role, description: item.description, searchProfile: profile, profileScores: item.profileScores });
+      ?? selectResumeProfileForJob({ role: item.role, description: item.description, searchProfile: profile, profileScores: item.profileScores }, workspaceRoot);
     const selectedResume = javaAssessment?.selectedResume
       ?? suppliedSelection?.selectedResume
+      ?? resumePaths(workspaceRoot)[resumeProfile]
       ?? RESUME_PATH_BY_PROFILE[resumeProfile];
     const chosenMatchScore = javaAssessment?.score ?? item.profileScores?.[resumeProfile] ?? matchScore;
     const decision = javaAssessment
@@ -151,7 +157,7 @@ function search(args: string[], freezeForStart = false): void {
       reasonCodes: javaAssessment
         ? [...javaAssessment.reasonCodes, ...(javaAssessment.whyCandidateMatches.length ? ["MATCHED_CANDIDATE_PROFILE"] : [])]
         : item.reasonCodes ?? ["MATCHED_CANDIDATE_PROFILE"],
-    });
+    }, workspaceRoot);
     const result = coordinator.recordOpportunity(opportunity, {
       query: item.query ?? "fixture",
       queryVariant: item.queryVariant ?? "fixture",
@@ -243,7 +249,21 @@ function freezeBatch(args: string[]): void {
   }, null, 2));
 }
 
+function onboard(args: string[]): void {
+  const sourceResume = argValue(args, "--resume") ?? args.find((arg) => !arg.startsWith("--"));
+  if (!sourceResume) throw new Error("Usage: onboard --resume /absolute/path/to/resume.pdf [--profile-id primary] [--force]");
+  const profileId = argValue(args, "--profile-id") ?? "primary";
+  const result = onboardResume(workspaceRoot, sourceResume, profileId, args.includes("--force"));
+  console.log(JSON.stringify({
+    mode: "resume-onboarding",
+    status: "questions_pending",
+    ...result,
+    nextStep: "Ask the candidate the questions in candidate/onboarding-questions.md, then persist only confirmed answers before searching.",
+  }, null, 2));
+}
+
 function help(): void {
+  console.log("onboard --resume /path/to/resume.pdf [--profile-id primary] [--force]");
   console.log("search [java|node] [count] [--fixture path] [--run-id id]");
   console.log("start [java|node] [count] [--fixture path] [--run-id id]");
   console.log("freeze <run-id>");
@@ -256,7 +276,8 @@ function help(): void {
 const args = process.argv.slice(2);
 const command = args.shift();
 try {
-  if (command === "search") search(args);
+  if (command === "onboard") onboard(args);
+  else if (command === "search") search(args);
   else if (command === "start") search(args, true);
   else if (command === "freeze") freezeBatch(args);
   else if (command === "apply" && args.shift() === "native") applyNative(args);

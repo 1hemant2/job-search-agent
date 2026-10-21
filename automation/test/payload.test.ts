@@ -1,9 +1,14 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { findDuplicate, validateApplicationPayload } from "../src/application-payload.js";
-import { JAVA_RESUME_PROFILE, NODE_RESUME_PROFILE } from "../src/search-profiles.js";
+import { PRIMARY_RESUME_PROFILE, SPECIALIZED_RESUME_PROFILE } from "../src/search-profiles.js";
 
-const workspaceRoot = path.resolve(process.cwd(), "..");
+const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "payload-workspace-"));
+fs.mkdirSync(path.join(workspaceRoot, "candidate", "resumes"), { recursive: true });
+fs.writeFileSync(path.join(workspaceRoot, "candidate", "resumes", "primary.pdf"), "fixture");
+fs.writeFileSync(path.join(workspaceRoot, "candidate", "resumes", "specialized.pdf"), "fixture");
 
 function payload(overrides: Record<string, unknown> = {}) {
   return {
@@ -11,12 +16,12 @@ function payload(overrides: Record<string, unknown> = {}) {
     role: "Backend Engineer",
     jobUrl: "https://boards.greenhouse.io/example/jobs/123",
     ats: "greenhouse",
-    resume: "resumes/Hemant_Kumar_NodeJS_Resume.pdf",
+    resume: "candidate/resumes/primary.pdf",
     candidate: {
-      name: "Hemant Kumar",
-      email: "meet.hemant.k@gmail.com",
-      phone: "+91 9534909390",
-      location: "Bengaluru, Karnataka, India",
+      name: "Example Candidate",
+      email: "candidate@example.test",
+      phone: "+1 0000000000",
+      location: "Remote",
     },
     answers: {},
     ...overrides,
@@ -24,20 +29,20 @@ function payload(overrides: Record<string, unknown> = {}) {
 }
 
 describe("application payload validation", () => {
-  it("accepts a source-of-truth resume inside resumes/", () => {
+  it("accepts a source-of-truth resume inside candidate/resumes/", () => {
     const result = validateApplicationPayload(payload(), workspaceRoot);
     expect(result.errors).toEqual([]);
-    expect(result.payload.resumeProfile).toBe(NODE_RESUME_PROFILE);
+    expect(result.payload.resumeProfile).toBe(PRIMARY_RESUME_PROFILE);
   });
 
   it("rejects mismatched frozen resume metadata", () => {
-    const result = validateApplicationPayload(payload({ resumeProfile: JAVA_RESUME_PROFILE }), workspaceRoot);
+    const result = validateApplicationPayload(payload({ resumeProfile: SPECIALIZED_RESUME_PROFILE }), workspaceRoot);
     expect(result.errors.join(" ")).toContain("does not match selectedResume");
   });
 
-  it("rejects a resume outside the workspace resumes directory", () => {
+  it("rejects a resume outside candidate/resumes", () => {
     const result = validateApplicationPayload(payload({ resume: "AGENTS.md" }), workspaceRoot);
-    expect(result.errors).toContain("resume must be inside the workspace resumes directory");
+    expect(result.errors).toContain("resume must be inside candidate/resumes");
   });
 
   it("requires an explicit allowlist for a LinkedIn external redirect", () => {

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { chromium } from "playwright";
 import { describe, expect, it } from "vitest";
@@ -5,8 +7,10 @@ import { GreenhouseAdapter } from "../src/ats/greenhouse.js";
 import { LinkedInAdapter } from "../src/ats/linkedin.js";
 import { localExecutablePath } from "../src/browser.js";
 
-const workspaceRoot = path.resolve(process.cwd(), "..");
-const resume = "resumes/Hemant_Kumar_NodeJS_Resume.pdf";
+const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "adapter-workspace-"));
+fs.mkdirSync(path.join(workspaceRoot, "candidate", "resumes"), { recursive: true });
+fs.writeFileSync(path.join(workspaceRoot, "candidate", "resumes", "primary.pdf"), "fixture");
+const resume = "candidate/resumes/primary.pdf";
 const basePayload = {
   company: "Example Company",
   role: "Backend Engineer",
@@ -14,10 +18,10 @@ const basePayload = {
   ats: "greenhouse" as const,
   resume,
   candidate: {
-    name: "Hemant Kumar",
-    email: "meet.hemant.k@gmail.com",
-    phone: "+91 9534909390",
-    location: "Bengaluru, Karnataka, India",
+    name: "Example Candidate",
+    email: "candidate@example.test",
+    phone: "+1 0000000000",
+    location: "Remote",
   },
   answers: { work_authorized: "Yes" },
 };
@@ -56,7 +60,7 @@ describe("deterministic form execution", () => {
     expect((await adapter.validate()).ok).toBe(true);
     expect((await adapter.submit()).details).toContain("not clicked");
     expect(clicked).toBe(false);
-    expect(await page.locator("input[type=email]").inputValue()).toBe("meet.hemant.k@gmail.com");
+    expect(await page.locator("input[type=email]").inputValue()).toBe("candidate@example.test");
     expect(await page.locator("select").inputValue()).toBe("Yes");
     await browser.close();
   }, 20_000);

@@ -5,6 +5,9 @@ This file contains only bootstrapping, command modes, and invariants.
 
 ## Commands
 
+- `onboard --resume <path>` parses an uploaded PDF resume into the private
+  candidate workspace and creates a pending intake questionnaire. It never
+  searches for jobs or submits applications.
 - `search` runs discovery with the default evaluation limit.
 - `search 100` evaluates approximately 100 unique opportunities across the
   configured query variants and sources; the number is not result-card count.
@@ -43,32 +46,58 @@ This file contains only bootstrapping, command modes, and invariants.
 
 Migration and dry-run commands never submit applications.
 
+## Resume onboarding
+
+When a new user provides a resume, run the onboarding flow before `search` or
+`start`. The CLI accepts a local PDF path:
+
+```sh
+cd automation
+npm run workspace -- onboard --resume /absolute/path/to/resume.pdf
+```
+
+The flow copies the resume into the private `candidate/resumes/` directory,
+updates `candidate/resume-profiles.json`, extracts text and conservative
+contact/section suggestions, and writes `candidate/onboarding.json` plus
+`candidate/onboarding-questions.md`. Parsed suggestions are not confirmed
+candidate facts. Ask the pending questions in chat, persist only the user's
+confirmed answers in the candidate source-of-truth files, and leave unknown
+material questions in `candidate/human-input-queue.md`. Do not infer legal,
+work-authorization, compensation, demographic, or professional-experience
+facts from a resume alone. A specific portal can still ask a new material
+question later; stop and ask the candidate instead of guessing.
+If confirmed candidate data already exists, the command refuses to overwrite
+it unless `--force` is supplied intentionally.
+
 ## Bootstrap sequence
 
 Before `search`, `apply native`, `start`, `continue`, or `resume`, load and
 reconcile, in order:
 
 1. `.agents/skills/job-application/SKILL.md`
-2. `candidate/profile.md`
-3. `candidate/application-answers.md`
-4. `candidate/technology-experience.md`
-5. `candidate/experience.md`
-6. `candidate/education.md`
-7. `candidate/projects.md`
-8. `candidate/preferences.md`
-9. `candidate/work-authorization.md`
-10. `candidate/compensation.md`
-11. `resumes/index.md` and resume files
-12. `application-history.md`
-13. `candidate/human-input-queue.md`
-14. `state/credential-registry.md` only for authentication-method presence
-15. `state/run-state.md` when present
+2. `candidate/onboarding.json` when present; if its status is
+   `questions_pending`, stop and complete onboarding before searching or
+   applying
+3. `candidate/profile.md`
+4. `candidate/application-answers.md`
+5. `candidate/technology-experience.md`
+6. `candidate/matching-config.json` when using the optional Java/backend matcher
+7. `candidate/experience.md`
+8. `candidate/education.md`
+9. `candidate/projects.md`
+10. `candidate/preferences.md`
+11. `candidate/work-authorization.md`
+12. `candidate/compensation.md`
+13. `candidate/resume-profiles.json` and `candidate/resumes/`
+14. `application-history.md`
+15. `candidate/human-input-queue.md`
+16. `state/credential-registry.md` only for authentication-method presence
+17. `state/run-state.md` when present
 
 Candidate files are the source of truth. Never invent identity, employment,
 education, dates, skills, authorization, compensation, or demographic facts.
 Preserve the distinction between general hands-on technology experience and
-professional/production experience, especially the Java interpretation in
-`candidate/technology-experience.md`.
+professional/production experience described in `candidate/technology-experience.md`.
 
 ## Continue/resume invariant
 
@@ -163,21 +192,12 @@ score, status, and discovery run ID.
 
 ### Resume-selection queue contract
 
-During Stage 1, select the resume before routing the opportunity. Use only
-these canonical queue values:
-
-- `hemant_kumar_nodejs_resume` maps to
-  `resumes/Hemant_Kumar_NodeJS_Resume.pdf`.
-- `hemant_kumar_java_resume` maps to
-  `resumes/Hemant_Kumar_Java_Resume.pdf`.
-
-Use the Java profile when Java or Spring is a core required or meaningfully
-preferred backend technology. Use the Node.js profile for Node.js, TypeScript,
-or JavaScript-specific roles and as the default for general backend roles where
-Java is incidental. For a genuinely mixed role, score the job truthfully
-against both resume profiles with the same matching model and choose the higher
-score; a tie defaults to the Node.js profile. Never broaden the candidate's
-Java production experience while scoring.
+During Stage 1, select the resume before routing the opportunity. Use only the
+resume profile IDs and paths configured in `candidate/resume-profiles.json`.
+The shared code weights title evidence above incidental description mentions,
+uses the configured default on ties, and allows a genuinely mixed role to use
+the same matching model against both configured profiles. Never broaden the
+candidate's experience or turn project work into professional production work.
 
 Queue metadata must stay minimal. Persist only `resumeProfile`,
 `selectedResume`, and the existing `matchScore` for the chosen profile; do not
@@ -237,7 +257,7 @@ frozen jobs can be grouped:
    and candidate-data categories that will be transmitted. Then ask once for
    confirmation covering all currently actionable frozen jobs. Name every
    company and role, its destination, its exact resume filename, and the
-   specific data categories. Do not ask for SolarWinds alone when another
+   specific data categories. Do not ask for one employer alone when another
    frozen job can be included in the same imminent batch transmission.
 2. After that confirmation, fill every covered application to its furthest safe
    point, leaving each successful flow at final review/submit. Continue past
@@ -377,10 +397,9 @@ the workspace while leaving the same resume attached. Upload again only when
 the page clearly shows no attachment, the site rejects or loses the file, or
 the user explicitly asks to replace it.
 
-Persisted candidate context also states that Enterprise Bot is the candidate's
-only employer and that the candidate is the first person in the family to work
-in IT, with no relatives at other companies. Backfill employer-history and
-familial-relationship questions from these facts automatically when applicable.
+Backfill employer-history and familial-relationship questions only from facts
+confirmed in the private candidate source-of-truth files. If no such fact is
+confirmed, leave the question for the user.
 
 ## Specific-link handoff mode
 

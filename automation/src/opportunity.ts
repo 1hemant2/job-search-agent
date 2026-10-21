@@ -145,11 +145,11 @@ export function opportunityAliases(input: OpportunityInput): string[] {
   return [...aliases];
 }
 
-export function makeJobOpportunity(input: OpportunityInput): JobOpportunity {
+export function makeJobOpportunity(input: OpportunityInput, workspaceRoot?: string): JobOpportunity {
   const applicationChannel = classifyApplicationChannel(input);
   const nativePlatform = input.nativePlatform ?? nativePlatformFor(input.source);
   const externalAts = input.externalAts ?? detectExternalAts(input.applicationUrl);
-  const resumeSelection = resolveResumeSelection(input);
+  const resumeSelection = resolveResumeSelection(input, workspaceRoot);
   return {
     id: canonicalOpportunityId(input),
     source: input.source,

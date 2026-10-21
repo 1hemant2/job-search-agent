@@ -1,0 +1,45 @@
+{
+  "defaultProfile": "primary",
+  "profiles": [
+    {
+      "id": "primary",
+      "label": "Primary resume",
+      "path": "candidate/resumes/primary.pdf",
+      "keywords": ["software engineer", "backend", "api", "platform"],
+      "queryVariants": [
+        ["Software Engineer", "software-engineer"],
+        ["Backend Engineer", "backend-engineer"],
+        ["API Engineer", "api-engineer"]
+      ],
+      "locations": ["Remote"]
+    },
+    {
+      "id": "specialized",
+      "label": "Specialized resume",
+      "path": "candidate/resumes/specialized.pdf",
+      "keywords": ["<specialization keyword>"],
+      "queryVariants": [["<specialized role>", "specialized-role"]],
+      "locations": ["Remote"]
+    }
+  ],
+  "searchProfiles": [
+    {
+      "id": "node_backend",
+      "aliases": ["default", "general", "node"],
+      "resumeProfile": "primary",
+      "queryVariants": [
+        ["Software Engineer", "software-engineer"],
+        ["Backend Engineer", "backend-engineer"],
+        ["API Engineer", "api-engineer"]
+      ],
+      "locations": ["Remote"]
+    },
+    {
+      "id": "java_backend",
+      "aliases": ["java", "specialized"],
+      "resumeProfile": "specialized",
+      "queryVariants": [["Specialized Software Engineer", "specialized-software-engineer"]],
+      "locations": ["Remote"]
+    }
+  ]
+}

@@ -14,7 +14,7 @@ function setup(plan: DiscoveryPlan): { root: string; coordinator: DiscoveryCoord
 
 const oneQueryPlan = (runId: string): DiscoveryPlan => ({
   runId,
-  sources: [{ source: "linkedin", queries: [{ query: "Backend Engineer", queryVariant: "backend-engineer", location: "India" }] }],
+  sources: [{ source: "linkedin", queries: [{ query: "Backend Engineer", queryVariant: "backend-engineer", location: "Example Region" }] }],
 });
 
 function visibleIds(prefix: string, count: number): string[] {
@@ -23,28 +23,28 @@ function visibleIds(prefix: string, count: number): string[] {
 
 describe("discovery breadth and exhaustion state machine", () => {
   it("builds multiple compatible query variants for each planned source", () => {
-    const plan = buildDefaultDiscoveryPlan("RUN-PLAN", { sources: ["linkedin"], location: "India" });
+    const plan = buildDefaultDiscoveryPlan("RUN-PLAN", { sources: ["linkedin"], location: "Example Region" });
     expect(plan.sources).toHaveLength(1);
     expect(plan.sources[0].queries.length).toBeGreaterThan(1);
-    expect(plan.sources[0].queries.map((query) => query.query)).toContain("Node.js Backend Engineer");
-    expect(plan.sources[0].queries.map((query) => query.query)).toContain("TypeScript Backend Engineer");
+    expect(plan.sources[0].queries.map((query) => query.query)).toContain("Software Engineer");
+    expect(plan.sources[0].queries.map((query) => query.query)).toContain("API Engineer");
     expect(plan.sources[0].queries.every((query) => query.filters?.posted_within_days === 7)).toBe(true);
   });
 
   it("expands each role variant across the configured locations", () => {
     const plan = buildDefaultDiscoveryPlan("RUN-LOCATIONS", {
       sources: ["linkedin"],
-      locations: ["India", "Remote"],
+      locations: ["Example Region", "Remote"],
     });
-    expect(plan.sources[0].queries).toHaveLength(26);
-    expect(plan.sources[0].queries.map((query) => query.location)).toContain("India");
+    expect(plan.sources[0].queries).toHaveLength(8);
+    expect(plan.sources[0].queries.map((query) => query.location)).toContain("Example Region");
     expect(plan.sources[0].queries.map((query) => query.location)).toContain("Remote");
   });
 
   it("continues from page 1 with zero qualifying jobs to page 2", () => {
     const { coordinator } = setup(oneQueryPlan("RUN-PAGE-2"));
     expect(coordinator.recordSearchPage({
-      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "India",
+      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "Example Region",
       pageNumber: 1, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 20,
       hasNextPage: true, paginationCompleted: false, scrollCompleted: true, visibleJobIds: visibleIds("page-1", 20),
     })).toBe("SEARCH_SAMPLE_EXHAUSTED");
@@ -57,7 +57,7 @@ describe("discovery breadth and exhaustion state machine", () => {
       decision: "qualifying", reasonCodes: [],
     });
     expect(coordinator.recordSearchPage({
-      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "India",
+      source: "linkedin", query: "Backend Engineer", queryVariant: "backend-engineer", location: "Example Region",
       pageNumber: 2, resultsVisible: 20, newlyDiscovered: 20, duplicates: 0, evaluated: 1,
       hasNextPage: false, paginationCompleted: true, scrollCompleted: true, visibleJobIds: visibleIds("page-2", 20),
     })).toBe("SEARCH_SPACE_REASONABLY_EXHAUSTED");

@@ -8,7 +8,7 @@ description: Persistent truthful job discovery, matching, deduplication, queue f
 This skill owns discovery, matching, deduplication, application-channel
 classification, queue routing and freezing, supported native automation, and
 browser-assisted external processing. Candidate facts remain in `candidate/`; resume selection
-remains in `resumes/`; `application-history.md` remains the human-readable
+remains in `candidate/resume-profiles.json` and `candidate/resumes/`; `application-history.md` remains the human-readable
 audit trail; `state/run-state.md` remains operational checkpoint state.
 
 ## Specific-link handoff override
@@ -179,6 +179,14 @@ already present there. Source priority is current user correction, candidate
 source-of-truth, confirmed reusable answers, resume, derivations with
 provenance, records, preferences, and only then current form context.
 
+If `candidate/onboarding.json` exists with `status: "questions_pending"`,
+pause discovery and application work. Ask the pending onboarding questions,
+persist only confirmed answers in the candidate source-of-truth files, and
+change the onboarding state to `ready_for_search` only after the candidate has
+confirmed the required profile, contact, preference, authorization, and
+experience facts. Resume extraction is evidence for questions, never a
+substitute for confirmation.
+
 An already-attached resume is authoritative for attachment selection in that
 specific handoff, but not for candidate facts: confirmed candidate files still
 control field values when ATS parsing is blank, malformed, or inconsistent.
@@ -264,22 +272,13 @@ required skills, and clear seniority mismatch.
 
 ## Resume selection and minimal queue metadata
 
-Select the resume during discovery before queue routing. The only canonical
-profile IDs and paths are:
-
-- `hemant_kumar_nodejs_resume` ->
-  `resumes/Hemant_Kumar_NodeJS_Resume.pdf`
-- `hemant_kumar_java_resume` ->
-  `resumes/Hemant_Kumar_Java_Resume.pdf`
-
-Choose `hemant_kumar_java_resume` when Java or Spring is core required or a
-meaningful preferred backend technology. Choose
-`hemant_kumar_nodejs_resume` for Node.js, TypeScript, or JavaScript-specific
-roles and by default for general backend roles where Java is incidental. For a
-genuinely mixed role, apply the same truthful matching model to both profiles,
-choose the higher score, and use the Node.js profile on a tie. Preserve the
-confirmed distinction between hands-on Java experience and professional Java
-production experience.
+Select the resume during discovery before queue routing. Resume profile IDs and
+paths are defined only in `candidate/resume-profiles.json`; the workflow must
+not assume a person's name, filename, stack, country, or number of resume
+variants. Use configured title/keyword evidence, score genuinely mixed roles
+against the available profiles, and use the configured default on a tie.
+Preserve the confirmed distinction between hands-on project experience and
+professional/production experience.
 
 Persist only `resumeProfile`, `selectedResume`, and `matchScore` as
 resume-selection metadata. `matchScore` is the score for the chosen profile.
@@ -295,10 +294,10 @@ Experience entry in the queued `selectedResume`, reconciled with
 `candidate/experience.md`. Do not replace that entry with a generated one-line
 stack summary or copy the target job description. Preserve all material
 truthful achievements and metrics when the field permits, using plain-text
-bullets. The selected profile controls phrasing and emphasis: the Node.js
-profile may retain its confirmed Node.js/BullMQ/Redis/PostgreSQL employment
-details, while the Java profile must not imply professional Java employment.
-Independent project technologies never become employment responsibilities.
+bullets. The selected profile controls phrasing and emphasis, but it must not
+introduce technologies absent from the selected employment record or imply
+professional experience from an independent project. Independent project
+technologies never become employment responsibilities.
 Only compress for a real field limit, retaining quantified impact and the most
 profile-relevant supported achievements.
 

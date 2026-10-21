@@ -42,15 +42,14 @@ Experience`, `Add Education`, or similar. Click the section-scoped control and
 then inspect the newly exposed fields; do not search only for already-visible
 empty inputs.
 
-- **Work Experience:** `candidate/experience.md` confirms one Enterprise Bot
-  employment record. If the summary says `No Response` or the record is absent,
-  click Add and enter the confirmed employer, title, location, September 2024
-  start date, current-employment state, and only supported description details.
+- **Work Experience:** `candidate/experience.md` is the source of truth for
+  the candidate's employment records. If the summary says `No Response` or a
+  record is absent, click Add and enter only the confirmed employer, title,
+  location, dates, current-employment state, and supported description details.
   Preserve an accurate parser-created record instead of duplicating it.
-- **Education:** `candidate/education.md` confirms one B.Tech record. If absent,
-  click Add and enter Arya College of Engineering & IT, Computer Science &
-  Engineering, September 2020 through May 2024, and the confirmed grade only
-  where the form supports it.
+- **Education:** `candidate/education.md` is the source of truth for education
+  records. If a confirmed record is absent, click Add and enter its institution,
+  field, dates, and grade only where the form supports it.
 - **Certifications:** add the confirmed RHCSA certification when the section
   supports it. Do not invent an issue date, expiration date, credential ID, or
   URL; a required unknown field blocks only this item.
@@ -71,8 +70,8 @@ required-field blocker.
 ### Workday Role Description
 
 The Work Experience `Role Description` field is a long-form employment record.
-Populate it with the complete Enterprise Bot Work Experience section from the
-queued `selectedResume`, cross-checked against `candidate/experience.md`. Do not
+Populate it with the complete employment section from the queued
+`selectedResume`, cross-checked against `candidate/experience.md`. Do not
 write a short stack sentence such as "Build scalable backend systems using..."
 and do not derive the text from the target job description.
 
@@ -81,21 +80,12 @@ an existing one-line keyword/stack summary with the full selected-resume
 experience entry before saving, while preserving any accurate user edits.
 
 Use newline-separated plain-text bullets and retain all material achievements
-when Workday's character limit permits. For the current resumes this includes:
+when Workday's character limit permits. Preserve every material achievement,
+responsibility, and metric from that employment record.
 
-- ownership of the Pulse multi-tenant analytics and quota-management platform;
-- the 400M+ raw-event backfill and 7M+ consumption-record pipeline;
-- PostgreSQL optimization from about 14 seconds to under 1 second;
-- asynchronous alert processing and retry/notification workflows;
-- streaming CSV/ZIP exports for 7M+ records;
-- 15+ PostgreSQL analytics queries and their optimization techniques; and
-- Docker, Kubernetes, GitLab CI, and ArgoCD delivery work.
-
-Follow the selected resume's wording and technology emphasis. With
-`hemant_kumar_nodejs_resume`, retain the confirmed Node.js, BullMQ, Redis, and
-PostgreSQL employment details. With `hemant_kumar_java_resume`, use that
-resume's truthful employment wording and never add Java or Spring Boot to the
-Enterprise Bot role; those technologies are independent-project experience.
+Follow the selected resume's wording and technology emphasis. Never add a
+technology to an employment record merely because it appears in a project,
+another resume variant, or the target job description.
 If Workday enforces a smaller character limit, compress the bullets only as much
 as required, prioritize quantified impact plus profile-relevant evidence, and
 never collapse the entry to a one-line keyword list while more space remains.

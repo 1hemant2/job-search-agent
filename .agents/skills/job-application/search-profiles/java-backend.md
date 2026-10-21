@@ -10,11 +10,13 @@ Load the candidate files required by root `AGENTS.md`. In particular:
 
 - `candidate/technology-experience.md` owns general versus professional,
   production, and commercial Java experience values.
+- `candidate/matching-config.json` provides the confirmed numeric scopes to the
+  optional automated matcher. A missing scope is a human-review blocker.
 - `candidate/experience.md` owns professional backend achievements.
 - `candidate/projects.md` owns independent Java/Spring Boot evidence.
 - `candidate/preferences.md` and `candidate/work-authorization.md` own
   location and eligibility facts.
-- `resumes/index.md` owns resume selection.
+- `candidate/resume-profiles.json` owns resume selection.
 
 Do not copy candidate facts into this profile or infer that the professional
 production stack was Java. Generic Java-experience questions use the canonical
@@ -35,11 +37,10 @@ Continue across configured query variants, pages, and sources until the unique
 evaluation target is reached or the shared discovery state machine reaches
 `SEARCH_SPACE_REASONABLY_EXHAUSTED`.
 
-Location priority is Bengaluru, Remote India, Hyderabad, Pune, Gurgaon/NCR,
-then other compatible Indian locations. International remote roles qualify
-only when candidates located in India are eligible. Prefer product companies,
-engineering-focused startups, mid-sized technology companies, and backend-heavy
-fintech, SaaS, or infrastructure companies; company fame is not required.
+Location priority comes from the candidate's configured search profile and
+preferences. International roles qualify only when the candidate's confirmed
+authorization permits them. Prefer the company types and industries listed in
+the private candidate preferences; company fame is not required.
 
 ## Target and blockers
 
@@ -91,13 +92,12 @@ learnable backend tools must not automatically force `SKIP`.
 
 ## Resume and persistence
 
-Select queue profile `hemant_kumar_java_resume` and
-`resumes/Hemant_Kumar_Java_Resume.pdf` only when Java/Spring is meaningful to
-the backend role. An incidental Java mention is insufficient. A clearly
-Node.js/TypeScript-specific role keeps `hemant_kumar_nodejs_resume` and the
-Node.js resume even if Java is merely nice to have. A genuinely mixed role is
-scored against both profiles; choose the higher profile score and use Node.js
-on a tie.
+Select the configured specialized resume profile and exact path only when
+Java/Spring is meaningful to the backend role. An incidental Java mention is
+insufficient. A clearly profile-specific role keeps its matching configured
+resume even if another technology is merely mentioned. A genuinely mixed role
+is scored against both configured profiles; choose the higher profile score
+and use the configured default on a tie.
 
 Every Java evaluation persists the shared canonical opportunity ID plus company,
 role, location, source and application URLs, source/platform, required YOE,

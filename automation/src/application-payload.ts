@@ -128,9 +128,9 @@ export function validateApplicationPayload(
 
   if (value.resume) {
     const resumePath = path.resolve(workspaceRoot, value.resume);
-    const resumesRoot = path.resolve(workspaceRoot, "resumes");
+    const resumesRoot = path.resolve(workspaceRoot, "candidate", "resumes");
     const relative = path.relative(resumesRoot, resumePath);
-    if (relative.startsWith("..") || path.isAbsolute(relative)) errors.push("resume must be inside the workspace resumes directory");
+    if (relative.startsWith("..") || path.isAbsolute(relative)) errors.push("resume must be inside candidate/resumes");
     else if (!fs.existsSync(resumePath)) errors.push(`resume file does not exist: ${value.resume}`);
   }
 
@@ -139,7 +139,7 @@ export function validateApplicationPayload(
     resumeSelection = resolveResumeSelection({
       resumeProfile: value.resumeProfile,
       selectedResume: value.resume,
-    });
+    }, workspaceRoot);
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
   }
@@ -159,9 +159,9 @@ export function readPayloadFile(filePath: string): unknown {
 
 export function resumeAbsolutePath(payload: ApplicationPayload, workspaceRoot: string): string {
   const resolved = path.resolve(workspaceRoot, payload.resume);
-  const resumesRoot = path.resolve(workspaceRoot, "resumes");
+  const resumesRoot = path.resolve(workspaceRoot, "candidate", "resumes");
   const relative = path.relative(resumesRoot, resolved);
-  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("resume is outside the workspace resumes directory");
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("resume is outside candidate/resumes");
   return resolved;
 }
 

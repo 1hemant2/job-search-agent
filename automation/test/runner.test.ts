@@ -5,7 +5,9 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { executeApplication } from "../src/runner.js";
 
-const workspaceRoot = path.resolve(process.cwd(), "..");
+const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "executor-workspace-"));
+fs.mkdirSync(path.join(workspaceRoot, "candidate", "resumes"), { recursive: true });
+fs.writeFileSync(path.join(workspaceRoot, "candidate", "resumes", "primary.pdf"), "fixture");
 
 describe("runner dry-run integration", () => {
   it("navigates and fills a local form without submitting", async () => {
@@ -24,8 +26,8 @@ describe("runner dry-run integration", () => {
       role: "Backend Engineer",
       jobUrl: url,
       ats: "generic",
-      resume: "resumes/Hemant_Kumar_NodeJS_Resume.pdf",
-      candidate: { name: "Hemant Kumar", email: "meet.hemant.k@gmail.com", phone: "+91 9534909390", location: "Bengaluru" },
+      resume: "candidate/resumes/primary.pdf",
+      candidate: { name: "Example Candidate", email: "candidate@example.test", phone: "+1 0000000000", location: "Remote" },
       answers: {},
     }, { workspaceRoot, dryRun: true, profileDir: path.join(os.tmpdir(), `job-executor-test-${Date.now()}`) });
     server.close();
@@ -36,8 +38,8 @@ describe("runner dry-run integration", () => {
 
   it("persists executor telemetry when a run id is supplied", async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "executor-telemetry-"));
-    fs.mkdirSync(path.join(root, "resumes"), { recursive: true });
-    fs.writeFileSync(path.join(root, "resumes", "test-resume.pdf"), "fixture");
+    fs.mkdirSync(path.join(root, "candidate", "resumes"), { recursive: true });
+    fs.writeFileSync(path.join(root, "candidate", "resumes", "primary.pdf"), "fixture");
     let submitted = false;
     const server = http.createServer((_request, response) => {
       response.writeHead(200, { "content-type": "text/html" });
@@ -53,8 +55,8 @@ describe("runner dry-run integration", () => {
       role: "Backend Engineer",
       jobUrl: url,
       ats: "generic",
-      resume: "resumes/test-resume.pdf",
-      candidate: { name: "Hemant Kumar", email: "meet.hemant.k@gmail.com", phone: "+91 9534909390", location: "Bengaluru" },
+      resume: "candidate/resumes/primary.pdf",
+      candidate: { name: "Example Candidate", email: "candidate@example.test", phone: "+1 0000000000", location: "Remote" },
       answers: {},
     }, {
       workspaceRoot: root,

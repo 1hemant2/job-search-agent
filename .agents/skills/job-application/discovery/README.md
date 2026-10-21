@@ -29,7 +29,7 @@ For every qualifying record, persist the discovery run ID and minimal resume
 selection: canonical `resumeProfile`, exact `selectedResume` path, and the
 chosen-profile `matchScore`. Do not copy resume content or candidate answers
 into queue metadata. Existing canonical profile/path mappings live in
-`resumes/index.md`.
+`candidate/resume-profiles.json`.
 
 Discovery and application are separate stages. Complete discovery and write
 the run summary before opening any application. Then freeze only that run's

@@ -39,7 +39,10 @@ export function updateDiscoveryRunState(workspaceRoot: string, summary: Discover
   let text = fs.existsSync(statePath) ? fs.readFileSync(statePath, "utf8") : "# Run State\n\n## Active Run\n";
   const runIdPattern = new RegExp(`^- Run ID: ${summary.runId.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&")}$`, "m");
   if (!runIdPattern.test(text)) {
-    throw new Error(`Active run ${summary.runId} is not present in state/run-state.md`);
+    if (/^- Run ID:/m.test(text)) {
+      throw new Error(`Active run ${summary.runId} is not present in state/run-state.md`);
+    }
+    text = `${text.trimEnd()}\n- Run ID: ${summary.runId}\n`;
   }
 
   const values: Array<[string, string]> = [

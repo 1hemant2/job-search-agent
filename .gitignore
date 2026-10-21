@@ -1,0 +1,23 @@
+# Private candidate data and uploaded resumes.
+/candidate/*
+!/candidate/README.md
+!/candidate/.gitkeep
+/resumes/
+
+# Private runtime state, history, browser payloads, and generated artifacts.
+/application-history.md
+/state/*
+!/state/README.md
+!/state/.gitkeep
+!/state/run-state.example.md
+/tmp/*
+!/tmp/.gitkeep
+
+# Local browser and generated automation artifacts.
+/automation/.profile/
+/automation/dist/
+/automation/test-results/
+/automation/*.local.json
+
+# OS/editor files.
+.DS_Store

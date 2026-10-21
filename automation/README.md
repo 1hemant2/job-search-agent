@@ -36,6 +36,19 @@ resume, or application set materially changes.
 
 This subsystem is a deterministic browser executor for the existing job-agent workspace. It does not discover jobs, score them, derive candidate answers, or write candidate memory/history. Codex prepares one JSON payload, the runner executes routine browser actions, and Codex records the returned result in `application-history.md`, `state/run-state.md`, and—when a reusable answer was learned—`candidate/application-answers.md`.
 
+The workspace CLI also supports privacy-preserving resume onboarding before
+any search or application work:
+
+```sh
+npm run workspace -- onboard --resume /absolute/path/to/resume.pdf
+```
+
+It uses Poppler's `pdftotext` for conservative extraction, stores the uploaded
+resume and generated onboarding state under the ignored `candidate/` folder,
+and creates a questionnaire covering common Workday, Greenhouse, Lever,
+SmartRecruiters, company-career, and native-platform fields. Resume-derived
+values remain unconfirmed suggestions until the candidate verifies them.
+
 ## Architecture
 
 - `src/types.ts` — payload, lifecycle, blocker, and result contracts.
@@ -62,13 +75,13 @@ Codex should write a temporary JSON payload outside the candidate source-of-trut
   "role": "Backend Engineer",
   "jobUrl": "https://boards.greenhouse.io/example/jobs/123",
   "ats": "greenhouse",
-  "resumeProfile": "hemant_kumar_nodejs_resume",
-  "resume": "resumes/Hemant_Kumar_NodeJS_Resume.pdf",
+  "resumeProfile": "primary",
+  "resume": "candidate/resumes/primary.pdf",
   "candidate": {
-    "name": "Hemant Kumar",
+    "name": "Example Candidate",
     "email": "candidate@example.invalid",
-    "phone": "+91 0000000000",
-    "location": "Bengaluru, Karnataka, India"
+    "phone": "+1 0000000000",
+    "location": "Remote"
   },
   "answers": {
     "work_authorized": "Yes"
@@ -76,11 +89,10 @@ Codex should write a temporary JSON payload outside the candidate source-of-trut
 }
 ```
 
-The resume must resolve inside the workspace `resumes/` directory. Canonical
-batch payloads pair `hemant_kumar_nodejs_resume` with
-`resumes/Hemant_Kumar_NodeJS_Resume.pdf` or
-`hemant_kumar_java_resume` with `resumes/Hemant_Kumar_Java_Resume.pdf`; a
-mismatch is rejected. Values are never hard-coded in ATS adapters. For a
+The resume must resolve inside the private `candidate/resumes/` directory.
+Canonical profile IDs and paths come from the private
+`candidate/resume-profiles.json`; a mismatch is rejected. Values are never
+hard-coded in ATS adapters. For a
 LinkedIn listing that redirects to another domain, set `applicationUrl` to the
 actual application URL and include its host in `allowedApplicationDomains`.
 

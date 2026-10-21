@@ -29,8 +29,8 @@ have the same scope. A reusable answer record should carry:
 
 ```yaml
 normalized_key: notice_period
-value: 60 days
-scope: India employment application
+value: <confirmed notice period>
+scope: <application scope>
 source: user-confirmed
 confidence: confirmed
 equivalent_questions: [notice period, availability, earliest start]
