@@ -2,6 +2,10 @@
 /candidate/*
 !/candidate/README.md
 !/candidate/.gitkeep
+/candidate/resumes/
+/candidate/onboarding.json
+/candidate/onboarding-questions.md
+/candidate/parsed-resume.txt
 /resumes/
 
 # Private runtime state, history, browser payloads, and generated artifacts.
@@ -12,6 +16,14 @@
 !/state/run-state.example.md
 /tmp/*
 !/tmp/.gitkeep
+
+# Local secrets and ad-hoc application payloads.
+.env
+.env.*
+!.env.example
+**/*.payload.json
+**/*.local.json
+**/*.local.*
 
 # Local browser and generated automation artifacts.
 /automation/.profile/
