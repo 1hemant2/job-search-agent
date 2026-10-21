@@ -11,6 +11,7 @@
     "dry-run": "tsx src/runner.ts --dry-run",
     "execute": "tsx src/runner.ts",
     "workspace": "tsx src/workspace-cli.ts",
+    "setup": "tsx src/workspace-cli.ts setup",
     "search": "tsx src/workspace-cli.ts search",
     "start-batch": "tsx src/workspace-cli.ts start",
     "freeze-batch": "tsx src/workspace-cli.ts freeze",

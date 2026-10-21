@@ -181,11 +181,18 @@ provenance, records, preferences, and only then current form context.
 
 If `candidate/onboarding.json` exists with `status: "questions_pending"`,
 pause discovery and application work. Ask the pending onboarding questions,
-persist only confirmed answers in the candidate source-of-truth files, and
+one at a time, persist each answer immediately with the onboarding answer
+command, and then continue to the next unanswered question. If the process is
+interrupted, load the persisted state and resume at the first unanswered
+question. Persist only confirmed answers in the candidate source-of-truth files, and
 change the onboarding state to `ready_for_search` only after the candidate has
 confirmed the required profile, contact, preference, authorization, and
 experience facts. Resume extraction is evidence for questions, never a
 substitute for confirmation.
+
+When exactly one PDF is present in `candidate/inbox/` and the user says it is
+ready, run the setup command internally and begin the questionnaire in the
+chat. Do not make the candidate run setup or answer commands themselves.
 
 An already-attached resume is authoritative for attachment selection in that
 specific handoff, but not for candidate facts: confirmed candidate files still

@@ -1,5 +1,15 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { buildOnboardingQuestions, parseResumeText } from "../src/onboarding.js";
+import {
+  buildOnboardingQuestions,
+  discoverIncomingResume,
+  loadOnboardingState,
+  onboardingProgress,
+  parseResumeText,
+  recordOnboardingAnswer,
+} from "../src/onboarding.js";
 
 describe("resume onboarding", () => {
   it("extracts conservative contact, section, and technology suggestions", () => {
@@ -53,5 +63,44 @@ describe("resume onboarding", () => {
     expect(parsed.phone).toBeUndefined();
     expect(questions.find((item) => item.id === "contact_email")?.question).toContain("not detected");
     expect(questions.find((item) => item.id === "contact_phone")?.question).toContain("not detected");
+  });
+
+  it("finds the single PDF placed in the candidate inbox", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "onboarding-inbox-"));
+    const inbox = path.join(root, "candidate", "inbox");
+    fs.mkdirSync(inbox, { recursive: true });
+    fs.writeFileSync(path.join(inbox, "resume.pdf"), "fixture");
+
+    expect(discoverIncomingResume(root)).toBe(path.join(inbox, "resume.pdf"));
+  });
+
+  it("persists each answer and becomes ready when required questions are answered", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "onboarding-answers-"));
+    fs.mkdirSync(path.join(root, "candidate"), { recursive: true });
+    const questions = buildOnboardingQuestions(parseResumeText("Example Candidate\nexample@example.test"));
+    fs.writeFileSync(path.join(root, "candidate", "onboarding.json"), JSON.stringify({
+      schemaVersion: 1,
+      status: "questions_pending",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      resume: { sourceFileName: "resume.pdf", selectedResume: "candidate/resumes/resume.pdf", resumeProfile: "primary", parsedTextFile: "candidate/parsed-resume.txt" },
+      extracted: { urls: [], keywords: [] },
+      sections: {},
+      questions,
+    }), "utf8");
+    fs.writeFileSync(path.join(root, "candidate", "onboarding-questions.md"), "", "utf8");
+
+    const first = questions.find((item) => item.requiredForSearch)!;
+    const firstProgress = recordOnboardingAnswer(root, first.id, "confirmed answer");
+    expect(firstProgress.answered).toBe(1);
+    expect(firstProgress.requiredRemaining).toBeGreaterThan(0);
+    expect(loadOnboardingState(root)?.questions.find((item) => item.id === first.id)?.answer).toBe("confirmed answer");
+
+    for (const item of questions.filter((candidate) => candidate.requiredForSearch && candidate.id !== first.id)) {
+      recordOnboardingAnswer(root, item.id, "confirmed answer");
+    }
+    const completed = onboardingProgress(loadOnboardingState(root)!);
+    expect(completed.status).toBe("ready_for_search");
+    expect(completed.requiredRemaining).toBe(0);
   });
 });

@@ -40,14 +40,21 @@ The workspace CLI also supports privacy-preserving resume onboarding before
 any search or application work:
 
 ```sh
-npm run workspace -- onboard --resume /absolute/path/to/resume.pdf
+mkdir -p ../candidate/inbox
+# place exactly one resume PDF in ../candidate/inbox/
+npm run setup
+npm run setup -- status
+npm run setup -- answer identity_name "Example Candidate"
 ```
 
 It uses Poppler's `pdftotext` for conservative extraction, stores the uploaded
 resume and generated onboarding state under the ignored `candidate/` folder,
 and creates a questionnaire covering common Workday, Greenhouse, Lever,
-SmartRecruiters, company-career, and native-platform fields. Resume-derived
-values remain unconfirmed suggestions until the candidate verifies them.
+SmartRecruiters, company-career, and native-platform fields. The agent asks
+one question at a time in chat and persists each confirmed answer before
+moving on. Resume-derived values remain unconfirmed suggestions until the
+candidate verifies them. `onboard --resume <path>` remains available for an
+explicit path.
 
 ## Architecture
 

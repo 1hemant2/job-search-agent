@@ -2,6 +2,9 @@
 /candidate/*
 !/candidate/README.md
 !/candidate/.gitkeep
+!/candidate/inbox/
+/candidate/inbox/*
+!/candidate/inbox/README.md
 /candidate/resumes/
 /candidate/onboarding.json
 /candidate/onboarding-questions.md

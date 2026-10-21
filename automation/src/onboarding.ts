@@ -24,8 +24,9 @@ export interface OnboardingQuestion {
   category: string;
   question: string;
   oftenAskedByPortals: boolean;
-  answer: null;
-  status: "pending";
+  requiredForSearch: boolean;
+  answer: string | null;
+  status: "pending" | "answered";
 }
 
 export interface OnboardingState {
@@ -59,11 +60,20 @@ export interface OnboardingResult {
   detectedFields: string[];
 }
 
+export interface OnboardingProgress {
+  status: OnboardingStatus;
+  answered: number;
+  total: number;
+  requiredRemaining: number;
+  nextQuestion?: OnboardingQuestion;
+}
+
 const CANDIDATE_DIRECTORY = "candidate";
 const RESUME_DIRECTORY = "candidate/resumes";
 const ONBOARDING_STATE = "candidate/onboarding.json";
 const ONBOARDING_QUESTIONS = "candidate/onboarding-questions.md";
 const PARSED_RESUME = "candidate/parsed-resume.txt";
+const INBOX_DIRECTORY = "candidate/inbox";
 
 const SECTION_ALIASES: Record<string, string> = {
   summary: "summary",
@@ -307,8 +317,8 @@ function updateResumeConfig(workspaceRoot: string, profileId: string, selectedRe
   fs.writeFileSync(configPath, `${JSON.stringify(existing, null, 2)}\n`, "utf8");
 }
 
-function question(id: string, category: string, text: string, oftenAskedByPortals = true): OnboardingQuestion {
-  return { id, category, question: text, oftenAskedByPortals, answer: null, status: "pending" };
+function question(id: string, category: string, text: string, oftenAskedByPortals = true, requiredForSearch = true): OnboardingQuestion {
+  return { id, category, question: text, oftenAskedByPortals, requiredForSearch, answer: null, status: "pending" };
 }
 
 export function buildOnboardingQuestions(parsed: ParsedResume): OnboardingQuestion[] {
@@ -316,33 +326,48 @@ export function buildOnboardingQuestions(parsed: ParsedResume): OnboardingQuesti
     question("identity_name", "Identity", "What full name should job applications use? Confirm or correct the name detected from the resume."),
     question("contact_email", "Contact", "What email address should applications use? Confirm or correct the detected address."),
     question("contact_phone", "Contact", "What phone number should applications use? Include country code if relevant."),
-    question("mailing_address", "Contact", "What mailing address, if any, may be stored and used when a portal requires one? Do not store it if you prefer to enter it manually per application."),
+    question("mailing_address", "Contact", "What mailing address, if any, may be stored and used when a portal requires one? Do not store it if you prefer to enter it manually per application.", true, false),
     question("current_location", "Location", "What city, region, and country are you currently based in?"),
     question("target_roles", "Preferences", "Which job titles, seniority levels, and technologies should the agent target?"),
     question("work_arrangement", "Preferences", "Which work arrangements are acceptable: remote, hybrid, onsite, or some combination?"),
     question("target_locations", "Preferences", "Which locations are acceptable, and are you willing to relocate?"),
-    question("travel", "Preferences", "Are you willing to travel for work, and if so, what level of travel is acceptable?"),
+    question("travel", "Preferences", "Are you willing to travel for work, and if so, what level of travel is acceptable?", true, false),
     question("work_authorization", "Work authorization", "In which countries are you authorized to work, and will you need current or future sponsorship?"),
-    question("authorization_expiry", "Work authorization", "If your work authorization is time-limited, what expiry or renewal detail should be used? Say not applicable if none."),
+    question("authorization_expiry", "Work authorization", "If your work authorization is time-limited, what expiry or renewal detail should be used? Say not applicable if none.", true, false),
     question("employment_status", "Employment", "What is your current employment status, current employer, title, and start date? Confirm any employment history the resume parser may have missed."),
     question("availability", "Employment", "What is your notice period or earliest available start date?"),
-    question("employment_gaps", "Employment", "Are there employment gaps, overlapping dates, or other timeline details that need truthful explanation?"),
+    question("employment_gaps", "Employment", "Are there employment gaps, overlapping dates, or other timeline details that need truthful explanation?", true, false),
     question("professional_experience", "Experience", "How many years of professional experience should the agent use, and which technologies were used professionally versus only in projects or learning?"),
     question("education", "Education", "What is your highest completed education, institution, field of study, and graduation year?"),
-    question("certifications", "Education", "Which active certifications, licenses, or clearances should be included?"),
+    question("certifications", "Education", "Which active certifications, licenses, or clearances should be included?", true, false),
     question("compensation", "Compensation", "What compensation range and currency should be used when a portal asks for expectations? Do not provide current compensation unless you explicitly want it stored."),
-    question("references", "Application facts", "Do you want to keep references ready for portals that request them? Store contact details only with the reference's permission."),
-    question("cover_letter", "Application materials", "Should the agent prepare a tailored cover letter when a portal requests one, and what facts or constraints should it follow?", false),
+    question("references", "Application facts", "Do you want to keep references ready for portals that request them? Store contact details only with the reference's permission.", true, false),
+    question("cover_letter", "Application materials", "Should the agent prepare a tailored cover letter when a portal requests one, and what facts or constraints should it follow?", false, false),
     question("relatives_or_conflicts", "Application facts", "Are there any relatives at the employer, conflicts of interest, prior employment, or prior applications that a portal may ask about?"),
     question("background_check", "Application facts", "Are you willing to answer standard background-check or employment-verification questions when an application requires them? Material legal questions remain human decisions."),
-    question("voluntary_demographics", "Privacy", "Should voluntary demographic questions be skipped where possible, or do you want confirmed answers stored?"),
-    question("resume_profile", "Resume", "Should this uploaded resume be the default profile, or should the agent create additional profile variants for different role families?", false),
+    question("voluntary_demographics", "Privacy", "Should voluntary demographic questions be skipped where possible, or do you want confirmed answers stored?", true, false),
+    question("resume_profile", "Resume", "Should this uploaded resume be the default profile, or should the agent create additional profile variants for different role families?", false, false),
   ];
 
   if (!parsed.name) questions.find((item) => item.id === "identity_name")!.question = "What full name should job applications use? It was not reliably detected in the resume.";
   if (!parsed.email) questions.find((item) => item.id === "contact_email")!.question = "What email address should applications use? It was not detected in the resume.";
   if (!parsed.phone) questions.find((item) => item.id === "contact_phone")!.question = "What phone number should applications use? It was not detected in the resume.";
   return questions;
+}
+
+function nextQuestion(state: OnboardingState): OnboardingQuestion | undefined {
+  return state.questions.find((item) => item.status === "pending" && item.requiredForSearch)
+    ?? state.questions.find((item) => item.status === "pending");
+}
+
+export function onboardingProgress(state: OnboardingState): OnboardingProgress {
+  return {
+    status: state.status,
+    answered: state.questions.filter((item) => item.status === "answered").length,
+    total: state.questions.length,
+    requiredRemaining: state.questions.filter((item) => item.requiredForSearch && item.status !== "answered").length,
+    nextQuestion: nextQuestion(state),
+  };
 }
 
 function renderQuestions(state: OnboardingState): string {
@@ -357,7 +382,7 @@ function renderQuestions(state: OnboardingState): string {
   const lines = [
     "# Resume onboarding",
     "",
-    "Status: questions pending",
+    `Status: ${state.status}`,
     "",
     "The parser extracted suggestions from the uploaded resume. Treat them as unconfirmed until the candidate confirms or corrects them. Do not use this file as authorization to guess missing legal, employment, compensation, demographic, or work-authorization facts.",
     "",
@@ -367,7 +392,12 @@ function renderQuestions(state: OnboardingState): string {
     "",
     "## Questions to ask the candidate",
     "",
-    ...state.questions.map((item, index) => `${index + 1}. **${item.category} - ${item.id}:** ${item.question}`),
+    ...state.questions.map((item, index) => {
+      const marker = item.status === "answered" ? "x" : " ";
+      const requirement = item.requiredForSearch ? "required before search" : "optional";
+      const answer = item.answer ? ` Answer saved: ${item.answer}` : "";
+      return `${index + 1}. [${marker}] **${item.category} - ${item.id}** (${requirement}): ${item.question}${answer}`;
+    }),
     "",
     "## Portal coverage",
     "",
@@ -379,8 +409,56 @@ function renderQuestions(state: OnboardingState): string {
   return lines.join("\n");
 }
 
-export function onboardResume(workspaceRoot: string, sourceResume: string, profileId = "primary", force = false): OnboardingResult {
-  const sourcePath = path.resolve(sourceResume);
+export function loadOnboardingState(workspaceRoot: string): OnboardingState | undefined {
+  const statePath = path.join(workspaceRoot, ONBOARDING_STATE);
+  if (!fs.existsSync(statePath)) return undefined;
+  const state = JSON.parse(fs.readFileSync(statePath, "utf8")) as OnboardingState;
+  state.questions = state.questions.map((item) => ({
+    ...item,
+    requiredForSearch: item.requiredForSearch ?? true,
+    answer: item.answer ?? null,
+    status: item.status ?? (item.answer ? "answered" : "pending"),
+  }));
+  return state;
+}
+
+function saveOnboardingState(workspaceRoot: string, state: OnboardingState): void {
+  const now = new Date().toISOString();
+  state.updatedAt = now;
+  state.status = state.questions.some((item) => item.requiredForSearch && item.status !== "answered")
+    ? "questions_pending"
+    : "ready_for_search";
+  fs.writeFileSync(path.join(workspaceRoot, ONBOARDING_STATE), `${JSON.stringify(state, null, 2)}\n`, "utf8");
+  fs.writeFileSync(path.join(workspaceRoot, ONBOARDING_QUESTIONS), renderQuestions(state), "utf8");
+}
+
+export function recordOnboardingAnswer(workspaceRoot: string, questionId: string, answer: string): OnboardingProgress {
+  const state = loadOnboardingState(workspaceRoot);
+  if (!state) throw new Error("No onboarding is active. Run setup after placing a PDF in candidate/inbox/.");
+  const item = state.questions.find((candidate) => candidate.id === questionId);
+  if (!item) throw new Error(`Unknown onboarding question: ${questionId}`);
+  const normalizedAnswer = answer.trim();
+  if (!normalizedAnswer) throw new Error("An onboarding answer cannot be empty. Use 'Prefer not to say' or 'Not applicable' when appropriate.");
+  item.answer = normalizedAnswer;
+  item.status = "answered";
+  saveOnboardingState(workspaceRoot, state);
+  return onboardingProgress(state);
+}
+
+export function discoverIncomingResume(workspaceRoot: string): string | undefined {
+  const inbox = path.join(workspaceRoot, INBOX_DIRECTORY);
+  if (!fs.existsSync(inbox)) return undefined;
+  const resumes = fs.readdirSync(inbox, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.pdf$/i.test(entry.name))
+    .map((entry) => path.join(inbox, entry.name));
+  if (resumes.length > 1) throw new Error("More than one PDF is in candidate/inbox/. Leave one resume there or pass --resume explicitly.");
+  return resumes[0];
+}
+
+export function onboardResume(workspaceRoot: string, sourceResume: string | undefined, profileId = "primary", force = false): OnboardingResult {
+  const discoveredResume = sourceResume ?? discoverIncomingResume(workspaceRoot);
+  if (!discoveredResume) throw new Error("No PDF found. Put one resume in candidate/inbox/ and run setup again.");
+  const sourcePath = path.resolve(discoveredResume);
   if (!fs.existsSync(sourcePath) || !fs.statSync(sourcePath).isFile()) throw new Error(`Resume file not found: ${sourceResume}`);
   if (!/\.pdf$/i.test(sourcePath)) throw new Error("Onboarding currently accepts PDF resumes. Convert a DOC/DOCX resume to PDF first.");
   const existingCandidateFiles = nonTemplateCandidateFiles(workspaceRoot);

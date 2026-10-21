@@ -6,7 +6,7 @@ import { makeJobOpportunity } from "./opportunity.js";
 import { OpportunityQueues, sortExternalForReview } from "./queues.js";
 import { SOURCE_CAPABILITIES } from "./sources/index.js";
 import { evaluateJavaBackendJob, type ExperienceRequirement, type JavaRequirement } from "./matching/java-backend.js";
-import { onboardResume } from "./onboarding.js";
+import { loadOnboardingState, onboardResume, onboardingProgress, recordOnboardingAnswer } from "./onboarding.js";
 import {
   RESUME_PATH_BY_PROFILE,
   loadMatchingConfig,
@@ -249,21 +249,66 @@ function freezeBatch(args: string[]): void {
   }, null, 2));
 }
 
+function printOnboardingProgress(): void {
+  const state = loadOnboardingState(workspaceRoot);
+  if (!state) throw new Error("No onboarding is active. Put one PDF in candidate/inbox/ and run setup.");
+  const progress = onboardingProgress(state);
+  console.log(JSON.stringify({
+    mode: "resume-onboarding",
+    ...progress,
+    nextQuestion: progress.nextQuestion ? {
+      id: progress.nextQuestion.id,
+      category: progress.nextQuestion.category,
+      question: progress.nextQuestion.question,
+      requiredForSearch: progress.nextQuestion.requiredForSearch,
+    } : undefined,
+  }, null, 2));
+}
+
 function onboard(args: string[]): void {
+  const subcommand = args[0];
+  if (subcommand === "status") {
+    printOnboardingProgress();
+    return;
+  }
+  if (subcommand === "answer") {
+    const questionId = args[1];
+    const answer = argValue(args, "--value") ?? args.slice(2).filter((arg) => arg !== "--value").join(" ");
+    if (!questionId || !answer) throw new Error("Usage: setup answer <question-id> \"answer\"");
+    const progress = recordOnboardingAnswer(workspaceRoot, questionId, answer);
+    console.log(JSON.stringify({ mode: "resume-onboarding", saved: questionId, ...progress }, null, 2));
+    return;
+  }
   const sourceResume = argValue(args, "--resume") ?? args.find((arg) => !arg.startsWith("--"));
-  if (!sourceResume) throw new Error("Usage: onboard --resume /absolute/path/to/resume.pdf [--profile-id primary] [--force]");
+  const existing = loadOnboardingState(workspaceRoot);
+  if (existing && !sourceResume && !args.includes("--force")) {
+    printOnboardingProgress();
+    return;
+  }
   const profileId = argValue(args, "--profile-id") ?? "primary";
   const result = onboardResume(workspaceRoot, sourceResume, profileId, args.includes("--force"));
+  const progress = onboardingProgress(loadOnboardingState(workspaceRoot)!);
   console.log(JSON.stringify({
     mode: "resume-onboarding",
     status: "questions_pending",
     ...result,
-    nextStep: "Ask the candidate the questions in candidate/onboarding-questions.md, then persist only confirmed answers before searching.",
+    answered: progress.answered,
+    totalQuestions: progress.total,
+    nextQuestion: progress.nextQuestion ? {
+      id: progress.nextQuestion.id,
+      category: progress.nextQuestion.category,
+      question: progress.nextQuestion.question,
+      requiredForSearch: progress.nextQuestion.requiredForSearch,
+    } : undefined,
+    nextStep: "Ask the next question in chat, then save the answer with setup answer before asking another.",
   }, null, 2));
 }
 
 function help(): void {
-  console.log("onboard --resume /path/to/resume.pdf [--profile-id primary] [--force]");
+  console.log("setup");
+  console.log("setup status");
+  console.log("setup answer <question-id> \"answer\"");
+  console.log("setup --resume /path/to/resume.pdf [--profile-id primary] [--force]");
   console.log("search [java|node] [count] [--fixture path] [--run-id id]");
   console.log("start [java|node] [count] [--fixture path] [--run-id id]");
   console.log("freeze <run-id>");
@@ -276,7 +321,7 @@ function help(): void {
 const args = process.argv.slice(2);
 const command = args.shift();
 try {
-  if (command === "onboard") onboard(args);
+  if (command === "setup" || command === "onboard") onboard(args);
   else if (command === "search") search(args);
   else if (command === "start") search(args, true);
   else if (command === "freeze") freezeBatch(args);

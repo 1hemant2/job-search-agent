@@ -5,9 +5,12 @@ This file contains only bootstrapping, command modes, and invariants.
 
 ## Commands
 
-- `onboard --resume <path>` parses an uploaded PDF resume into the private
-  candidate workspace and creates a pending intake questionnaire. It never
-  searches for jobs or submits applications.
+- `setup` is an internal agent command: it finds the single PDF in
+  `candidate/inbox/`, initializes the private candidate workspace, and starts
+  resumable onboarding. `setup status` shows progress and `setup answer
+  <question-id> "answer"` persists one answer. `onboard --resume <path>`
+  remains an explicit-path alias. Setup never searches for jobs or submits
+  applications.
 - `search` runs discovery with the default evaluation limit.
 - `search 100` evaluates approximately 100 unique opportunities across the
   configured query variants and sources; the number is not result-card count.
@@ -48,20 +51,30 @@ Migration and dry-run commands never submit applications.
 
 ## Resume onboarding
 
-When a new user provides a resume, run the onboarding flow before `search` or
-`start`. The CLI accepts a local PDF path:
+When a new user provides a resume, they only need to place exactly one PDF in
+`candidate/inbox/` and say in chat that it is ready. The agent must run setup
+itself; do not ask the candidate to run terminal commands:
 
 ```sh
 cd automation
-npm run workspace -- onboard --resume /absolute/path/to/resume.pdf
+npm run setup
 ```
 
-The flow copies the resume into the private `candidate/resumes/` directory,
+```text
+Candidate: "My resume is ready."
+Agent: runs `npm run setup` internally, then asks the first question here.
+```
+
+Setup copies the resume into the private `candidate/resumes/` directory,
 updates `candidate/resume-profiles.json`, extracts text and conservative
 contact/section suggestions, and writes `candidate/onboarding.json` plus
-`candidate/onboarding-questions.md`. Parsed suggestions are not confirmed
-candidate facts. Ask the pending questions in chat, persist only the user's
-confirmed answers in the candidate source-of-truth files, and leave unknown
+`candidate/onboarding-questions.md`. The agent then asks the next question in
+chat, saves the answer internally with `setup answer`, and only asks the next
+question after persistence succeeds. The candidate should see questions and
+answers in chat, not shell commands. If the chat is interrupted, the agent
+uses the persisted state and continues from the first unanswered question.
+Parsed suggestions are not confirmed candidate facts. Persist only the user's
+confirmed answers in the candidate source-of-truth files and leave unknown
 material questions in `candidate/human-input-queue.md`. Do not infer legal,
 work-authorization, compensation, demographic, or professional-experience
 facts from a resume alone. A specific portal can still ask a new material
